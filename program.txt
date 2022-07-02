@@ -1,0 +1,7 @@
+  mov abc, bcd
+  add xd, dx  ;reeee to jest komentarz
+  sub aha, cd
+  cjne #0, 21, REEEE
+ETYKIETA:
+  nop
+  addlw #90

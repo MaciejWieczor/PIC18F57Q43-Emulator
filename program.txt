@@ -1,3 +1,8 @@
+DATA:
+  EQU PEPE 20
+
+
+
   mov abc, bcd
   add xd, dx  ;reeee to jest komentarz
   sub aha, cd

@@ -11,10 +11,19 @@ typedef struct Linia_kodu {
   char ** args;
 } Linia_kodu;
 
+typedef struct Etykieta {
+  int id;
+  int adres;
+  char * tekst;
+} Etykieta;
+
 typedef struct Tekst_programu {
   unsigned long liczba_linii;
+  unsigned long faktyczna_liczba_linii;
   char * nazwa_pliku;
   Linia_kodu * linie;
+  Etykieta * etykiety;
 } Tekst_programu;
 
 int CzytajZPliku(Tekst_programu * Kod, char * nazwa_pliku);
+int redukuj_indeksy(Tekst_programu * Kod);

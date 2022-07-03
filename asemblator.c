@@ -8,6 +8,11 @@
 
 //r = czytaj z pliku (read)
 //s = struktury
+//
+//typy 
+//0 - dyrektywa
+//1 - instrukcja 
+//2 - etykieta
 
 int Ile_Linii(FILE * fp){
   int linie = 0;
@@ -48,6 +53,21 @@ int Licz_operand_znaki(int i, int j, Tekst_programu * Kod, int operand_znaki){
   return operand_znaki;
 }
 
+//funkcja sprawdza czy dana linia to komentarz, albo znaki spacja/nowa linia/tabulator
+char Czy_ominac(char * bufor, int rozmiar_bufora, int liczba_znakow){
+  for(int i = 0 ; i < liczba_znakow ; i++){
+    if(bufor[i] == '\n' || bufor[i] == ' ' || bufor[i] == '\t'){
+    }
+    else
+    if(bufor[i] == ';'){
+      return 1;
+    }
+    else
+    return 0;
+  }
+  return 1;
+}
+
 int CzytajZPliku(Tekst_programu * Kod, char * nazwa_pliku) { 
   //Otwieranie pliku i zapis tekstu
   //--------------------------------------------------------------------//
@@ -69,6 +89,7 @@ int CzytajZPliku(Tekst_programu * Kod, char * nazwa_pliku) {
 
   bufor = (char*)malloc(rozmiar_bufora * sizeof(char));
 
+  int whitespace_counter = 0;
   int liczba_linii = Ile_Linii(fp);
   //--------------------------------------------------------------------//
 
@@ -78,23 +99,38 @@ int CzytajZPliku(Tekst_programu * Kod, char * nazwa_pliku) {
   for(int i = 0 ; i < liczba_linii ; i++){
     liczba_znakow = getline(&bufor, &rozmiar_bufora, fp);
 
+    //szybkie wykrycie czy linia nie jest przypadkiem pełna komentarzy albo 
+    //whitespace'u
+    
+    char test = Czy_ominac(bufor, (int)rozmiar_bufora, liczba_znakow);
+
     //sprawdzenie czy to koniec linii kodu i wypełnieni 
     //pól struktur dotyczących linii kodu
-    if((int)liczba_znakow < 0) break;
-    liczba_znakow--;
-    bufor[liczba_znakow] = '\0';
-    Kod->linie[i].numer_linii = i;
-    Kod->linie[i].dlugosc_linii = (int)liczba_znakow;
+    if(test){
+      whitespace_counter++;
+    }
+    else{
+      if((int)liczba_znakow < 0) break;
+      liczba_znakow--;
+      bufor[liczba_znakow] = '\0';
+      Kod->linie[i - whitespace_counter].numer_linii = i - whitespace_counter;
+      Kod->linie[i - whitespace_counter].dlugosc_linii = (int)liczba_znakow;
 
-    //tu można zaalokować miejsce na napis w strukturze Linia_kodu
-    //i skopiować go tam z bufora
-    Kod->linie[i].tekst = (char*)malloc(sizeof(char) * Kod->linie[i].dlugosc_linii);
-    strcpy(Kod->linie[i].tekst, bufor);
+      //tu można zaalokować miejsce na napis w strukturze Linia_kodu
+      //i skopiować go tam z bufora
+      Kod->linie[i - whitespace_counter].tekst = (char*)malloc(sizeof(char) * Kod->linie[i - whitespace_counter].dlugosc_linii);
+      strcpy(Kod->linie[i - whitespace_counter].tekst, bufor);
 
-  //--------------------------------------------------------------------//
-    printf("%s| %d, %d\n", Kod->linie[i].tekst, Kod->linie[i].numer_linii, Kod->linie[i].dlugosc_linii);
+    //--------------------------------------------------------------------//
+      printf("%s| %d, %d\n", Kod->linie[i - whitespace_counter].tekst, Kod->linie[i - whitespace_counter].numer_linii, Kod->linie[i - whitespace_counter].dlugosc_linii);
+    }
 
   }
+
+  //po podliczeniu linii które nie mają żadnego znaczenia 
+  //trzeba zaktualizować liczbę faktycznych linii kodu
+  liczba_linii = liczba_linii - whitespace_counter;
+  Kod->liczba_linii = liczba_linii;
   //--------------------------------------------------------------------//
   //Tutaj można przetworzyć linie tekstu mając już informacje o długości linii oraz  
   //ilości linii 
@@ -138,6 +174,17 @@ int CzytajZPliku(Tekst_programu * Kod, char * nazwa_pliku) {
     memcpy(Kod->linie[i].opcode, &Kod->linie[i].tekst[j], opcode_znaki);
     //--------------------------------------------------------------------//
     //tekst opcode'u zapisany w strukturze
+    
+    if(Kod->linie[i].opcode[opcode_znaki-1] == ':'){
+      Kod->linie[i].typ = 2;
+    }
+    else
+    if(strcmp(Kod->linie[i].opcode, "EQU") == 0){
+      Kod->linie[i].typ = 0;
+    }
+    else{
+      Kod->linie[i].typ = 1;
+    }
 
     k = k + opcode_znaki + 1;
     j = k;
@@ -148,7 +195,7 @@ int CzytajZPliku(Tekst_programu * Kod, char * nazwa_pliku) {
     //--------------------------------------------------------------------//
     //jeśli np rozkaz nie ma operandów to wypisz
     if(j >= Kod->linie[i].dlugosc_linii) {
-      printf("LINIA KODU, %s\n", Kod->linie[i].tekst);
+      printf("LINIA KODU, %s, typu %d\n", Kod->linie[i].tekst, Kod->linie[i].typ);
       //printf("LICZBA ZNAKÓW OPCODE, LICZBA ZNAKÓW OPERANDY, LICZBA OPERANDÓW, TEKST ROZKAZU, J %d, %d, %d, %s, %d\n", opcode_znaki, operand_znaki, liczba_operand, Kod->linie[i].opcode, j);
       //printf("DLUGOSC LINII, %d\n", Kod->linie[i].dlugosc_linii);
       Kod->linie[i].liczba_arg = 0;
@@ -169,7 +216,7 @@ int CzytajZPliku(Tekst_programu * Kod, char * nazwa_pliku) {
         j++;
       }
 
-      printf("LINIA KODU, %s\n", Kod->linie[i].tekst);
+      printf("LINIA KODU, %s, typu %d\n", Kod->linie[i].tekst, Kod->linie[i].typ);
       //printf("LICZBA ZNAKÓW OPCODE, LICZBA ZNAKÓW OPERANDY, LICZBA OPERANDÓW, TEKST ROZKAZU, J %d, %d, %d, %s, %d\n", opcode_znaki, operand_znaki, liczba_operand, Kod->linie[i].opcode, j);
       //printf("DLUGOSC LINII, %d\n", Kod->linie[i].dlugosc_linii);
       //jeśli pętla została przerwana bo koniec linii albo komentarz 
@@ -225,6 +272,28 @@ int CzytajZPliku(Tekst_programu * Kod, char * nazwa_pliku) {
     }
   }
   //--------------------------------------------------------------------//
-
     return 0;
+}
+
+//funkcja która jeśli napotka etykiete zmniejszy indeksy wszystkich następnych instrukcji 
+//żeby etykieta wskazywała nie na puste miejsce ale na kolejną linię kodu
+//Jednocześnie alokowane jest tu miejsce żeby zapisać etykiety do osobnej struktury
+int redukuj_indeksy(Tekst_programu * Kod){
+  int faktyczna_liczba_linii = Kod->liczba_linii;
+  printf("-----------------------------------\n");
+  for(int i = 0 ; i < Kod->liczba_linii ; i++){
+    if(Kod->linie[i].typ == 2){
+      faktyczna_liczba_linii--;
+      for(int j = i+1 ; j < Kod->liczba_linii ; j++){
+        Kod->linie[j].numer_linii--;
+      }
+    }
+    printf("%s| %d, %d\n", Kod->linie[i].tekst, Kod->linie[i].numer_linii, Kod->linie[i].dlugosc_linii);
+  }
+  Kod->faktyczna_liczba_linii = faktyczna_liczba_linii;
+  int liczba_etykiet = faktyczna_liczba_linii - Kod->liczba_linii;
+  //tutaj tworzone jest miejsce na osobne zapisanie etykiet 
+  //pomaga to potem
+  Kod->etykiety = (Etykieta *)malloc(sizeof(Etykieta) * liczba_etykiet);
+  return 0;
 }

@@ -14,6 +14,13 @@
 //1 - instrukcja 
 //2 - etykieta
 
+int Wypisz_kod(Tekst_programu * Kod){
+  for(int i = 0 ; i < Kod->liczba_linii ; i++){
+    printf("");
+  }
+  return 0;
+}
+
 int Ile_Linii(FILE * fp){
   int linie = 0;
   char *bufor;

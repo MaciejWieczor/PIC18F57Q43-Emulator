@@ -1,11 +1,5 @@
-main: main.o asemblator.o
-	gcc -o main main.o asemblator.o -lm
-
-asemblator.o: asemblator.c 
-	gcc -c asemblator.c
-
-main.o: main.c
-	gcc -c main.c
+main: main.cpp asemblator.c parser.cpp procesor.cpp
+	g++ -o main main.cpp asemblator.c parser.cpp procesor.cpp
 
 clean:
-	rm program program.o asemblator.o
+	rm main main.o program.o asemblator.o procesor.o

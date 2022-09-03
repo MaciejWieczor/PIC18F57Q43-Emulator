@@ -13,16 +13,14 @@ int main(){
   int state = 0;
   int request = 0;
   /* I set the clock to 10e9 nanoseconds for debug */
-  int period = 1000000000;
+  int period = 1e9;
   Memory memory;
 
   init_Memory(&code, &memory);
-
-  struct timespec tnow={0,0};
-  clock_gettime(CLOCK_MONOTONIC, &tnow);
+  init_Clock(&code.main_clock);
 
   while(1){
-    if(clk_Pulse(&tnow, period)){
+    if(clk_Pulse(&code.main_clock, period)){
       state = machine_State(state, request, &code, &memory);
     }
   }

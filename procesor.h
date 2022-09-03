@@ -11,7 +11,7 @@
  * returns a pulse
  * @tstart - timespec struct that holds starting time in seconds and nanoseconds
  * @period - long int period in nanoseconds*/
-int clk_Pulse(struct timespec *tstart, int period);
+int clk_Pulse(Clock * clock, int period);
 
 /* The function to determine in which state the mcu is while a new 
 * clock pulse is registered 
@@ -22,6 +22,8 @@ int machine_State(int state, int request, Code * code, Memory * memory);
 
 int init_Memory(Code * code, Memory * memory);
 
-int load_Instruction(Code * code, Memory * memory);
+int init_Clock(Clock * clock);
+
+int fetch_Instruction(Code * code, Memory * memory);
 
 int execute_Instruction(Code * code, Memory * memory);

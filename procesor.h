@@ -16,14 +16,11 @@ int clk_Pulse(Clock * clock, int period);
 /* The function to determine in which state the mcu is while a new 
 * clock pulse is registered 
 * 0 is intruction load, 1 is instruction execute
-* @state - int current state of the mcu
-* @request - int that requests some changes to mcu operation*/
-int machine_State(int state, int request, Code * code, Memory * memory);
+* @code - 
+* @memory - 
+* @bus - */
+void machine_State(Code * code, Memory * memory, Bus * bus);
 
 int init_Memory(Code * code, Memory * memory);
 
 int init_Clock(Clock * clock);
-
-int fetch_Instruction(Code * code, Memory * memory);
-
-int execute_Instruction(Code * code, Memory * memory);

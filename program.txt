@@ -1,6 +1,6 @@
 DATA:
   EQU PEPE 20
-
+START:
 
 
   mov abc, bcd

@@ -9,10 +9,6 @@ using namespace std;
  * @name - string containing the name of the source code file*/
 vector<string> load_Program_Text(string name);
 
-/* A function to remove whitespace from left and right of text 
- * @s - const string with whitespace that needs removing*/
-string trim(const string &s);
-
 /* A function to split whole program code into words
  * @name - the name of the text file to read code from*/
 Code split_Program_Code(string name);

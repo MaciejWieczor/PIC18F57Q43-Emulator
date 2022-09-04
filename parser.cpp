@@ -7,39 +7,30 @@
 
 using namespace std;
 
-// function to load text line by line
-vector<string> load_Program_Text(string name) {
-  vector<string> container;
-  fstream newfile;
-  newfile.open(name, ios::in); //open a file to perform read operation using file object
-   if (newfile.is_open()){   //checking whether the file is open
-      string tp;
-      while(getline(newfile, tp)){ //read data from file object and put it into string.
-        container.push_back(tp);
-      }
-      newfile.close(); //close the file object.
-   }
-  return container;
-}
 
-// function to strip whitespace from line
-const string WHITESPACE = " \n\r\t\f\v";
-string ltrim(const string &s) {
-    size_t start = s.find_first_not_of(WHITESPACE);
+/* 
+ * Static functions to use in other functions 
+ */
+const string whitespace = " \n\r\t\f\v";
+static string ltrim(const string &s) {
+    size_t start = s.find_first_not_of(whitespace);
     return (start == string::npos) ? "" : s.substr(start);
 }
  
-string rtrim(const string &s) {
-    size_t end = s.find_last_not_of(WHITESPACE);
+static string rtrim(const string &s) {
+    size_t end = s.find_last_not_of(whitespace);
     return (end == string::npos) ? "" : s.substr(0, end + 1);
 }
 
-string trim(const string &s) {
+static string trim(const string &s) {
   return rtrim(ltrim(s));
 }
 
+/*
+ * Condition functions
+ */
 /* check if line is only whitespace */
-int whitespace_only(string str) {
+static int whitespace_Only(string str) {
   if(str.find_first_not_of(' ') != string::npos)
   {
     return 1;
@@ -49,11 +40,11 @@ int whitespace_only(string str) {
 }
 
 /* remove comments from string */
-void remove_comments(string * original) {
+static void remove_Comments(string * original) {
   *original = original->substr(0, original->find(";"));
 }
 
-void remove_comma(string * str) {
+static void remove_Comma(string * str) {
   str->erase(std::remove(str->begin(), str->end(), ','), str->end());
 }
 
@@ -70,6 +61,24 @@ Line split_Line(string s_line) {
   return line;
 }
 
+/*
+ * Functions defined in parser.h to be used in the 
+ * main program
+ */
+vector<string> load_Program_Text(string name) {
+  vector<string> container;
+  fstream newfile;
+  newfile.open(name, ios::in); //open a file to perform read operation using file object
+   if (newfile.is_open()){   //checking whether the file is open
+      string tp;
+      while(getline(newfile, tp)){ //read data from file object and put it into string.
+        container.push_back(tp);
+      }
+      newfile.close(); //close the file object.
+   }
+  return container;
+}
+
 Code split_Program_Code(string name) {
   Code word_container;
   /* Load the program text into a vector line by line */
@@ -80,12 +89,12 @@ Code split_Program_Code(string name) {
     /* Remove whitespace from line */
     tmp = trim(line);
     /* Remove comments from line */
-    remove_comments(&tmp);
+    remove_Comments(&tmp);
     /* Check if this line has anything left after removals */
     /* If line is empty just skip it */
-    if(whitespace_only(tmp)) {
+    if(whitespace_Only(tmp)) {
     /* Remove commas */
-    remove_comma(&tmp);
+    remove_Comma(&tmp);
     /* Now split line along spaces */
     /* And save the words vector */
     word_container.lines.push_back(split_Line(tmp));

@@ -5,23 +5,31 @@
 #include "asemblator.h"
 #include "procesor.h"
 
+#define MAIN_CLOCK_PERIOD_NS 1e9
+
+/*
+ * Naming conventions : 
+ * Code - struct (big first letter)
+ * code - variable (small letters)
+ * CODE - define (all big letters)
+ * code_Function_Name - function (camel case)
+ */
+
 int main(){
   Code code = split_Program_Code("program.txt");
   parse_Code(&code);
   print_Program_Code(code);
 
-  int state = 0;
-  int request = 0;
   /* I set the clock to 10e9 nanoseconds for debug */
-  int period = 1e9;
   Memory memory;
+  Bus bus;
 
   init_Memory(&code, &memory);
   init_Clock(&code.main_clock);
 
   while(1){
-    if(clk_Pulse(&code.main_clock, period)){
-      state = machine_State(state, request, &code, &memory);
+    if(clk_Pulse(&code.main_clock, MAIN_CLOCK_PERIOD_NS)){
+      machine_State(&code, &memory, &bus);
     }
   }
 

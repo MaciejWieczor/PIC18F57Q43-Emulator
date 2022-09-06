@@ -2,6 +2,9 @@ DATA:
   EQU PEPE 20
 START:
 
+  goto aaa
+  GoTo aaa
+  movffl a b
 
   mov abc, bcd
   add xd, dx  ;reeee to jest komentarz

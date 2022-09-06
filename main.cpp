@@ -17,15 +17,15 @@
 
 int main(){
   Code code = split_Program_Code("program.txt");
-  parse_Code(&code);
-  print_Program_Code(code);
+  //print_Program_Code(&code);
 
-  /* I set the clock to 10e9 nanoseconds for debug */
+  /* I set the clock to 1e9 nanoseconds for debug */
   Memory memory;
   Bus bus;
 
-  init_Memory(&code, &memory);
+  init_Memory(&code, &memory, &bus);
   init_Clock(&code.main_clock);
+  parse_Code(&code, &memory);
 
   while(1){
     if(clk_Pulse(&code.main_clock, MAIN_CLOCK_PERIOD_NS)){

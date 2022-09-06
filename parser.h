@@ -15,8 +15,16 @@ Code split_Program_Code(string name);
 
 /* Print some data about the split words 
  * @code - Code struct with all parsed data*/
-void print_Program_Code(Code code);
+void print_Program_Code(Code * code);
 
 /* Parse code text to get some metadata and save it 
+ * Mosly resolve labels and switch from variables 
+ * to actual numbers
  * @code - Code struct that needs parsing*/
-void parse_Code(Code * code);
+void parse_Code(Code * code, Memory * memory);
+
+/* Decode parsed lines from words and numbers 
+ * into program memory entity (2-6 bytes lines based 
+ * on the type of instruction)
+ * @code - Parsed code*/
+void decode_Lines(Code * code);

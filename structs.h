@@ -55,6 +55,7 @@ typedef struct Clock {
  * @length - number meaning if instruction is 1, 2 or 3 bytes long*/
 typedef struct Line {
   vector<string> words;
+  int parameter_count;
   int type;
   int number; 
   int length;
@@ -63,8 +64,7 @@ typedef struct Line {
 /* Code structure 
  * @lines - an array of line structures
  * @length - amount of lines in source code
- * @instruction_Cycle - 0-2 values (fetch/exec/exec2)
- * @clock_Cycle - 0-11 values (inc,read memory, latch, decode, execute)
+ * @clock_Cycle - 0-3 values (inc,read memory, latch, decode, execute)
  * @pc_Changed - 0/1 - a flag set if pc was changed (if instruction was 
  *                     a goto or something like that)
  * @current_Line - PC/2 to know which line to load
@@ -72,14 +72,17 @@ typedef struct Line {
  * */
 typedef struct Code {
   vector<Line> lines;
-  vector<u16> decoded_lines;
   int length;
-  u8 instruction_Cycle;
   u8 clock_Cycle;
   u8 pc_Changed;
   u32 current_Line;
   Clock main_clock;
 } Code;
+
+typedef struct Program_Word {
+  u16 program_word;
+  u8 type;
+} Program_Word;
 
 /* Memory structure 
  * @program_counter - 21 bit PC with only even values
@@ -88,6 +91,7 @@ typedef struct Memory {
   union R_21 program_counter;
   union R_16 instruction_register;
   union R_16 instruction_data_latch;
+  vector<Program_Word> program_memory;
 } Memory;
 
 /* Bus structure */

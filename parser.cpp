@@ -5,6 +5,9 @@
 
 #include "parser.h"
 
+#define TYPE_BYTE_FILE    0
+#define TYPE_BYTE_SKIP    1
+
 using namespace std;
 
 
@@ -48,7 +51,7 @@ static void remove_Comma(string * str) {
   str->erase(std::remove(str->begin(), str->end(), ','), str->end());
 }
 
-Line split_Line(string s_line) {
+static Line split_Line(string s_line) {
   Line line;
   stringstream ss(s_line);
   istream_iterator<string> begin(ss);
@@ -59,6 +62,15 @@ Line split_Line(string s_line) {
       line.words.push_back(s);
   }
   return line;
+}
+
+static u8 categorize_Instruction_Length(string opcode) {
+  vector<string> two_byte = {"call", "movff", "goto", "lfsr", "movsf", "movss"};
+  vector<string> three_byte = {"movffl", "movsfl"};
+
+  if (std::find(two_byte.begin(), two_byte.end(), opcode) != two_byte.end()) return 2;
+  else if (std::find(three_byte.begin(), three_byte.end(), opcode) != three_byte.end()) return 3;
+  else return 1;
 }
 
 /*
@@ -103,28 +115,77 @@ Code split_Program_Code(string name) {
   return word_container;
 }
 
-void print_Program_Code(Code code) {
+void print_Program_Code(Code * code) {
   int i = 0;
-  for(Line line : code.lines){
+  for(Line line : code->lines){
     cout << "LINE " << i << ": ";
     i++;
     for(string word : line.words){
       /*here do some prints */
-      cout << word << " | ";
+      cout << word << " - bytes: " << line.length << " | ";
     }
-    cout << "\n";
   }
 }
 
-void parse_Code(Code * code) {
+void parse_Code(Code * code, Memory * memory) {
   int i = 0;
   for(Line line : code->lines){
-    i++;
+    cout << "LINE " << i << ": ";
+    /* Placeholder for some actual decoding */
+
+    /* save amount of parameters used in the instruction */
+    line.parameter_count = line.words.size();
+
+    /*here we save the program code length of an instruction */
+    string str = line.words[0];
+    transform(str.begin(), str.end(), str.begin(),[](unsigned char c){ return tolower(c); });
+    line.length = categorize_Instruction_Length(str);
+
+    /* here we initialize space for an appropriate amount of program memory lines of code */
+    for(int j = 0 ; j < line.length ; j++) {
+      printf("NEW PROGRAM MEMORY LINE %d : %d\n", i, j);
+      Program_Word tmp = {.program_word = 0, .type = 0};
+      memory->program_memory.push_back(tmp);
+    }
+
     for(string word : line.words){
       /*here do some parsing */
+      cout << word << " | ";
     }
+    cout << "\n";
+    i++;
   }
   code->length = i;
 }
-// function to categorize opcodes
-// function to translate vector to struct
+
+/* function to categorize opcodes */
+void decode_Lines(Code * code, Memory * memory) {
+
+  /* Thanks to this we can categorize instructions 
+   * and later at execution call apropriate functions 
+   * for each type - addwf as byte_file for example */
+  /* Byte_file can be further split into three categories by number of 
+   * parameters f,d,a [3]|(f,a | fs,fd)[2] */
+  vector<string> byte_file = {""};
+  /* Byte_skip can be further split into three categories by number of 
+   * parameters f,d,a [3]| f,a [2] */
+  vector<string> byte_skip = {""};
+  /* Bit_file always have three parameters f,b,a */ 
+  vector<string> bit_file = {""};
+  /* Bit_skip always have three parameters f,b,a */ 
+  vector<string> bit_skip = {""};
+  /* Inherent instructions don't have parameters */
+  vector<string> inherent = {""};
+  /* Literals can have either two or one parameters 
+   * fn,k | k */
+  vector<string> literal = {""};
+  /* Control instructions have either one or two parameters 
+   *( n | s | k )[1] | k,s [2] */
+  vector<string> control = {""};
+
+  int i = 0;
+  cout << "DECODING INSTRUCTIONS\n";
+  for(Line line : code->lines){
+    /* Placeholder for some actual decoding */
+  }
+}

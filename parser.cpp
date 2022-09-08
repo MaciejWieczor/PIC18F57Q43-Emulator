@@ -1,3 +1,5 @@
+#include <map>
+#include <iterator>
 #include <fstream>
 #include <algorithm>
 #include <sstream>
@@ -10,6 +12,21 @@
 
 using namespace std;
 
+static map<u8, string> reverse_map(const map<string, u8>& m) {
+    map<u8, string> r;
+    for (const auto& kv : m)
+        r[kv.second] = kv.first;
+    return r;
+}
+
+map<string, u8> opcode_number = {{"addwf", 9},{"addwfc", 8},{"andwf", 5},{"clrf", 53},{"comf", 7},
+                                 {"decf", 1},{"incf", 10},{"iorwf", 4},{"movf", 20},{"movff", 12},
+                                 {"movffl", 6},{"movwf", 55},{"mulwf", 1},{"negf", 54},{"rlcf", 13},
+                                 {"rlncf", 17},{"rrcf", 12},{"rrncf", 16},{"setf", 52},{"subfwb", 21},
+                                 {"subwf", 23},{"subwfb", 22},{"swapf", 14},{"xorwf", 6}
+};
+
+map<u8, string> number_opcode = reverse_map(opcode_number);
 
 /* 
  * Static functions to use in other functions 
@@ -73,10 +90,85 @@ static u8 categorize_Instruction_Length(string opcode) {
   else return 1;
 }
 
-/*
+static u8 resolve_opcode(string opcode) {
+  return 0;
+}
+
+/* --------------------------------------------------------------------------------------------------*/
+/* Here is a big block of functions used to decode each type 
+ * of instruction and fill the Program_Word structure */
+static void byte_file_encode(Line * line, Memory * memory, u8 index) {
+  cout << line->words[0] << " is " << "byte_file type\n";
+  /* Anon union for easier access to parameters */
+  /* defined in structs.h */
+  WORD_UNION p_word;
+  p_word.byte.opcode = resolve_opcode(line->words[0]);
+  p_word.byte.f = stoul(line->words[1]);
+  switch(line->words.size()) {
+      case 2:
+        p_word.byte.d = 1;
+        p_word.byte.a = 1;
+        break;
+      case 3:
+        p_word.byte.d = stoul(line->words[2]);
+        p_word.byte.a = 1;
+        break;
+      case 4:
+        p_word.byte.d = stoul(line->words[2]);
+        p_word.byte.a = stoul(line->words[3]);
+        break;
+      default:
+        cout << "ERROR - WRONG NUMBER OF PARAMETERS IN INSTRUCTION NR. " << line->number;
+    }
+  memory->program_memory[index].program_word = p_word.program_word;
+  memory->program_memory[index].type = BYTE_FILE;
+}
+
+static void byte_file_nw_encode(Line * line, Memory * memory, u8 index) {
+  cout << line->words[0] << " is " << "byte_file_nw type\n";
+  /* Anon union for easier access to parameters */
+  /* defined in structs.h */
+  WORD_UNION p_word;
+  p_word.byte_nw.opcode = resolve_opcode(line->words[0]);
+  p_word.byte_nw.f = stoul(line->words[1]);
+  switch(line->words.size()) {
+      case 2:
+        p_word.byte_nw.a = 1;
+        break;
+      case 3:
+        p_word.byte_nw.a = stoul(line->words[3]);
+        break;
+      default:
+        cout << "ERROR - WRONG NUMBER OF PARAMETERS IN INSTRUCTION NR. " << line->number;
+    }
+  memory->program_memory[index].program_word = p_word.program_word;
+  memory->program_memory[index].type = BYTE_FILE_NW;
+}
+
+static void byte_skip_encode(Line * line, Memory * memory, u8 index) {
+  cout << line->words[0] << " is " << "byte_skip type\n";
+}
+
+static void bit_encode(Line * line, Memory * memory, u8 index) {
+  cout << line->words[0] << " is " << "bit_file type\n";
+}
+
+static void inherent_encode(Line * line, Memory * memory, u8 index) {
+  cout << line->words[0] << " is " << "inherent type\n";
+}
+
+static void control_encode(Line * line, Memory * memory, u8 index) {
+  cout << line->words[0] << " is " << "control type\n";
+}
+
+static void literal_encode(Line * line, Memory * memory, u8 index) {
+  cout << line->words[0] << " is " << "literal type\n";
+}
+
+/* -----------------------------------------------
  * Functions defined in parser.h to be used in the 
  * main program
- */
+ * ---------------------------------------------*/
 vector<string> load_Program_Text(string name) {
   vector<string> container;
   fstream newfile;
@@ -129,22 +221,20 @@ void print_Program_Code(Code * code) {
 
 void parse_Code(Code * code, Memory * memory) {
   int i = 0;
-  for(Line line : code->lines){
+  for(Line &line : code->lines){
     cout << "LINE " << i << ": ";
     /* Placeholder for some actual decoding */
-
-    /* save amount of parameters used in the instruction */
-    line.parameter_count = line.words.size();
 
     /*here we save the program code length of an instruction */
     string str = line.words[0];
     transform(str.begin(), str.end(), str.begin(),[](unsigned char c){ return tolower(c); });
+    line.words[0] = str;
     line.length = categorize_Instruction_Length(str);
 
     /* here we initialize space for an appropriate amount of program memory lines of code */
     for(int j = 0 ; j < line.length ; j++) {
       printf("NEW PROGRAM MEMORY LINE %d : %d\n", i, j);
-      Program_Word tmp = {.program_word = 0, .type = 0};
+      Program_Word tmp = {.program_word = 0, .type = ERROR_TYPE};
       memory->program_memory.push_back(tmp);
     }
 
@@ -166,26 +256,68 @@ void decode_Lines(Code * code, Memory * memory) {
    * for each type - addwf as byte_file for example */
   /* Byte_file can be further split into three categories by number of 
    * parameters f,d,a [3]|(f,a | fs,fd)[2] */
-  vector<string> byte_file = {""};
+  vector<string> byte_file = {"addwf", "addwfc", "andwf", "comf",
+                              "decf", "incf", "iorwf", "movf", "rlcf",
+                              "rlncf", "rrcf", "rrncf", "subfwb", 
+                              "subwf", "subwfb", "swapf", "xorwf"};
+
+  vector<string> byte_file_nw = {"clrf", "movff", "movffl", 
+                                 "movwf", "mulwf", "negwf", "setf"};
+
   /* Byte_skip can be further split into three categories by number of 
    * parameters f,d,a [3]| f,a [2] */
-  vector<string> byte_skip = {""};
-  /* Bit_file always have three parameters f,b,a */ 
-  vector<string> bit_file = {""};
-  /* Bit_skip always have three parameters f,b,a */ 
-  vector<string> bit_skip = {""};
+  vector<string> byte_skip = {"cpfseq", "cpfsgt", "cpfslt", "decfsz", 
+                              "dcfsnz", "incfsz", "infsnz", "tstfsz"};
+
+  /* Bit type always has three parameters f,b,a */ 
+  vector<string> bit_file = {"bcf", "bsf", "btg", "btfsc", "btfss"};
+
   /* Inherent instructions don't have parameters */
-  vector<string> inherent = {""};
+  vector<string> inherent = {"clrwdt", "daw", "nop", "pop", "push",
+                             "reset", "sleep"};
   /* Literals can have either two or one parameters 
    * fn,k | k */
-  vector<string> literal = {""};
+  vector<string> literal = {"addfsr", "addlw", "andlw", "iorlw",
+                            "lfsr", "movlb", "movlw", "mullw",
+                            "retlw", "subfsr", "sublw", "xorlw"};
   /* Control instructions have either one or two parameters 
    *( n | s | k )[1] | k,s [2] */
-  vector<string> control = {""};
+  vector<string> control = {"bc", "bn", "bnc", "bnn", "bnov",
+                            "bnz", "bov", "bra", "bz", "call",
+                            "callw", "goto", "rcall", "retfie",
+                            "retlw", "return"};
 
   int i = 0;
-  cout << "DECODING INSTRUCTIONS\n";
-  for(Line line : code->lines){
+
+  printf("DECODING INSTRUCTIONS\n");
+  for(Line &line : code->lines){
     /* Placeholder for some actual decoding */
+    cout << "PROGRAM CODE INDEX " << i << " - LEN " << line.length << " - OPCODE " << line.words[0] << "\n";
+
+    /* Call apropriate function based on instruction type */
+    if (std::find(byte_file.begin(), byte_file.end(), line.words[0]) != byte_file.end()) 
+      byte_file_encode(&line, memory, i);
+
+    if (std::find(byte_file_nw.begin(), byte_file_nw.end(), line.words[0]) != byte_file_nw.end()) 
+      byte_file_nw_encode(&line, memory, i);
+      
+    if (std::find(byte_skip.begin(), byte_skip.end(), line.words[0]) != byte_skip.end()) 
+      byte_skip_encode(&line, memory, i);
+
+    if (std::find(bit_file.begin(), bit_file.end(), line.words[0]) != bit_file.end()) 
+      bit_encode(&line, memory, i);
+      
+    if (std::find(inherent.begin(), inherent.end(), line.words[0]) != inherent.end()) 
+      inherent_encode(&line, memory, i);
+
+    if (std::find(control.begin(), control.end(), line.words[0]) != control.end()) 
+      control_encode(&line, memory, i);
+
+    if (std::find(literal.begin(), literal.end(), line.words[0]) != literal.end()) 
+      literal_encode(&line, memory, i);
+
+    /* Increment index (i) by the amount of words it will take in the 
+     * program memory */
+    i += line.length;
   }
 }

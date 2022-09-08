@@ -1,15 +1,18 @@
-DATA:
-  EQU PEPE 20
-START:
-
-  goto aaa
-  GoTo aaa
-  movffl a b
-
-  mov abc, bcd
-  add xd, dx  ;reeee to jest komentarz
-  sub aha, cd
-  cjne #0, 21, REEEE
-ETYKIETA:
-  nop
-  addlw #90
+;DATA:
+;  EQU PEPE 20
+;START:
+;
+;  goto 99
+;  GoTo 128
+;  movffl 15, 31
+;
+  movf 111, 0
+  movf 111, 0, 1
+  movf 111
+  movf 111
+;  addlw 69  ;reeee to jest komentarz
+;  subwf 31
+;  tstfsz 1
+;ETYKIETA:
+;  nop
+;  addlw 90

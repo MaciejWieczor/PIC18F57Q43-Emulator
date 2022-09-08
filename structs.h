@@ -17,6 +17,108 @@ typedef signed short s16;
 typedef signed int s32;
 typedef signed long s64;
 
+enum instruction_type {
+  ERROR_TYPE,
+  BYTE_FILE, 
+  BYTE_FILE_NW, 
+  BYTE_SKIP, 
+  BIT, 
+  INHERENT, 
+  BRA_COND, 
+  BRA_UNCOND, 
+  RET, 
+  CALL, 
+  GOTOI, 
+  CALL_GOTO_ND,
+  LITERAL,
+  LITERAL_FSR,
+  LFSR_ST,
+  LFSR_ND
+};
+
+union WORD_UNION {
+
+  u16 program_word;
+
+  struct {
+    u8 opcode : 6;
+    u8 d : 1;
+    u8 a : 1;
+    u8 f : 8;
+  } byte;
+
+  struct {
+    u8 opcode : 7;
+    u8 a : 1;
+    u8 f : 8;
+  } byte_nw;
+
+  struct {
+    /* For nop just set msb to 0xFX or 0x0X*/
+    u8 msb : 8;
+    u8 lsb : 8;
+  } inherent;
+
+  struct {
+    u8 opcode : 8;
+    u8 n : 8;
+  } bra_cond;
+  /* For BRA and RCALL */
+  struct {
+    u8 opcode : 5;
+    u16 n : 11;
+  } bra_uncond;
+  /* For RETURN i RETFIE */
+  struct {
+    u16 opcode : 15;
+    u8 s : 1;
+  } ret;
+  struct {
+    u8 opcode : 7;
+    u8 s : 1;
+    u8 k : 7;
+  } call;
+  struct {
+    u8 opcode : 8;
+    u8 k : 8;
+  } gotoi;
+  struct {
+    u8 opcode : 4;
+    u16 k : 12;
+  } call_goto_nd;
+
+  struct {
+    u8 opcode : 4;
+    u8 b : 3;
+    u8 a : 1;
+    u8 f : 8;
+  } bit;
+
+  /* Literal formats defined */
+  struct {
+    u8 opcode : 8;
+    u8 k : 8;
+  } literal;
+
+  struct {
+    u8 opcode : 8;
+    u8 f : 2;
+    u8 k : 6;
+  } literal_fsr;
+
+  struct {
+    u8 opcode : 8;
+    u8 zeros : 2;
+    u8 fn : 2;
+    u8 k : 4;
+  } lfsr_st;
+  struct {
+    u8 opcode : 4;
+    u8 zeros : 2;
+    u16 k : 10;
+  } lfsr_nd;
+};
+
 /* Union type to abstract a 21 bit register
  * that is in reality three 8 bit registers 
  * combined - sometimes byte access is locked
@@ -79,9 +181,13 @@ typedef struct Code {
   Clock main_clock;
 } Code;
 
+/* Program_word structure 
+ * @program_word - a massive union to help access bit fields
+ * @type - defines what type of instruction we're dealing with
+ * */
 typedef struct Program_Word {
   u16 program_word;
-  u8 type;
+  enum instruction_type type;
 } Program_Word;
 
 /* Memory structure 

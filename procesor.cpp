@@ -21,6 +21,7 @@ static int fetch_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock) 
     case CLOCK_PC_INC_LATCH_IR:
       memory->program_counter.DATA += 2;
       code->current_Line = memory->program_counter.DATA / 2;
+      cout << "SETTING PC AT " << memory->program_counter.DATA << "\n";
       break;
 
     case CLOCK_PC_INC_DECODE:
@@ -105,11 +106,10 @@ void machine_State(Code * code, Memory * memory, Bus * bus) {
   /* Possible states are instruction load and 
     * instruction execute */
   // PRINTS FOR DEBUG
-  printf("PC %d | CLOCK %d \n", memory->program_counter.DATA, code->clock_Cycle);
-  printf("CURRENTLY LOADED INSTRUCTION CODE : %X\n", memory->instruction_register.DATA);
 
-  int ERR;
-
+  cout << "CLOCK : " << code->clock_Cycle << "\n";
+  printf("CLOCK %d\n", code->clock_Cycle);
+  printf("INSTRUCTION CODED %d\n", memory->program_memory[code->current_Line].program_word);
   fetch_Instruction(code, memory, bus, code->clock_Cycle);
   execute_Instruction(code, memory, bus, code->clock_Cycle);
   code->clock_Cycle++;

@@ -27,4 +27,4 @@ void parse_Code(Code * code, Memory * memory);
  * into program memory entity (2-6 bytes lines based 
  * on the type of instruction)
  * @code - Parsed code*/
-void decode_Lines(Code * code, Memory * memory);
+void decode_Lines(Code * code, Memory * memory, Bus * bus);

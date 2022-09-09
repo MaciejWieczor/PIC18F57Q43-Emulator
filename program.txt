@@ -7,7 +7,7 @@
 ;  movffl 15, 31
 ;
   movf 111, 0
-  movf 111, 0, 1
+  movf 111, 0, 0
   movf 111
   movf 111
 ;  addlw 69  ;reeee to jest komentarz

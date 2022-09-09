@@ -26,7 +26,7 @@ int main(){
   init_Memory(&code, &memory, &bus);
   init_Clock(&code.main_clock);
   parse_Code(&code, &memory);
-  decode_Lines(&code, &memory);
+  decode_Lines(&code, &memory, &bus);
 
   cout << "PROGRAM MEMORY SIZE : " << memory.program_memory.size() << "\n";
 

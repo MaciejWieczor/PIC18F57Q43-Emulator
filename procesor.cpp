@@ -23,7 +23,6 @@ static int fetch_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock) 
       code->current_Line = memory->program_counter.DATA / 2;
       cout << "SETTING PC AT " << memory->program_counter.DATA << "\n";
       break;
-
     case CLOCK_PC_INC_DECODE:
       break;
 
@@ -51,7 +50,11 @@ static int execute_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock
   switch(code->clock_Cycle) {
 
     case CLOCK_PC_INC_LATCH_IR:
+      WORD_UNION tmp;
       memory->instruction_register.DATA = read_Instruction_Bus(code, memory, bus);
+      tmp.program_word = memory->instruction_register.DATA;
+      printf("INSTRUCTION CODED %d | OPCODE %d, F %d, D %d, A %d\n", memory->instruction_register.DATA, 
+                                                  tmp.byte.opcode, tmp.byte.f, tmp.byte.d, tmp.byte.a);
       break;
 
     case CLOCK_PC_INC_DECODE:
@@ -107,9 +110,7 @@ void machine_State(Code * code, Memory * memory, Bus * bus) {
     * instruction execute */
   // PRINTS FOR DEBUG
 
-  cout << "CLOCK : " << code->clock_Cycle << "\n";
   printf("CLOCK %d\n", code->clock_Cycle);
-  printf("INSTRUCTION CODED %d\n", memory->program_memory[code->current_Line].program_word);
   fetch_Instruction(code, memory, bus, code->clock_Cycle);
   execute_Instruction(code, memory, bus, code->clock_Cycle);
   code->clock_Cycle++;

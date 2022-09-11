@@ -37,7 +37,6 @@ enum instruction_type {
 };
 
 union WORD_UNION {
-
   u16 program_word;
 
   struct {
@@ -140,6 +139,18 @@ union R_16 {
   };
 };
 
+typedef struct Memory_Bank {
+  u8 data[256];
+} Memory_Bank;
+
+typedef struct Access_Bank {
+  u8* data[256];
+} Access_Bank;
+
+typedef struct RAM {
+  Memory_Bank bank[37];
+} RAM;
+
 /* Clock structure 
  * @tnow - timespec of when the clock was turned on
  * @period - clock period in nanoseconds
@@ -195,14 +206,24 @@ typedef struct Program_Word {
  *                    pointing to instruction address*/
 typedef struct Memory {
   union R_21 program_counter;
-  union R_16 instruction_register;
-  union R_16 instruction_data_latch;
+  Program_Word instruction_register;
+  Program_Word instruction_data_latch;
+  u8 wreg;
+
+  union R_16 file_select_register[3];
+  union R_16 indirect_file_register[3];
+  union R_16 ram_address;
+  u8 bank_select_register;
+  Access_Bank access_bank;
+
+  RAM ram;
+
   vector<Program_Word> program_memory;
 } Memory;
 
 /* Bus structure */
 typedef struct Bus {
-  u16 instruction_Bus;
+  Program_Word instruction_Bus;
   u16 data_Bus;
 } Bus;
 

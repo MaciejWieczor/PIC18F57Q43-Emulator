@@ -8,8 +8,23 @@
 #define CLOCK_ADDRESS_PROCESS       2
 #define CLOCK_LATCH_WRITE           3
 
-static u16 read_Instruction_Bus(Code * code, Memory * memory, Bus * bus) {
+static Program_Word read_Instruction_Bus(Code * code, Memory * memory, Bus * bus) {
   return bus->instruction_Bus; 
+}
+
+/* Here we need to check the file parameter of the instruction 
+ * and resolve it to an actual address that we access in the next step */
+static void decode_memory(Memory * memory) {
+}
+
+/* Here we change the values of registers according to the opcode 
+ * and the parameters */
+static void execute_instruction(Memory * memory) {
+}
+
+/* Here we take the value that we got from the operation and we save 
+ * it back either to f or to WREG */
+static void write_to_memory(Memory * memory) {
 }
 
 static int fetch_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock) {
@@ -23,17 +38,18 @@ static int fetch_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock) 
       code->current_Line = memory->program_counter.DATA / 2;
       cout << "SETTING PC AT " << memory->program_counter.DATA << "\n";
       break;
+
     case CLOCK_PC_INC_DECODE:
       break;
 
     case CLOCK_ADDRESS_PROCESS:
       /* The instruction is latched into the data latch after program memory */
-      memory->instruction_data_latch.DATA = memory->program_memory[code->current_Line].program_word;
+      memory->instruction_data_latch = memory->program_memory[code->current_Line];
       break;
 
     case CLOCK_LATCH_WRITE:
       /* Data latch outputs the instruction onto the bus */
-      bus->instruction_Bus = memory->instruction_data_latch.DATA;
+      bus->instruction_Bus = memory->instruction_data_latch;
       break;
 
     default:
@@ -50,20 +66,26 @@ static int execute_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock
   switch(code->clock_Cycle) {
 
     case CLOCK_PC_INC_LATCH_IR:
+      Program_Word tmp_p;
       WORD_UNION tmp;
-      memory->instruction_register.DATA = read_Instruction_Bus(code, memory, bus);
-      tmp.program_word = memory->instruction_register.DATA;
-      printf("INSTRUCTION CODED %d | OPCODE %d, F %d, D %d, A %d\n", memory->instruction_register.DATA, 
-                                                  tmp.byte.opcode, tmp.byte.f, tmp.byte.d, tmp.byte.a);
+      memory->instruction_register = read_Instruction_Bus(code, memory, bus);
+      tmp_p = memory->instruction_register;
+      tmp.program_word = tmp_p.program_word;
+      printf("LOADING INSTRUCTION INTO IR\n");
+      printf("INSTRUCTION CODED %d | OPCODE %d, F %d, D %d, A %d | TYPE %d\n", memory->instruction_register.program_word, 
+                                                  tmp.byte.opcode, tmp.byte.f, tmp.byte.d, tmp.byte.a, tmp_p.type);
       break;
 
     case CLOCK_PC_INC_DECODE:
+      decode_memory(memory);
       break;
 
     case CLOCK_ADDRESS_PROCESS:
+      execute_instruction(memory);
       break;
 
     case CLOCK_LATCH_WRITE:
+      write_to_memory(memory);
       break;
 
     default:
@@ -89,13 +111,26 @@ int clk_Pulse(Clock * clock, int period) {
 
 int init_Memory(Code * code, Memory * memory, Bus * bus) {
   memory->program_counter.DATA = 0;
-  memory->instruction_register.DATA = 0;
+  memory->instruction_register.program_word = 0;
+  memory->bank_select_register = 0;
+  memory->ram_address.DATA = 0;
 
-  bus->instruction_Bus = 0;
+  bus->instruction_Bus = {.program_word = 0, .type = ERROR_TYPE};
   bus->data_Bus = 0;
 
   code->current_Line = memory->program_counter.DATA / 2;
   code->clock_Cycle = 0;
+
+  /* Init virtual access bank */
+  for(int i = 0 ; i < 256 ; i++) {
+    if( i < 96 ) {
+      memory->access_bank.data[i] = &memory->ram.bank[5].data[i];
+    }
+    else {
+      memory->access_bank.data[i] = &memory->ram.bank[4].data[i];
+    }
+  }
+
   return 0;
 }
 

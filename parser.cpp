@@ -23,8 +23,8 @@ map<string, u8> opcode_number = {{"addwf", 9},{"addwfc", 8},{"andwf", 5},{"clrf"
                                  {"decf", 1},{"incf", 10},{"iorwf", 4},{"movf", 20},{"movff", 12},
                                  {"movffl", 6},{"movwf", 55},{"mulwf", 1},{"negf", 54},{"rlcf", 13},
                                  {"rlncf", 17},{"rrcf", 12},{"rrncf", 16},{"setf", 52},{"subfwb", 21},
-                                 {"subwf", 23},{"subwfb", 22},{"swapf", 14},{"xorwf", 6}
-};
+                                 {"subwf", 23},{"subwfb", 22},{"swapf", 14},{"xorwf", 6}};
+
 map<u8, string> number_opcode = reverse_map(opcode_number);
 
 /* 
@@ -329,6 +329,6 @@ void decode_Lines(Code * code, Memory * memory, Bus * bus) {
   }
 
   /* Some post initialization */
-  bus->instruction_Bus = memory->program_memory[0].program_word;
+  bus->instruction_Bus = memory->program_memory[0];
 
 }

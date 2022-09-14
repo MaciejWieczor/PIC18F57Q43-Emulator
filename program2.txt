@@ -1,0 +1,75 @@
+Disassembly Listing for C_compile_test
+Generated From:
+/home/maciej/MPLABXProjects/C_compile_test.X/dist/default/production/C_compile_test.X.production.elf
+2022-09-12 22:19:10
+
+---  /tmp/xcXdEDAKH.s  ----------------------------------------------------------------------------------
+1FFAC  0100     MOVLB 0x0
+1FFAE  EFD9     GOTO 0x1FFB2
+---  /home/maciej/MPLABXProjects/C_compile_test.X/newmain.c  --------------------------------------------
+1:             /*
+2:              * File:   newmain.c
+3:              * Author: maciej
+4:              *
+5:              * Created on 7 sierpnia 2022, 11:04
+6:              */
+7:             
+8:             #define _XTAL_FREQ 8000000UL
+9:             
+10:            #include <xc.h>
+11:            
+12:            void main(void) {
+1FFB2  80C7     BSF 0xFC7, 0, ACCESS
+13:                
+14:            TRISB0 = 1;
+15:            TRISB1 = 0;
+1FFB4  92C7     BCF 0xFC7, 1, ACCESS
+16:                
+17:            while(1)
+1FFB6  A0CF     BTFSS 0xFCF, 0, ACCESS
+1FFB8  EFE0     GOTO 0x1FFC0
+1FFBA  F0FF     NOP
+1FFBC  EFE2     GOTO 0x1FFC4
+1FFBE  F0FF     NOP
+1FFC0  EFDB     GOTO 0x1FFB6
+1FFC2  F0FF     NOP
+18:            {
+19:               if(RB0 == 1)
+20:               {
+21:                  // If the button is pressed, flash the LED twice/second.
+22:                  RB1 = 1;
+1FFC4  82CF     BSF 0xFCF, 1, ACCESS
+23:                  __delay_ms(250);
+1FFC6  0E03     MOVLW 0x3
+1FFC8  6E02     MOVWF 0x2, ACCESS
+1FFCA  0E8A     MOVLW 0x8A
+1FFCC  6E01     MOVWF 0x1, ACCESS
+1FFCE  0E56     MOVLW 0x56
+1FFD0  2EE8     DECFSZ 0xFE8, F, ACCESS
+1FFD2  D7FE     BRA 0xFFD0
+1FFD4  2E01     DECFSZ 0x1, F, ACCESS
+1FFD6  D7FC     BRA 0xFFD0
+1FFD8  2E02     DECFSZ 0x2, F, ACCESS
+1FFDA  D7FA     BRA 0xFFD0
+24:                  RB1 = 0;
+1FFDC  92CF     BCF 0xFCF, 1, ACCESS
+25:                  __delay_ms(250);
+1FFDE  0E03     MOVLW 0x3
+1FFE0  6E02     MOVWF 0x2, ACCESS
+1FFE2  0E8A     MOVLW 0x8A
+1FFE4  6E01     MOVWF 0x1, ACCESS
+1FFE6  0E56     MOVLW 0x56
+1FFE8  2EE8     DECFSZ 0xFE8, F, ACCESS
+1FFEA  D7FE     BRA 0xFFE8
+1FFEC  2E01     DECFSZ 0x1, F, ACCESS
+1FFEE  D7FC     BRA 0xFFE8
+1FFF0  2E02     DECFSZ 0x2, F, ACCESS
+1FFF2  D7FA     BRA 0xFFE8
+1FFF4  EFDB     GOTO 0x1FFB6
+1FFF6  F0FF     NOP
+1FFF8  EFFE     GOTO 0x1FFFC
+1FFFA  F0FF     NOP
+26:               }
+27:            }
+28:                return;
+29:            }

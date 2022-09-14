@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <sstream>
 #include <iterator>
+#include <regex>
 
 #include "parser.h"
 
@@ -19,13 +20,44 @@ static map<u8, string> reverse_map(const map<string, u8>& m) {
     return r;
 }
 
-map<string, u8> opcode_number = {{"addwf", 9},{"addwfc", 8},{"andwf", 5},{"clrf", 53},{"comf", 7},
-                                 {"decf", 1},{"incf", 10},{"iorwf", 4},{"movf", 20},{"movff", 12},
-                                 {"movffl", 6},{"movwf", 55},{"mulwf", 1},{"negf", 54},{"rlcf", 13},
-                                 {"rlncf", 17},{"rrcf", 12},{"rrncf", 16},{"setf", 52},{"subfwb", 21},
-                                 {"subwf", 23},{"subwfb", 22},{"swapf", 14},{"xorwf", 6}};
 
-map<u8, string> number_opcode = reverse_map(opcode_number);
+/*
+ * Below I am mapping the opcode strings to numbers 
+ * I also group them by the amount of bits they occupy 
+ * in the coded instruction so that later it's easier to 
+ * differentiate between instructions with the same actual 
+ * value of the opcode
+ * */
+map<string, u8> opcode4_number = {{"movffl", 6},{"btg", 7},{"bsf", 8},{"bcf", 9},
+                                  {"btfss", 10},{"btfsc", 11},{"movff", 12}};
+
+map<string, u8> opcode5_number = {{"bra", 26},{"rcall", 27}};
+
+map<string, u8> opcode6_number = {{"addwf", 9},{"addwfc", 8},{"andwf", 5},{"comf", 7},
+                                 {"decf", 1},{"incf", 10},{"iorwf", 4},{"movf", 20},{"rlcf", 13},
+                                 {"rlncf", 17},{"rrcf", 12},{"rrncf", 16},{"subfwb", 21},
+                                 {"subwf", 23},{"subwfb", 22},{"swapf", 14},{"xorwf", 6},
+                                 {"decfsz", 11},{"dcfsnz", 19},{"incfsz", 15},{"infsnz", 18}};
+
+map<string, u8> opcode7_number = {{"clrf", 53},{"movwf", 55},{"mulwf", 1},{"negf", 54},{"setf", 52},
+                                  {"cpfseq", 49},{"cpfsgt", 50},{"cpfslt", 48},{"tstfsz", 51},
+                                  {"call", 118},{"retfie", 8},{"return", 9}};
+
+map<string, u8> opcode8_number = {{"bc", 226},{"bn", 230},{"bnc", 227},{"bnn", 231},
+                                 {"bnov", 229},{"bnz", 225},{"bov", 228},{"bz", 224},{"callw", 20},
+                                 {"goto", 239},{"retlw", 12},{"clrwdt", 4},
+                                 {"daw", 7},{"pop", 6},{"push", 5},{"reset", 255},
+                                 {"sleep", 3},
+                                 {"addfsr", 232},{"addlw", 15},{"andlw", 11},
+                                 {"iorlw", 9},{"lfsr", 238},{"movlb", 1},{"movlw", 14},
+                                 {"mullw", 13},{"retlw", 12},{"subfsr", 233},{"sublw", 8}};
+
+map<u8, string> number_opcode7 = reverse_map(opcode7_number);
+map<u8, string> number_opcode6 = reverse_map(opcode6_number);
+map<u8, string> number_opcode5 = reverse_map(opcode5_number);
+map<u8, string> number_opcode4 = reverse_map(opcode4_number);
+map<u8, string> number_opcode8 = reverse_map(opcode8_number);
+
 
 /* 
  * Static functions to use in other functions 
@@ -61,6 +93,14 @@ static int whitespace_Only(string str) {
 /* remove comments from string */
 static void remove_Comments(string * original) {
   *original = original->substr(0, original->find(";"));
+  *original = original->substr(0, original->find("---"));
+}
+
+static void save_C_Line(string * original) {
+    if(regex_match(*original, regex("^[0-9]+:(.*)"))) {
+    printf("FOUND C LINE\n");
+    *original = "";
+  }
 }
 
 static void remove_Comma(string * str) {
@@ -77,6 +117,13 @@ static Line split_Line(string s_line) {
   for (string s: tokens) {
       line.words.push_back(s);
   }
+
+  string tmp = "0x" + line.words[0];
+  line.address = stoul(tmp, NULL, 16);
+  /* Delete the first two string as they are the address 
+   * which we save just above and the code which we don't need */
+  line.words.erase(line.words.begin(), line.words.begin() + 2);
+
   return line;
 }
 
@@ -92,29 +139,37 @@ static u8 categorize_Instruction_Length(string opcode) {
 /* --------------------------------------------------------------------------------------------------*/
 /* Here is a big block of functions used to decode each type 
  * of instruction and fill the Program_Word structure */
+/* Each function accesses the opcode - number maps based on the category 
+ * that each instruction belongs to (it depends on the structure of parameters, 
+ * their length, etc.) Some opcode numbers occur in the instruction set more than 
+ * once so there is a need to categorize - for example 
+ * byte oriented instrucions have a 6 bit opcode, then d and a parameters and a 
+ * register address but there are instructions that access a register but 
+ * have a hardcoded d parameter. In that case the opcode is 7 bit long and it 
+ * is categorized separately. Some instructions like BRA need to be 
+ * separately coded because they have a different length of the opcode (5 bits) and 
+ * they carry an address to jump to. To avoid the problems of coding a jump address 
+ * in two separate program words we just assign it an additional field in the program 
+ * word structure. If an instruction needs to jump it has its argument right there to 
+ * write to the program counter - and of course execute the next instruction as a NOP */
 static void byte_file_encode(Line * line, Memory * memory, u8 index) {
   cout << line->words[0] << " is " << "byte_file type\n";
   /* Anon union for easier access to parameters */
   /* defined in structs.h */
   WORD_UNION p_word;
-  p_word.byte.opcode = opcode_number.find(line->words[0])->second;
-  p_word.byte.f = stoul(line->words[1]);
-  switch(line->words.size()) {
-      case 2:
-        p_word.byte.d = 1;
-        p_word.byte.a = 1;
-        break;
-      case 3:
-        p_word.byte.d = stoul(line->words[2]);
-        p_word.byte.a = 1;
-        break;
-      case 4:
-        p_word.byte.d = stoul(line->words[2]);
-        p_word.byte.a = stoul(line->words[3]);
-        break;
-      default:
-        cout << "ERROR - WRONG NUMBER OF PARAMETERS IN INSTRUCTION NR. " << line->number;
-    }
+  p_word.byte.opcode = opcode6_number.find(line->words[0])->second;
+  p_word.byte.f = stoul(line->words[1], NULL, 16);
+
+        if(line->words[2] == "F")
+          p_word.byte.d = 1; /* Default */
+        else
+          p_word.byte.d = 0;
+
+        if(line->words[3] == "ACCESS")
+          p_word.byte.a = 0;
+        else
+          p_word.byte.a = 1; /* Default */
+
   memory->program_memory[index].program_word = p_word.program_word;
   memory->program_memory[index].type = BYTE_FILE;
 }
@@ -124,18 +179,15 @@ static void byte_file_nw_encode(Line * line, Memory * memory, u8 index) {
   /* Anon union for easier access to parameters */
   /* defined in structs.h */
   WORD_UNION p_word;
-  p_word.byte_nw.opcode = opcode_number.find(line->words[0])->second;
-  p_word.byte_nw.f = stoul(line->words[1]);
-  switch(line->words.size()) {
-      case 2:
-        p_word.byte_nw.a = 1;
-        break;
-      case 3:
-        p_word.byte_nw.a = stoul(line->words[3]);
-        break;
-      default:
-        cout << "ERROR - WRONG NUMBER OF PARAMETERS IN INSTRUCTION NR. " << line->number;
-    }
+  p_word.byte_nw.opcode = opcode7_number.find(line->words[0])->second;
+  p_word.byte_nw.f = stoul(line->words[1], NULL, 16);
+
+        if(line->words[2] == "ACCESS")
+          p_word.byte_nw.a = 0;
+        else
+          p_word.byte_nw.a = 1; /* Default */
+
+  printf("ENCODED : opcode %d a %d f %d\n", p_word.byte_nw.opcode, p_word.byte_nw.a, p_word.byte_nw.f);
   memory->program_memory[index].program_word = p_word.program_word;
   memory->program_memory[index].type = BYTE_FILE_NW;
 }
@@ -143,20 +195,16 @@ static void byte_file_nw_encode(Line * line, Memory * memory, u8 index) {
 static void bit_encode(Line * line, Memory * memory, u8 index) {
   cout << line->words[0] << " is " << "bit_file type\n";
   WORD_UNION p_word;
-  p_word.bit.opcode = opcode_number.find(line->words[0])->second;
-  p_word.bit.f = stoul(line->words[1]);
-  switch(line->words.size()) {
-      case 2:
-        p_word.bit.b = stoul(line->words[2]);
-        p_word.bit.a = 1;
-        break;
-      case 3:
-        p_word.bit.b = stoul(line->words[2]);
-        p_word.bit.a = stoul(line->words[3]);
-        break;
-      default:
-        cout << "ERROR - WRONG NUMBER OF PARAMETERS IN INSTRUCTION NR. " << line->number;
-    }
+  p_word.bit.opcode = opcode4_number.find(line->words[0])->second;
+  p_word.bit.f = stoul(line->words[1], NULL, 16);
+  p_word.bit.b = stoul(line->words[2], NULL, 16);
+
+        if(line->words[3] == "ACCESS")
+          p_word.bit.a = 0;
+        else
+          p_word.bit.a = 1; /* Default */
+
+  printf("ENCODED : opcode %d b %d a %d f %d\n", p_word.bit.opcode, p_word.bit.b, p_word.bit.a, p_word.bit.f);
   memory->program_memory[index].program_word = p_word.program_word;
   memory->program_memory[index].type = BIT;
 }
@@ -196,21 +244,34 @@ Code split_Program_Code(string name) {
   /* Load the program text into a vector line by line */
   vector<string> lines = load_Program_Text(name);
   /* Go line by line and do string parsing */
+  int i = 0;
+  int j = 0;
+  int offset = 0;
   for(string line : lines){
-    string tmp;
-    /* Remove whitespace from line */
-    tmp = trim(line);
-    /* Remove comments from line */
-    remove_Comments(&tmp);
-    /* Check if this line has anything left after removals */
-    /* If line is empty just skip it */
-    if(whitespace_Only(tmp)) {
-    /* Remove commas */
-    remove_Comma(&tmp);
-    /* Now split line along spaces */
-    /* And save the words vector */
-    word_container.lines.push_back(split_Line(tmp));
+    /* Get current index */
+    if(i > 3) {
+      string tmp;
+      /* Remove whitespace from line */
+      tmp = trim(line);
+      /* Find and remove C line */
+      save_C_Line(&tmp);
+      /* Remove comments from line */
+      remove_Comments(&tmp);
+      /* Check if this line has anything left after removals */
+      /* If line is empty just skip it */
+      if(whitespace_Only(tmp)) {
+        /* Remove commas */
+        remove_Comma(&tmp);
+        /* Now split line along spaces */
+        /* And save the words vector */
+        word_container.lines.push_back(split_Line(tmp));
+        if( word_container.lines.size() == 1 )
+          word_container.base_address = word_container.lines[0].address;
+        word_container.lines[j].index = j;
+        j++;
+      }
     }
+    i++;
   }
   return word_container;
 }
@@ -241,13 +302,8 @@ void parse_Code(Code * code, Memory * memory) {
     /* here we initialize space for an appropriate amount of program memory lines of code */
     for(int j = 0 ; j < line.length ; j++) {
       printf("NEW PROGRAM MEMORY LINE %d : %d\n", i, j);
-      Program_Word tmp = {.program_word = 0, .type = ERROR_TYPE};
-      memory->program_memory.push_back(tmp);
-    }
-
-    /* Some tmp padding */
-    for(int j = 0 ; j < 100 ; j++) {
-      Program_Word tmp = {.program_word = 0, .type = ERROR_TYPE};
+      Program_Word tmp = {.program_word = 0, .type = ERROR_TYPE, 
+                          .address = line.address, .index = line.index, .jump_address = code->base_address};
       memory->program_memory.push_back(tmp);
     }
 
@@ -259,6 +315,10 @@ void parse_Code(Code * code, Memory * memory) {
     i++;
   }
   code->length = i;
+  for(i = 0 ; i < 10 ; i++) {
+      Program_Word tmp = {.program_word = 0, .type = ERROR_TYPE};
+      memory->program_memory.push_back(tmp);
+  }
 }
 
 /* function to categorize opcodes */
@@ -302,7 +362,9 @@ void decode_Lines(Code * code, Memory * memory, Bus * bus) {
   printf("DECODING INSTRUCTIONS\n");
   for(Line &line : code->lines){
     /* Placeholder for some actual decoding */
-    cout << "PROGRAM CODE INDEX " << i << " - LEN " << line.length << " - OPCODE " << line.words[0] << "\n";
+    cout << "PROGRAM CODE INDEX " << line.index << " - LEN ";
+    cout << line.length << " - OPCODE " << line.words[0] << " - ADDRESS " << line.address << " - ";
+    cout << "PROGRAM MEM INDEX " << i <<"\n";
 
     /* Call apropriate function based on instruction type */
     if (std::find(byte_file.begin(), byte_file.end(), line.words[0]) != byte_file.end()) 

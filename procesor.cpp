@@ -14,17 +14,36 @@ static Program_Word read_Instruction_Bus(Code * code, Memory * memory, Bus * bus
 
 /* Here we need to check the file parameter of the instruction 
  * and resolve it to an actual address that we access in the next step */
-static void decode_memory(Memory * memory) {
+static void decode_memory(Memory * memory, Code * code) {
+      Program_Word tmp_p;
+      WORD_UNION tmp;
+      tmp_p = memory->instruction_register;
+      tmp.program_word = tmp_p.program_word;
+      printf("DECODING - INSTRUCTION %s | OPCODE %d, F %d, A %d | TYPE %d | INDEX %d | PROGRAM MEM INDEX %d\n",
+                                                  code->lines[tmp_p.index].words[0].c_str(), 
+                                                  tmp.byte_nw.opcode, tmp.byte_nw.f, tmp.byte_nw.a, 
+                                                  tmp_p.type, tmp_p.index, code->current_Line-1);
 }
 
 /* Here we change the values of registers according to the opcode 
  * and the parameters */
 static void execute_instruction(Memory * memory) {
+      switch(memory->instruction_register.type) {
+
+      /* File operations that take one byte as register address */
+      case BYTE_FILE:
+        break;
+      
+      default:
+        printf("EXECUTING AS NOP\n");
+        break;
+  }
 }
 
 /* Here we take the value that we got from the operation and we save 
  * it back either to f or to WREG */
 static void write_to_memory(Memory * memory) {
+      printf("WRITING RESULT TO MEMORY\n");
 }
 
 static int fetch_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock) {
@@ -36,7 +55,7 @@ static int fetch_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock) 
     case CLOCK_PC_INC_LATCH_IR:
       memory->program_counter.DATA += 2;
       code->current_Line = memory->program_counter.DATA / 2;
-      cout << "SETTING PC AT " << memory->program_counter.DATA << "\n";
+      printf("SETTING PC AT %d\n", memory->program_counter.DATA);
       break;
 
     case CLOCK_PC_INC_DECODE:
@@ -72,12 +91,13 @@ static int execute_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock
       tmp_p = memory->instruction_register;
       tmp.program_word = tmp_p.program_word;
       printf("LOADING INSTRUCTION INTO IR\n");
-      printf("INSTRUCTION CODED %d | OPCODE %d, F %d, D %d, A %d | TYPE %d\n", memory->instruction_register.program_word, 
-                                                  tmp.byte.opcode, tmp.byte.f, tmp.byte.d, tmp.byte.a, tmp_p.type);
+      if(tmp_p.type == BYTE_FILE_NW)
+      printf("INSTRUCTION %s | OPCODE %d, F %d, A %d | TYPE %d | INDEX %d\n", code->lines[tmp_p.index].words[0].c_str(), 
+                                                  tmp.byte_nw.opcode, tmp.byte_nw.f, tmp.byte_nw.a, tmp_p.type, tmp_p.index);
       break;
 
     case CLOCK_PC_INC_DECODE:
-      decode_memory(memory);
+      decode_memory(memory, code);
       break;
 
     case CLOCK_ADDRESS_PROCESS:
@@ -145,9 +165,11 @@ void machine_State(Code * code, Memory * memory, Bus * bus) {
     * instruction execute */
   // PRINTS FOR DEBUG
 
-  printf("CLOCK %d\n", code->clock_Cycle);
   fetch_Instruction(code, memory, bus, code->clock_Cycle);
   execute_Instruction(code, memory, bus, code->clock_Cycle);
   code->clock_Cycle++;
-  if(code->clock_Cycle == 4) code->clock_Cycle = 0;
+  if(code->clock_Cycle == 4) {
+    code->clock_Cycle = 0;
+    printf("---------------------------------------------------------\n");
+  }
 }

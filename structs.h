@@ -19,21 +19,26 @@ typedef signed long s64;
 
 enum instruction_type {
   ERROR_TYPE,
+  /* Byte_file */
   BYTE_FILE, 
+  /* Byte_file_nw */
   BYTE_FILE_NW, 
+  /* Byte_file / Byte_file_nw */
   BYTE_SKIP, 
+  /* Bit_file  */
   BIT, 
+  /* Inherent */
   INHERENT, 
+  /* Control */
   BRA_COND, 
   BRA_UNCOND, 
   RET, 
   CALL, 
   GOTOI, 
-  CALL_GOTO_ND,
+  /* Literal */
   LITERAL,
   LITERAL_FSR,
   LFSR_ST,
-  LFSR_ND
 };
 
 union WORD_UNION {
@@ -62,29 +67,30 @@ union WORD_UNION {
     u8 opcode : 8;
     u8 n : 8;
   } bra_cond;
+
   /* For BRA and RCALL */
   struct {
     u8 opcode : 5;
     u16 n : 11;
   } bra_uncond;
+
   /* For RETURN i RETFIE */
   struct {
-    u16 opcode : 15;
+    u8 zeros : 8;
+    u8 opcode : 7;
     u8 s : 1;
   } ret;
+
   struct {
     u8 opcode : 7;
     u8 s : 1;
     u8 k : 7;
   } call;
+
   struct {
     u8 opcode : 8;
     u8 k : 8;
   } gotoi;
-  struct {
-    u8 opcode : 4;
-    u16 k : 12;
-  } call_goto_nd;
 
   struct {
     u8 opcode : 4;
@@ -103,19 +109,14 @@ union WORD_UNION {
     u8 opcode : 8;
     u8 f : 2;
     u8 k : 6;
-  } literal_fsr;
+  } addl_fsr;
 
   struct {
     u8 opcode : 8;
     u8 zeros : 2;
     u8 fn : 2;
     u8 k : 4;
-  } lfsr_st;
-  struct {
-    u8 opcode : 4;
-    u8 zeros : 2;
-    u16 k : 10;
-  } lfsr_nd;
+  } lfsr;
 };
 
 /* Union type to abstract a 21 bit register
@@ -167,11 +168,13 @@ typedef struct Clock {
  * @number - number meaning which line in the code it is
  * @length - number meaning if instruction is 1, 2 or 3 bytes long*/
 typedef struct Line {
+  int address;
   vector<string> words;
   int parameter_count;
   int type;
   int number; 
   int length;
+  int index;
 } Line;
 
 /* Code structure 
@@ -184,6 +187,7 @@ typedef struct Line {
  * @main_clock - Clock structure ticking for the CPU
  * */
 typedef struct Code {
+  int base_address;
   vector<Line> lines;
   int length;
   u8 clock_Cycle;
@@ -199,6 +203,9 @@ typedef struct Code {
 typedef struct Program_Word {
   u16 program_word;
   enum instruction_type type;
+  int address;
+  int index;
+  int jump_address;
 } Program_Word;
 
 /* Memory structure 

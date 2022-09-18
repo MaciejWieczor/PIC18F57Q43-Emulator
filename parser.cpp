@@ -128,7 +128,7 @@ static Line split_Line(string s_line) {
 }
 
 static u8 categorize_Instruction_Length(string opcode) {
-  vector<string> two_byte = {"call", "movff", "goto", "lfsr", "movsf", "movss"};
+  vector<string> two_byte = {"call", "movff", "lfsr", "movsf", "movss"};
   vector<string> three_byte = {"movffl", "movsfl"};
 
   if (std::find(two_byte.begin(), two_byte.end(), opcode) != two_byte.end()) return 2;
@@ -152,7 +152,7 @@ static u8 categorize_Instruction_Length(string opcode) {
  * in two separate program words we just assign it an additional field in the program 
  * word structure. If an instruction needs to jump it has its argument right there to 
  * write to the program counter - and of course execute the next instruction as a NOP */
-static void byte_file_encode(Line * line, Memory * memory, u8 index) {
+static void byte_file_encode(Line * line, Memory * memory) {
   cout << line->words[0] << " is " << "byte_file type\n";
   /* Anon union for easier access to parameters */
   /* defined in structs.h */
@@ -170,11 +170,13 @@ static void byte_file_encode(Line * line, Memory * memory, u8 index) {
         else
           p_word.byte.a = 1; /* Default */
 
-  memory->program_memory[index].program_word = p_word.program_word;
-  memory->program_memory[index].type = BYTE_FILE;
+  memory->program_memory[line->address/2].program_word = p_word.program_word;
+  memory->program_memory[line->address/2].type = BYTE_FILE;
+  memory->program_memory[line->address/2].address = line->address;
+  memory->program_memory[line->address/2].index = line->index;
 }
 
-static void byte_file_nw_encode(Line * line, Memory * memory, u8 index) {
+static void byte_file_nw_encode(Line * line, Memory * memory) {
   cout << line->words[0] << " is " << "byte_file_nw type\n";
   /* Anon union for easier access to parameters */
   /* defined in structs.h */
@@ -188,11 +190,11 @@ static void byte_file_nw_encode(Line * line, Memory * memory, u8 index) {
           p_word.byte_nw.a = 1; /* Default */
 
   printf("ENCODED : opcode %d a %d f %d\n", p_word.byte_nw.opcode, p_word.byte_nw.a, p_word.byte_nw.f);
-  memory->program_memory[index].program_word = p_word.program_word;
-  memory->program_memory[index].type = BYTE_FILE_NW;
+  memory->program_memory[line->address/2].program_word = p_word.program_word;
+  memory->program_memory[line->address/2].type = BYTE_FILE_NW;
 }
 
-static void bit_encode(Line * line, Memory * memory, u8 index) {
+static void bit_encode(Line * line, Memory * memory) {
   cout << line->words[0] << " is " << "bit_file type\n";
   WORD_UNION p_word;
   p_word.bit.opcode = opcode4_number.find(line->words[0])->second;
@@ -205,8 +207,8 @@ static void bit_encode(Line * line, Memory * memory, u8 index) {
           p_word.bit.a = 1; /* Default */
 
   printf("ENCODED : opcode %d b %d a %d f %d\n", p_word.bit.opcode, p_word.bit.b, p_word.bit.a, p_word.bit.f);
-  memory->program_memory[index].program_word = p_word.program_word;
-  memory->program_memory[index].type = BIT;
+  memory->program_memory[line->address/2].program_word = p_word.program_word;
+  memory->program_memory[line->address/2].type = BIT;
 }
 
 static void inherent_encode(Line * line, Memory * memory, u8 index) {
@@ -290,6 +292,14 @@ void print_Program_Code(Code * code) {
 
 void parse_Code(Code * code, Memory * memory) {
   int i = 0;
+  /* here we initialize space for an appropriate amount of program memory lines of code */
+  int program_memory_size = 64 * 1024; // this is the amount of program_words we can have
+  for(int j = 0 ; j < program_memory_size ; j++) {
+    Program_Word tmp = {.program_word = 0, .type = ERROR_TYPE, 
+                        .address = 0, .index = 0, .jump_address = code->base_address};
+    memory->program_memory.push_back(tmp);
+  }
+
   for(Line &line : code->lines){
     cout << "LINE " << i << ": ";
     /* Placeholder for some actual decoding */
@@ -299,13 +309,8 @@ void parse_Code(Code * code, Memory * memory) {
     transform(str.begin(), str.end(), str.begin(),[](unsigned char c){ return tolower(c); }); line.words[0] = str;
     line.length = categorize_Instruction_Length(str);
 
-    /* here we initialize space for an appropriate amount of program memory lines of code */
-    for(int j = 0 ; j < line.length ; j++) {
-      printf("NEW PROGRAM MEMORY LINE %d : %d\n", i, j);
-      Program_Word tmp = {.program_word = 0, .type = ERROR_TYPE, 
-                          .address = line.address, .index = line.index, .jump_address = code->base_address};
-      memory->program_memory.push_back(tmp);
-    }
+    memory->program_memory[line.address/2].address = line.address;
+    memory->program_memory[line.address/2].index = line.index;
 
     for(string word : line.words){
       /*here do some parsing */
@@ -315,10 +320,6 @@ void parse_Code(Code * code, Memory * memory) {
     i++;
   }
   code->length = i;
-  for(i = 0 ; i < 10 ; i++) {
-      Program_Word tmp = {.program_word = 0, .type = ERROR_TYPE};
-      memory->program_memory.push_back(tmp);
-  }
 }
 
 /* function to categorize opcodes */
@@ -368,13 +369,13 @@ void decode_Lines(Code * code, Memory * memory, Bus * bus) {
 
     /* Call apropriate function based on instruction type */
     if (std::find(byte_file.begin(), byte_file.end(), line.words[0]) != byte_file.end()) 
-      byte_file_encode(&line, memory, i);
+      byte_file_encode(&line, memory);
 
     if (std::find(byte_file_nw.begin(), byte_file_nw.end(), line.words[0]) != byte_file_nw.end()) 
-      byte_file_nw_encode(&line, memory, i);
+      byte_file_nw_encode(&line, memory);
       
     if (std::find(bit_file.begin(), bit_file.end(), line.words[0]) != bit_file.end()) 
-      bit_encode(&line, memory, i);
+      bit_encode(&line, memory);
       
     if (std::find(inherent.begin(), inherent.end(), line.words[0]) != inherent.end()) 
       inherent_encode(&line, memory, i);

@@ -19,10 +19,6 @@ static void decode_memory(Memory * memory, Code * code) {
       WORD_UNION tmp;
       tmp_p = memory->instruction_register;
       tmp.program_word = tmp_p.program_word;
-      printf("DECODING - INSTRUCTION %s | OPCODE %d, F %d, A %d | TYPE %d | INDEX %d | PROGRAM MEM INDEX %d\n",
-                                                  code->lines[tmp_p.index].words[0].c_str(), 
-                                                  tmp.byte_nw.opcode, tmp.byte_nw.f, tmp.byte_nw.a, 
-                                                  tmp_p.type, tmp_p.index, code->current_Line-1);
 }
 
 /* Here we change the values of registers according to the opcode 
@@ -35,7 +31,6 @@ static void execute_instruction(Memory * memory) {
         break;
       
       default:
-        printf("EXECUTING AS NOP\n");
         break;
   }
 }
@@ -43,7 +38,6 @@ static void execute_instruction(Memory * memory) {
 /* Here we take the value that we got from the operation and we save 
  * it back either to f or to WREG */
 static void write_to_memory(Memory * memory) {
-      printf("WRITING RESULT TO MEMORY\n");
 }
 
 static int fetch_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock) {
@@ -55,7 +49,6 @@ static int fetch_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock) 
     case CLOCK_PC_INC_LATCH_IR:
       memory->program_counter.DATA += 2;
       code->current_Line = memory->program_counter.DATA / 2;
-      printf("SETTING PC AT %d\n", memory->program_counter.DATA);
       break;
 
     case CLOCK_PC_INC_DECODE:
@@ -85,15 +78,6 @@ static int execute_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock
   switch(code->clock_Cycle) {
 
     case CLOCK_PC_INC_LATCH_IR:
-      Program_Word tmp_p;
-      WORD_UNION tmp;
-      memory->instruction_register = read_Instruction_Bus(code, memory, bus);
-      tmp_p = memory->instruction_register;
-      tmp.program_word = tmp_p.program_word;
-      printf("LOADING INSTRUCTION INTO IR\n");
-      if(tmp_p.type == BYTE_FILE_NW)
-      printf("INSTRUCTION %s | OPCODE %d, F %d, A %d | TYPE %d | INDEX %d\n", code->lines[tmp_p.index].words[0].c_str(), 
-                                                  tmp.byte_nw.opcode, tmp.byte_nw.f, tmp.byte_nw.a, tmp_p.type, tmp_p.index);
       break;
 
     case CLOCK_PC_INC_DECODE:
@@ -114,6 +98,9 @@ static int execute_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock
   return 0;
 }
 
+static void print_coded_instr(Program_Word tmp) {
+}
+
 int clk_Pulse(Clock * clock, int period) {
   struct timespec tnow={0,0};
   clock_gettime(CLOCK_MONOTONIC, &tnow);
@@ -130,7 +117,8 @@ int clk_Pulse(Clock * clock, int period) {
 }
 
 int init_Memory(Code * code, Memory * memory, Bus * bus) {
-  memory->program_counter.DATA = 0;
+  /* Here we first set the program counter to the base address */
+  memory->program_counter.DATA = code->base_address - 2;
   memory->instruction_register.program_word = 0;
   memory->bank_select_register = 0;
   memory->ram_address.DATA = 0;
@@ -171,5 +159,17 @@ void machine_State(Code * code, Memory * memory, Bus * bus) {
   if(code->clock_Cycle == 4) {
     code->clock_Cycle = 0;
     printf("---------------------------------------------------------\n");
+    Program_Word tmp_p;
+    WORD_UNION tmp;
+    memory->instruction_register = read_Instruction_Bus(code, memory, bus);
+    tmp_p = memory->instruction_register;
+    tmp.program_word = tmp_p.program_word;
+    /* TBD Print register values for debugging purpouses */
+    printf("DECODING - INSTRUCTION %s | OPCODE %d, F %d, A %d | TYPE %d | INDEX %d | PROGRAM MEM INDEX %X\n",
+                                                  code->lines[tmp_p.index].words[0].c_str(), 
+                                                  tmp.byte_nw.opcode, tmp.byte_nw.f, tmp.byte_nw.a, 
+                                                  tmp_p.type, tmp_p.index, (code->current_Line)*2);
+    /* TBD Print register values for debugging purpouses */
+    print_coded_instr(tmp_p);
   }
 }

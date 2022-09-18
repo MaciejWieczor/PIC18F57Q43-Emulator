@@ -78,6 +78,7 @@ static int execute_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock
   switch(code->clock_Cycle) {
 
     case CLOCK_PC_INC_LATCH_IR:
+      memory->instruction_register = read_Instruction_Bus(code, memory, bus);
       break;
 
     case CLOCK_PC_INC_DECODE:
@@ -98,7 +99,29 @@ static int execute_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock
   return 0;
 }
 
-static void print_coded_instr(Program_Word tmp) {
+static void print_coded_instr(Code * code, Memory * memory, Bus * bus) {
+
+  Program_Word tmp_p;
+  WORD_UNION tmp;
+  tmp_p = memory->instruction_register;
+  tmp.program_word = tmp_p.program_word;
+  printf("REGISTER STATE : \n");
+  printf("PC : 0x%X, ", memory->program_counter.DATA);
+  printf("BSR : %d, ", memory->data_memory[BSR]);
+  printf("WREG : %d", memory->data_memory[WREG]);
+  printf("\n");
+  printf("LAST INSTRUCTION (EXECUTED) : %s, ", code->lines[tmp_p.index].words[0].c_str());
+  printf("\n");
+  printf("NEXT INSTRUCTION (LOADED) : %s, ", code->lines[read_Instruction_Bus(code, memory, bus).index].words[0].c_str());
+  switch(tmp_p.type) {
+    default:
+      printf("\n");
+      break;
+  }
+}
+
+static u16 data_address(u8 bsr, u8 f) {
+  return f + bsr * 0x100;
 }
 
 int clk_Pulse(Clock * clock, int period) {
@@ -120,8 +143,6 @@ int init_Memory(Code * code, Memory * memory, Bus * bus) {
   /* Here we first set the program counter to the base address */
   memory->program_counter.DATA = code->base_address - 2;
   memory->instruction_register.program_word = 0;
-  memory->bank_select_register = 0;
-  memory->ram_address.DATA = 0;
 
   bus->instruction_Bus = {.program_word = 0, .type = ERROR_TYPE};
   bus->data_Bus = 0;
@@ -129,15 +150,24 @@ int init_Memory(Code * code, Memory * memory, Bus * bus) {
   code->current_Line = memory->program_counter.DATA / 2;
   code->clock_Cycle = 0;
 
+  /* Init data memory banks */
+  for(int i = 0 ; i < 64 ; i++) {
+    for(int j = 0 ; j < 256 ; j++) {
+      memory->data_memory.push_back(0);
+    }
+  }
+
   /* Init virtual access bank */
   for(int i = 0 ; i < 256 ; i++) {
     if( i < 96 ) {
-      memory->access_bank.data[i] = &memory->ram.bank[5].data[i];
+      memory->access_bank.data[i] = &memory->data_memory[data_address(5, i)];
     }
     else {
-      memory->access_bank.data[i] = &memory->ram.bank[4].data[i];
+      memory->access_bank.data[i] = &memory->data_memory[data_address(4, i)];
     }
   }
+
+  memory->data_memory[BSR] = 0;
 
   return 0;
 }
@@ -159,17 +189,7 @@ void machine_State(Code * code, Memory * memory, Bus * bus) {
   if(code->clock_Cycle == 4) {
     code->clock_Cycle = 0;
     printf("---------------------------------------------------------\n");
-    Program_Word tmp_p;
-    WORD_UNION tmp;
-    memory->instruction_register = read_Instruction_Bus(code, memory, bus);
-    tmp_p = memory->instruction_register;
-    tmp.program_word = tmp_p.program_word;
     /* TBD Print register values for debugging purpouses */
-    printf("DECODING - INSTRUCTION %s | OPCODE %d, F %d, A %d | TYPE %d | INDEX %d | PROGRAM MEM INDEX %X\n",
-                                                  code->lines[tmp_p.index].words[0].c_str(), 
-                                                  tmp.byte_nw.opcode, tmp.byte_nw.f, tmp.byte_nw.a, 
-                                                  tmp_p.type, tmp_p.index, (code->current_Line)*2);
-    /* TBD Print register values for debugging purpouses */
-    print_coded_instr(tmp_p);
+    print_coded_instr(code, memory, bus);
   }
 }

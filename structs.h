@@ -8,6 +8,10 @@ using namespace std;
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
+  #define WREG      0x4E8
+  #define BSR       0x4E0
+  #define STATUS    0x4D8
+
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned int u32;
@@ -39,6 +43,17 @@ enum instruction_type {
   LITERAL,
   LITERAL_FSR,
   LFSR_ST,
+};
+
+union STATUS_R {
+  u8 undef : 1;
+  u8 TO : 1;
+  u8 PD : 1;
+  u8 N : 1;
+  u8 OV : 1;
+  u8 Z : 1;
+  u8 DC : 1;
+  u8 C : 1;
 };
 
 union WORD_UNION {
@@ -140,17 +155,9 @@ union R_16 {
   };
 };
 
-typedef struct Memory_Bank {
-  u8 data[256];
-} Memory_Bank;
-
 typedef struct Access_Bank {
   u8* data[256];
 } Access_Bank;
-
-typedef struct RAM {
-  Memory_Bank bank[37];
-} RAM;
 
 /* Clock structure 
  * @tnow - timespec of when the clock was turned on
@@ -215,15 +222,9 @@ typedef struct Memory {
   union R_21 program_counter;
   Program_Word instruction_register;
   Program_Word instruction_data_latch;
-  u8 wreg;
 
-  union R_16 file_select_register[3];
-  union R_16 indirect_file_register[3];
-  union R_16 ram_address;
-  u8 bank_select_register;
   Access_Bank access_bank;
-
-  RAM ram;
+  vector<u8> data_memory;
 
   vector<Program_Word> program_memory;
 } Memory;

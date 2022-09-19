@@ -215,12 +215,87 @@ static void inherent_encode(Line * line, Memory * memory, u8 index) {
   cout << line->words[0] << " is " << "inherent type\n";
 }
 
+/* Here we encode control instructions. They usually modify the PC so they 
+ * carry an address in their argument. To make life easier we'll just save 
+ * the argument-address in a field in the program word structure. For any 
+ * non-jump instruction it will just equal the base address. (We use the 
+ * data field in Program_Word struct)
+ * Possible formats are :
+ * Conditional branch*/
 static void control_encode(Line * line, Memory * memory, u8 index) {
-  cout << line->words[0] << " is " << "control type\n";
+  printf("%s is control type\n", line->words[0].c_str());
+  WORD_UNION p_word;
+  if( line->words[0] == "return" || line->words[0] == "retfie" ) {
+    p_word.ret.zeros = 0;
+    p_word.ret.opcode = opcode7_number.find(line->words[0])->second;
+    p_word.ret.s = stoul(line->words[1], NULL, 16);
+    memory->program_memory[line->address/2].type = RET;
+  }
+  else if ( line->words[0] == "call" ) {
+    p_word.call.opcode = opcode7_number.find(line->words[0])->second;
+    p_word.call.s = stoul(line->words[2], NULL, 16);
+    p_word.call.k = 0;
+    memory->program_memory[line->address/2].data = stoul(line->words[1], NULL, 16);
+    memory->program_memory[line->address/2].type = CALL;
+    printf("ENCODED : opcode %d k %d\n", p_word.call.opcode, memory->program_memory[line->address/2].data);
+  }
+  else if (line->words[0] == "goto") {
+    p_word.gotoi.opcode = opcode8_number.find(line->words[0])->second;
+    p_word.gotoi.k = 0;
+    memory->program_memory[line->address/2].data = stoul(line->words[1], NULL, 16);
+    memory->program_memory[line->address/2].type = GOTOI;
+    printf("ENCODED : opcode %d k %d\n", p_word.gotoi.opcode, memory->program_memory[line->address/2].data);
+  }
+  /* 5 bit opcode means unconditional branch */
+  else if(opcode5_number.find(line->words[0]) != opcode5_number.end()) {
+    p_word.bra_uncond.opcode = opcode5_number.find(line->words[0])->second;
+    p_word.bra_uncond.n = stoul(line->words[1], NULL, 16);
+    memory->program_memory[line->address/2].type = BRA_UNCOND;
+    printf("ENCODED : opcode %d k %d\n", p_word.bra_uncond.opcode, p_word.bra_uncond.n);
+  }
+  /* 8 bit opcode means conditional branch */
+  else if(opcode8_number.find(line->words[0]) != opcode8_number.end()) {
+    p_word.bra_cond.opcode = opcode8_number.find(line->words[0])->second;
+    p_word.bra_cond.n = stoul(line->words[1], NULL, 16);
+    memory->program_memory[line->address/2].type = BRA_COND;
+    printf("ENCODED : opcode %d k %d\n", p_word.bra_cond.opcode, p_word.bra_cond.n);
+  }
+  memory->program_memory[line->address/2].program_word = p_word.program_word;
+  
 }
 
+/* Here we encode literal instructions in three formats (as specified at the end 
+ * of WORD_UNION data structure. A literal - 8 bit opcode and 8 bit parameter,
+ * lsfr - 8 bit opcode, 2 bit zeroes, 2 bit fsr select, 4 bit literal start (lfsr 
+ * stores 14 bit literal in the program_word.data field, that's used to store longer 
+ * data than one program word), addlfsr - 8 bit opcode, 2 bit fsr select, 6 bit literal */
 static void literal_encode(Line * line, Memory * memory, u8 index) {
-  cout << line->words[0] << " is " << "literal type\n";
+  printf("%s is literal type\n", line->words[0].c_str());
+  WORD_UNION p_word;
+  /* First case - 8 bit opcode */
+  if(line->words[0] == "lfsr") {
+    p_word.lfsr.opcode = opcode8_number.find(line->words[0])->second;
+    p_word.lfsr.zeros = 0;
+    p_word.lfsr.fn = stoul(line->words[1], NULL, 16);
+    p_word.lfsr.k = 0;
+    memory->program_memory[line->address/2].data = stoul(line->words[2], NULL, 16);
+    memory->program_memory[line->address/2].type = LFSR;
+    printf("ENCODED : opcode %d, fn %d, k %d\n", p_word.lfsr.opcode, p_word.lfsr.fn, memory->program_memory[line->address/2].data);
+  }
+  else if(line->words[0] == "addfsr" || line->words[0] == "subfsr") {
+    p_word.addl_fsr.opcode = opcode8_number.find(line->words[0])->second;
+    p_word.addl_fsr.f = stoul(line->words[1], NULL, 16);
+    p_word.addl_fsr.k = stoul(line->words[2], NULL, 16);
+    memory->program_memory[line->address/2].type = LITERAL_FSR;
+    printf("ENCODED : opcode %d, fn %d, k %d\n", p_word.addl_fsr.opcode, p_word.addl_fsr.f, p_word.addl_fsr.k);
+  }
+  else if(opcode8_number.find(line->words[0]) != opcode8_number.end()) {
+    p_word.literal.opcode = opcode8_number.find(line->words[0])->second;
+    p_word.literal.k = stoul(line->words[1], NULL, 16);
+    memory->program_memory[line->address/2].type = LITERAL;
+    printf("ENCODED : opcode %d k %d\n", p_word.literal.opcode, p_word.literal.k);
+  }
+  memory->program_memory[line->address/2].program_word = p_word.program_word;
 }
 
 /* -----------------------------------------------
@@ -296,7 +371,7 @@ void parse_Code(Code * code, Memory * memory) {
   int program_memory_size = 64 * 1024; // this is the amount of program_words we can have
   for(int j = 0 ; j < program_memory_size ; j++) {
     Program_Word tmp = {.program_word = 0, .type = ERROR_TYPE, 
-                        .address = 0, .index = 0, .jump_address = code->base_address};
+                        .address = 0, .index = 0, .data = 0};
     memory->program_memory.push_back(tmp);
   }
 

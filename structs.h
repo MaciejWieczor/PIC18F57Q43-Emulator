@@ -42,7 +42,7 @@ enum instruction_type {
   /* Literal */
   LITERAL,
   LITERAL_FSR,
-  LFSR_ST,
+  LFSR,
 };
 
 union STATUS_R {
@@ -173,7 +173,8 @@ typedef struct Clock {
  * @words - a vector array of words used in one instruction
  * @type - number suggesting if instruction is an opcode, data or a label
  * @number - number meaning which line in the code it is
- * @length - number meaning if instruction is 1, 2 or 3 bytes long*/
+ * @length - number meaning if instruction is 1, 2 or 3 bytes long
+ * @index - line number*/
 typedef struct Line {
   int address;
   vector<string> words;
@@ -185,6 +186,7 @@ typedef struct Line {
 } Line;
 
 /* Code structure 
+ * @base_address - the PC value of the first instruction
  * @lines - an array of line structures
  * @length - amount of lines in source code
  * @clock_Cycle - 0-3 values (inc,read memory, latch, decode, execute)
@@ -206,13 +208,16 @@ typedef struct Code {
 /* Program_word structure 
  * @program_word - a massive union to help access bit fields
  * @type - defines what type of instruction we're dealing with
+ * @address - program memory address (PC) assigned to the instruction
+ * @data - any additional data that comes with the instruction (for example 
+ *         any address with goto or branch, or literals longer than 8 bits)
  * */
 typedef struct Program_Word {
   u16 program_word;
   enum instruction_type type;
   int address;
   int index;
-  int jump_address;
+  int data;
 } Program_Word;
 
 /* Memory structure 

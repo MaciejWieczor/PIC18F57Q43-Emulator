@@ -23,13 +23,45 @@ static void decode_memory(Memory * memory, Code * code) {
 
 /* Here we change the values of registers according to the opcode 
  * and the parameters */
+/* TBD: put some actual operations inside here - at first at least 
+ * literal/wreg operations and gotos*/
+/* TBD: put out the result of the operation onto a data bus which will 
+ *      save it to data memory in the next step */
 static void execute_instruction(Memory * memory) {
       switch(memory->instruction_register.type) {
 
       /* File operations that take one byte as register address */
-      case BYTE_FILE:
-        break;
-      
+			case ERROR_TYPE:
+        printf("ERROR - NO INSTRUCTION TYPE!");
+				break;
+			case BYTE_FILE:
+				break;
+			case BYTE_FILE_NW:
+				break;
+			case BYTE_SKIP:
+				break;
+			case BYTE_SKIP_NW:
+				break;
+			case BIT:
+				break;
+			case INHERENT:
+				break;
+			case BRA_COND:
+				break;
+			case BRA_UNCOND:
+				break;
+			case RET:
+				break;
+			case CALL:
+				break;
+			case GOTOI:
+				break;
+			case LITERAL:
+				break;
+			case LITERAL_FSR:
+				break;
+			case LFSR:
+				break;
       default:
         break;
   }
@@ -37,6 +69,7 @@ static void execute_instruction(Memory * memory) {
 
 /* Here we take the value that we got from the operation and we save 
  * it back either to f or to WREG */
+/* TBD: if instruction accesses file read the value back from data bus */
 static void write_to_memory(Memory * memory) {
 }
 
@@ -99,8 +132,58 @@ static int execute_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock
   return 0;
 }
 
-static void print_coded_instr(Code * code, Memory * memory, Bus * bus) {
+static void print_encoded(Program_Word tmp_p, Memory * memory, Line * line) {
+  WORD_UNION p_word;
+  p_word.program_word = tmp_p.program_word;
 
+  switch(tmp_p.type) {
+
+		case ERROR_TYPE:
+      printf("ERROR TYPE!\n");
+			break;
+		case BYTE_FILE: 
+      printf("ENCODED : opcode %d d %d a %d f %d\n", p_word.byte.opcode, p_word.byte.d, p_word.byte.a, p_word.byte.f);
+			break;
+		case BYTE_FILE_NW: 
+      printf("ENCODED : opcode %d a %d f %d\n", p_word.byte_nw.opcode, p_word.byte_nw.a, p_word.byte_nw.f);
+			break;
+		case BIT: 
+      printf("ENCODED : opcode %d b %d a %d f %d\n", p_word.bit.opcode, p_word.bit.b, p_word.bit.a, p_word.bit.f);
+			break;
+		case INHERENT: 
+      printf("ENCODED : opcode %d\n", p_word.inherent.lsb);
+			break;
+		case BRA_COND: 
+      printf("ENCODED : opcode %d k %d\n", p_word.bra_cond.opcode, p_word.bra_cond.n);
+			break;
+		case BRA_UNCOND: 
+      printf("ENCODED : opcode %d k %d\n", p_word.bra_uncond.opcode, p_word.bra_uncond.n);
+			break;
+		case RET: 
+      printf("ENCODED : opcode %d k %d\n", p_word.ret.opcode, p_word.ret.s);
+			break;
+		case CALL: 
+      printf("ENCODED : opcode %d k %X\n", p_word.call.opcode, memory->program_memory[line->address/2].data);
+			break;
+		case GOTOI: 
+      printf("ENCODED : opcode %d k %X\n", p_word.gotoi.opcode, memory->program_memory[line->address/2].data);
+			break;
+		case LITERAL:
+      printf("ENCODED : opcode %d k %d\n", p_word.literal.opcode, p_word.literal.k);
+			break;
+		case LITERAL_FSR:
+      printf("ENCODED : opcode %d, fn %d, k %d\n", p_word.addl_fsr.opcode, p_word.addl_fsr.f, p_word.addl_fsr.k);
+			break;
+		case LFSR:
+      printf("ENCODED : opcode %d, fn %d, k %X\n", p_word.lfsr.opcode, p_word.lfsr.fn, memory->program_memory[line->address/2].data);
+			break;
+    default:
+      printf("\n");
+      break;
+  }
+}
+
+static void print_coded_instr(Code * code, Memory * memory, Bus * bus) {
   Program_Word tmp_p;
   WORD_UNION tmp;
   tmp_p = memory->instruction_register;
@@ -110,14 +193,22 @@ static void print_coded_instr(Code * code, Memory * memory, Bus * bus) {
   printf("BSR : %d, ", memory->data_memory[BSR]);
   printf("WREG : %d", memory->data_memory[WREG]);
   printf("\n");
+  printf("ACCESS BANK : \n");
+  printf("     0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F\n");
+  for(int i = 0 ; i < 16 ; i++) {
+    printf("%X : ", i);
+    for(int j = 0 ; j < 16 ; j++) {
+      printf("%2X ", *memory->access_bank.data[i*16 + j]);
+    }
+    printf("\n");
+  }
+  printf("\n");
   printf("LAST INSTRUCTION (EXECUTED) : %s, ", code->lines[tmp_p.index].words[0].c_str());
   printf("\n");
+  print_encoded(tmp_p, memory, &code->lines[tmp_p.index]);
   printf("NEXT INSTRUCTION (LOADED) : %s, ", code->lines[read_Instruction_Bus(code, memory, bus).index].words[0].c_str());
-  switch(tmp_p.type) {
-    default:
-      printf("\n");
-      break;
-  }
+  printf("\n");
+  print_encoded(read_Instruction_Bus(code, memory, bus), memory, &code->lines[read_Instruction_Bus(code, memory, bus).index]);
 }
 
 static u16 data_address(u8 bsr, u8 f) {
@@ -145,7 +236,7 @@ int init_Memory(Code * code, Memory * memory, Bus * bus) {
   memory->instruction_register.program_word = 0;
 
   bus->instruction_Bus = {.program_word = 0, .type = ERROR_TYPE};
-  bus->data_Bus = 0;
+  bus->data_Bus.data = 0;
 
   code->current_Line = memory->program_counter.DATA / 2;
   code->clock_Cycle = 0;

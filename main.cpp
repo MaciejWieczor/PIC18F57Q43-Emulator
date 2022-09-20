@@ -5,7 +5,7 @@
 #include "asemblator.h"
 #include "procesor.h"
 
-#define MAIN_CLOCK_PERIOD_NS 1e9
+#define MAIN_CLOCK_PERIOD_NS 2e8
 
 /*
  * Naming conventions : 

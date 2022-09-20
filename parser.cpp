@@ -8,9 +8,6 @@
 
 #include "parser.h"
 
-#define TYPE_BYTE_FILE    0
-#define TYPE_BYTE_SKIP    1
-
 using namespace std;
 
 static map<u8, string> reverse_map(const map<string, u8>& m) {
@@ -19,6 +16,8 @@ static map<u8, string> reverse_map(const map<string, u8>& m) {
         r[kv.second] = kv.first;
     return r;
 }
+
+vector<string> byte_skip_opcode = {"cpfseq", "cpfsgt", "cpfslt", "decfsz", "dcfsnz", "incfsz", "infsnz", "tstfsz"};
 
 
 /*
@@ -47,7 +46,7 @@ map<string, u8> opcode8_number = {{"bc", 226},{"bn", 230},{"bnc", 227},{"bnn", 2
                                  {"bnov", 229},{"bnz", 225},{"bov", 228},{"bz", 224},{"callw", 20},
                                  {"goto", 239},{"retlw", 12},{"clrwdt", 4},
                                  {"daw", 7},{"pop", 6},{"push", 5},{"reset", 255},
-                                 {"sleep", 3},
+                                 {"sleep", 3}, {"nop", 0},
                                  {"addfsr", 232},{"addlw", 15},{"andlw", 11},
                                  {"iorlw", 9},{"lfsr", 238},{"movlb", 1},{"movlw", 14},
                                  {"mullw", 13},{"retlw", 12},{"subfsr", 233},{"sublw", 8}};
@@ -171,9 +170,10 @@ static void byte_file_encode(Line * line, Memory * memory) {
           p_word.byte.a = 1; /* Default */
 
   memory->program_memory[line->address/2].program_word = p_word.program_word;
-  memory->program_memory[line->address/2].type = BYTE_FILE;
-  memory->program_memory[line->address/2].address = line->address;
-  memory->program_memory[line->address/2].index = line->index;
+  if(find(byte_skip_opcode.begin(), byte_skip_opcode.end(), line->words[0]) != byte_skip_opcode.end()) 
+    memory->program_memory[line->address/2].type = BYTE_SKIP;
+  else
+    memory->program_memory[line->address/2].type = BYTE_FILE;
 }
 
 static void byte_file_nw_encode(Line * line, Memory * memory) {
@@ -191,7 +191,10 @@ static void byte_file_nw_encode(Line * line, Memory * memory) {
 
   printf("ENCODED : opcode %d a %d f %d\n", p_word.byte_nw.opcode, p_word.byte_nw.a, p_word.byte_nw.f);
   memory->program_memory[line->address/2].program_word = p_word.program_word;
-  memory->program_memory[line->address/2].type = BYTE_FILE_NW;
+  if(find(byte_skip_opcode.begin(), byte_skip_opcode.end(), line->words[0]) != byte_skip_opcode.end()) 
+    memory->program_memory[line->address/2].type = BYTE_SKIP_NW;
+  else
+    memory->program_memory[line->address/2].type = BYTE_FILE_NW;
 }
 
 static void bit_encode(Line * line, Memory * memory) {
@@ -213,6 +216,11 @@ static void bit_encode(Line * line, Memory * memory) {
 
 static void inherent_encode(Line * line, Memory * memory, u8 index) {
   cout << line->words[0] << " is " << "inherent type\n";
+  WORD_UNION p_word;
+  p_word.inherent.lsb = opcode8_number.find(line->words[0])->second;
+  printf("ENCODED : opcode %d\n", p_word.inherent.lsb);
+  memory->program_memory[line->address/2].program_word = p_word.program_word;
+  memory->program_memory[line->address/2].type = INHERENT;
 }
 
 /* Here we encode control instructions. They usually modify the PC so they 
@@ -230,6 +238,7 @@ static void control_encode(Line * line, Memory * memory, u8 index) {
     p_word.ret.opcode = opcode7_number.find(line->words[0])->second;
     p_word.ret.s = stoul(line->words[1], NULL, 16);
     memory->program_memory[line->address/2].type = RET;
+    printf("ENCODED : opcode %d k %d\n", p_word.ret.opcode, p_word.ret.s);
   }
   else if ( line->words[0] == "call" ) {
     p_word.call.opcode = opcode7_number.find(line->words[0])->second;
@@ -237,14 +246,14 @@ static void control_encode(Line * line, Memory * memory, u8 index) {
     p_word.call.k = 0;
     memory->program_memory[line->address/2].data = stoul(line->words[1], NULL, 16);
     memory->program_memory[line->address/2].type = CALL;
-    printf("ENCODED : opcode %d k %d\n", p_word.call.opcode, memory->program_memory[line->address/2].data);
+    printf("ENCODED : opcode %d k %X\n", p_word.call.opcode, memory->program_memory[line->address/2].data);
   }
   else if (line->words[0] == "goto") {
     p_word.gotoi.opcode = opcode8_number.find(line->words[0])->second;
     p_word.gotoi.k = 0;
     memory->program_memory[line->address/2].data = stoul(line->words[1], NULL, 16);
     memory->program_memory[line->address/2].type = GOTOI;
-    printf("ENCODED : opcode %d k %d\n", p_word.gotoi.opcode, memory->program_memory[line->address/2].data);
+    printf("ENCODED : opcode %d k %X\n", p_word.gotoi.opcode, memory->program_memory[line->address/2].data);
   }
   /* 5 bit opcode means unconditional branch */
   else if(opcode5_number.find(line->words[0]) != opcode5_number.end()) {

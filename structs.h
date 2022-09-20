@@ -27,8 +27,8 @@ enum instruction_type {
   BYTE_FILE, 
   /* Byte_file_nw */
   BYTE_FILE_NW, 
-  /* Byte_file / Byte_file_nw */
-  BYTE_SKIP, 
+  BYTE_SKIP,
+  BYTE_SKIP_NW,
   /* Bit_file  */
   BIT, 
   /* Inherent */
@@ -234,10 +234,14 @@ typedef struct Memory {
   vector<Program_Word> program_memory;
 } Memory;
 
+typedef struct Data_Bus {
+  u16 data;
+} Data_Bus;
+
 /* Bus structure */
 typedef struct Bus {
   Program_Word instruction_Bus;
-  u16 data_Bus;
+  Data_Bus data_Bus;
 } Bus;
 
 #endif /* STRUCTS_H */

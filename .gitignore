@@ -1,3 +1,4 @@
 *.o
 main
 *.json
+.ccls-cache

@@ -16,7 +16,7 @@
  */
 
 int main(){
-  Code code = split_Program_Code("program.txt");
+  Code code = split_Program_Code("program2.asm");
   //print_Program_Code(&code);
 
   /* I set the clock to 1e9 nanoseconds for debug */

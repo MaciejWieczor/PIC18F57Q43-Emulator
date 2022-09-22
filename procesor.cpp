@@ -1,12 +1,18 @@
-#include <time.h>
-#include <stdio.h>
-
 #include "procesor.h"
 
 #define CLOCK_PC_INC_LATCH_IR       0
 #define CLOCK_PC_INC_DECODE         1
 #define CLOCK_ADDRESS_PROCESS       2
 #define CLOCK_LATCH_WRITE           3
+
+enum math_operation {
+	ADDITION,
+	SUBTRACTION,
+	LOGICAL_AND,
+	LOGICAL_IOR,
+	LOGICAL_XOR
+};
+
 
 static Program_Word read_Instruction_Bus(Code * code, Memory * memory, Bus * bus) {
   return bus->instruction_Bus; 
@@ -21,13 +27,139 @@ static void decode_memory(Memory * memory, Code * code) {
       tmp.program_word = tmp_p.program_word;
 }
 
+/* TBD: possible problems when working with negative numbers, to test later */
+/* POSSIBLE_IDEA: copy the numbers and the operation*/
+static void modify_status_reg(Memory * memory, u8 a, u8 wreg, u8 operation_type) {
+  STATUS_R status;
+  int temp;
+  status.reg = memory->data_memory[STATUS];
+
+  switch(operation_type) {
+		case ADDITION:
+      temp = a + wreg;
+			break;
+		case SUBTRACTION:
+      temp = a - wreg;
+			break;
+		case LOGICAL_AND:
+      temp = a & wreg;
+			break;
+		case LOGICAL_IOR:
+      temp = a | wreg;
+			break;
+		case LOGICAL_XOR:
+      temp = a ^ wreg;
+			break;
+    default:
+      break;
+  }
+
+  if(operation_type == ADDITION || operation_type == SUBTRACTION) {
+    if(temp & 0x100) status.C = 1;
+    if(((a & 0x0F) + (wreg & 0x0F)) & 0x10) status.DC = 1;
+    if((wreg & 0x80) != (temp & 0x80)) status.OV = 1;
+  }
+  if(temp == 0) status.Z = 1;
+  if(temp < 0 ) status.N = 1;
+
+  memory->data_memory[STATUS] = status.reg;
+}
+
+/* TBD: Implement the actual logic what each literal instruction does
+ * and what data memory address it set to write the result to*/
+/* LEFT_TBD:
+ * MULLW
+ * RETLW
+ * SUBFSR
+ * */
+/* TBD: Add STATUS register changes based on arythmetic operations */
+static void execute_literal(Memory * memory, Bus * bus) {
+  int address;
+  WORD_UNION p_word;
+  bus->data_Bus.two_byte_write = 0;
+  p_word.program_word = memory->instruction_register.program_word;
+
+  switch(p_word.literal.opcode) {
+
+    case INSTR_MULLW:
+      bus->data_Bus.two_byte_write = 1;
+      bus->data_Bus.data = p_word.literal.k * memory->data_memory[WREG];
+      memory->data_address = PROD;
+      break;
+
+    case INSTR_MOVLW:
+      bus->data_Bus.data = p_word.literal.k;
+      memory->data_address = WREG;
+      break;
+
+    case INSTR_MOVLB:
+      bus->data_Bus.data = p_word.literal.k;
+      memory->data_address = BSR;
+      break;
+
+    case INSTR_ADDLW:
+      bus->data_Bus.data = p_word.literal.k + memory->data_memory[WREG];
+      modify_status_reg(memory, p_word.literal.k, memory->data_memory[WREG], ADDITION);
+      memory->data_address = WREG;
+      break;
+
+    case INSTR_SUBLW:
+      bus->data_Bus.data = p_word.literal.k - memory->data_memory[WREG];
+      modify_status_reg(memory, p_word.literal.k, memory->data_memory[WREG], SUBTRACTION);
+      memory->data_address = WREG;
+      break;
+
+    case INSTR_ANDLW:
+      bus->data_Bus.data = p_word.literal.k & memory->data_memory[WREG];
+      modify_status_reg(memory, p_word.literal.k, memory->data_memory[WREG], LOGICAL_AND);
+      memory->data_address = WREG;
+      break;
+
+    case INSTR_XORLW:
+      bus->data_Bus.data = p_word.literal.k ^ memory->data_memory[WREG];
+      modify_status_reg(memory, p_word.literal.k, memory->data_memory[WREG], LOGICAL_XOR);
+      memory->data_address = WREG;
+      break;
+
+    case INSTR_IORLW:
+      bus->data_Bus.data = p_word.literal.k | memory->data_memory[WREG];
+      modify_status_reg(memory, p_word.literal.k, memory->data_memory[WREG], LOGICAL_IOR);
+      memory->data_address = WREG;
+      break;
+
+    case INSTR_ADDFSR:
+      address = FSR0 - 8 * p_word.addl_fsr.f;
+      bus->data_Bus.data = memory->program_memory[memory->instruction_register.index].data + memory->data_memory[address];
+      if(memory->data_memory[address] == 255)
+        bus->data_Bus.two_byte_write = 1;
+      memory->data_address = address;
+      break;
+
+    case INSTR_SUBFSR:
+      address = FSR0 - 8 * p_word.addl_fsr.f;
+      bus->data_Bus.data = memory->program_memory[memory->instruction_register.index].data + memory->data_memory[address];
+      if(memory->data_memory[address] == 255)
+        bus->data_Bus.two_byte_write = 1;
+      memory->data_address = address;
+      break;
+
+    case INSTR_LFSR:
+      bus->data_Bus.two_byte_write = 1;
+      address = FSR0 - 8 * p_word.lfsr.fn;
+      bus->data_Bus.data = memory->program_memory[memory->instruction_register.index].data;
+      memory->data_address = address;
+      break;
+
+    default:
+      break;
+  }
+}
+
 /* Here we change the values of registers according to the opcode 
  * and the parameters */
 /* TBD: put some actual operations inside here - at first at least 
  * literal/wreg operations and gotos*/
-/* TBD: put out the result of the operation onto a data bus which will 
- *      save it to data memory in the next step */
-static void execute_instruction(Memory * memory) {
+static void execute_instruction(Memory * memory, Bus * bus) {
       switch(memory->instruction_register.type) {
 
       /* File operations that take one byte as register address */
@@ -55,8 +187,10 @@ static void execute_instruction(Memory * memory) {
 			case CALL:
 				break;
 			case GOTOI:
+        memory->program_counter.DATA = memory->instruction_register.data;
 				break;
 			case LITERAL:
+        execute_literal(memory, bus);
 				break;
 			case LITERAL_FSR:
 				break;
@@ -69,8 +203,14 @@ static void execute_instruction(Memory * memory) {
 
 /* Here we take the value that we got from the operation and we save 
  * it back either to f or to WREG */
-/* TBD: if instruction accesses file read the value back from data bus */
-static void write_to_memory(Memory * memory) {
+/* TBD: based on memory->data_address save the operation from the data_bus*/
+static void write_to_memory(Memory * memory, Bus * bus) {
+  if(bus->data_Bus.two_byte_write) {
+    memory->data_memory[memory->data_address] = bus->data_Bus.data & 0x00FF;
+    memory->data_memory[memory->data_address + 1] = (bus->data_Bus.data & 0xFF00) >> 8;
+  }
+  else
+    memory->data_memory[memory->data_address] = bus->data_Bus.data;
 }
 
 static int fetch_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock) {
@@ -119,11 +259,11 @@ static int execute_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock
       break;
 
     case CLOCK_ADDRESS_PROCESS:
-      execute_instruction(memory);
+      execute_instruction(memory, bus);
       break;
 
     case CLOCK_LATCH_WRITE:
-      write_to_memory(memory);
+      write_to_memory(memory, bus);
       break;
 
     default:
@@ -188,6 +328,12 @@ static void print_coded_instr(Code * code, Memory * memory, Bus * bus) {
   WORD_UNION tmp;
   tmp_p = memory->instruction_register;
   tmp.program_word = tmp_p.program_word;
+  printf("LAST INSTRUCTION (EXECUTED) : %s, ", code->lines[tmp_p.index].words[0].c_str());
+  printf("\n");
+  print_encoded(tmp_p, memory, &code->lines[tmp_p.index]);
+  printf("NEXT INSTRUCTION (LOADED) : %s, ", code->lines[read_Instruction_Bus(code, memory, bus).index].words[0].c_str());
+  printf("\n");
+  print_encoded(read_Instruction_Bus(code, memory, bus), memory, &code->lines[read_Instruction_Bus(code, memory, bus).index]);
   printf("REGISTER STATE : \n");
   printf("PC : 0x%X, ", memory->program_counter.DATA);
   printf("BSR : %d, ", memory->data_memory[BSR]);
@@ -202,13 +348,10 @@ static void print_coded_instr(Code * code, Memory * memory, Bus * bus) {
     }
     printf("\n");
   }
-  printf("\n");
-  printf("LAST INSTRUCTION (EXECUTED) : %s, ", code->lines[tmp_p.index].words[0].c_str());
-  printf("\n");
-  print_encoded(tmp_p, memory, &code->lines[tmp_p.index]);
-  printf("NEXT INSTRUCTION (LOADED) : %s, ", code->lines[read_Instruction_Bus(code, memory, bus).index].words[0].c_str());
-  printf("\n");
-  print_encoded(read_Instruction_Bus(code, memory, bus), memory, &code->lines[read_Instruction_Bus(code, memory, bus).index]);
+}
+
+static u16 merge_byte(u8 h, u8 l) {
+  return h * 16 + l;
 }
 
 static u16 data_address(u8 bsr, u8 f) {

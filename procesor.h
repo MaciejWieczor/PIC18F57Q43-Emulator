@@ -1,4 +1,3 @@
-#include <time.h>
 #include"structs.h"
 
 #define INSTRUCTION_LOAD 0

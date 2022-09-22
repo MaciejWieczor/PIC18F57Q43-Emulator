@@ -1,9 +1,4 @@
-#include<iostream>
-#include<vector>
-#include<string>
 #include"structs.h"
-using namespace std;
-
 
 /* A function to load the program code from file to a vector of strings 
  * @name - string containing the name of the source code file*/

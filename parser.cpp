@@ -1,62 +1,7 @@
-#include <map>
-#include <iterator>
-#include <fstream>
-#include <algorithm>
-#include <sstream>
-#include <iterator>
-#include <regex>
-
+#include "structs.h"
 #include "parser.h"
 
 using namespace std;
-
-static map<u8, string> reverse_map(const map<string, u8>& m) {
-    map<u8, string> r;
-    for (const auto& kv : m)
-        r[kv.second] = kv.first;
-    return r;
-}
-
-vector<string> byte_skip_opcode = {"cpfseq", "cpfsgt", "cpfslt", "decfsz", "dcfsnz", "incfsz", "infsnz", "tstfsz"};
-
-
-/*
- * Below I am mapping the opcode strings to numbers 
- * I also group them by the amount of bits they occupy 
- * in the coded instruction so that later it's easier to 
- * differentiate between instructions with the same actual 
- * value of the opcode
- * */
-map<string, u8> opcode4_number = {{"movffl", 6},{"btg", 7},{"bsf", 8},{"bcf", 9},
-                                  {"btfss", 10},{"btfsc", 11},{"movff", 12}};
-
-map<string, u8> opcode5_number = {{"bra", 26},{"rcall", 27}};
-
-map<string, u8> opcode6_number = {{"addwf", 9},{"addwfc", 8},{"andwf", 5},{"comf", 7},
-                                 {"decf", 1},{"incf", 10},{"iorwf", 4},{"movf", 20},{"rlcf", 13},
-                                 {"rlncf", 17},{"rrcf", 12},{"rrncf", 16},{"subfwb", 21},
-                                 {"subwf", 23},{"subwfb", 22},{"swapf", 14},{"xorwf", 6},
-                                 {"decfsz", 11},{"dcfsnz", 19},{"incfsz", 15},{"infsnz", 18}};
-
-map<string, u8> opcode7_number = {{"clrf", 53},{"movwf", 55},{"mulwf", 1},{"negf", 54},{"setf", 52},
-                                  {"cpfseq", 49},{"cpfsgt", 50},{"cpfslt", 48},{"tstfsz", 51},
-                                  {"call", 118},{"retfie", 8},{"return", 9}};
-
-map<string, u8> opcode8_number = {{"bc", 226},{"bn", 230},{"bnc", 227},{"bnn", 231},
-                                 {"bnov", 229},{"bnz", 225},{"bov", 228},{"bz", 224},{"callw", 20},
-                                 {"goto", 239},{"retlw", 12},{"clrwdt", 4},
-                                 {"daw", 7},{"pop", 6},{"push", 5},{"reset", 255},
-                                 {"sleep", 3}, {"nop", 0},
-                                 {"addfsr", 232},{"addlw", 15},{"andlw", 11},
-                                 {"iorlw", 9},{"lfsr", 238},{"movlb", 1},{"movlw", 14},
-                                 {"mullw", 13},{"retlw", 12},{"subfsr", 233},{"sublw", 8}};
-
-map<u8, string> number_opcode7 = reverse_map(opcode7_number);
-map<u8, string> number_opcode6 = reverse_map(opcode6_number);
-map<u8, string> number_opcode5 = reverse_map(opcode5_number);
-map<u8, string> number_opcode4 = reverse_map(opcode4_number);
-map<u8, string> number_opcode8 = reverse_map(opcode8_number);
-
 
 /* 
  * Static functions to use in other functions 
@@ -119,6 +64,11 @@ static Line split_Line(string s_line) {
 
   string tmp = "0x" + line.words[0];
   line.address = stoul(tmp, NULL, 16);
+
+  /* Here we save the instruction coded by the disassembler */
+  tmp = "0x" + line.words[1];
+  line.coded_disasm = stoul(tmp, NULL, 16);
+
   /* Delete the first two string as they are the address 
    * which we save just above and the code which we don't need */
   line.words.erase(line.words.begin(), line.words.begin() + 2);
@@ -157,7 +107,12 @@ static void byte_file_encode(Line * line, Memory * memory) {
   /* defined in structs.h */
   WORD_UNION p_word;
   p_word.byte.opcode = opcode6_number.find(line->words[0])->second;
-  p_word.byte.f = stoul(line->words[1], NULL, 16);
+  char* p;
+  p_word.bit.f = strtol(line->words[1].c_str(), &p, 16);
+  if (*p) {
+      // conversion failed because the input wasn't a number
+    p_word.byte_nw.f = (line->coded_disasm & 0x00FF);
+  }
 
         if(line->words[2] == "F")
           p_word.byte.d = 1; /* Default */
@@ -182,7 +137,12 @@ static void byte_file_nw_encode(Line * line, Memory * memory) {
   /* defined in structs.h */
   WORD_UNION p_word;
   p_word.byte_nw.opcode = opcode7_number.find(line->words[0])->second;
-  p_word.byte_nw.f = stoul(line->words[1], NULL, 16);
+  char* p;
+  p_word.byte_nw.f = strtol(line->words[1].c_str(), &p, 16);
+  if (*p) {
+      // conversion failed because the input wasn't a number
+    p_word.byte_nw.f = (line->coded_disasm & 0x00FF);
+  }
 
         if(line->words[2] == "ACCESS")
           p_word.byte_nw.a = 0;
@@ -201,7 +161,12 @@ static void bit_encode(Line * line, Memory * memory) {
   cout << line->words[0] << " is " << "bit_file type\n";
   WORD_UNION p_word;
   p_word.bit.opcode = opcode4_number.find(line->words[0])->second;
-  p_word.bit.f = stoul(line->words[1], NULL, 16);
+  char* p;
+  p_word.bit.f = strtol(line->words[1].c_str(), &p, 16);
+  if (*p) {
+      // conversion failed because the input wasn't a number
+    p_word.byte_nw.f = (line->coded_disasm & 0x00FF);
+  }
   p_word.bit.b = stoul(line->words[2], NULL, 16);
 
         if(line->words[3] == "ACCESS")

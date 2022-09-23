@@ -68,9 +68,7 @@ static void modify_status_reg(Memory * memory, u8 a, u8 wreg, u8 operation_type)
 /* TBD: Implement the actual logic what each literal instruction does
  * and what data memory address it set to write the result to*/
 /* LEFT_TBD:
- * MULLW
  * RETLW
- * SUBFSR
  * */
 /* TBD: Add STATUS register changes based on arythmetic operations */
 static void execute_literal(Memory * memory, Bus * bus) {

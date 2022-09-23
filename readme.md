@@ -41,10 +41,35 @@
 
 ### ToDo
 
+  - CPU executes file accessing instructions
+  - CPU executes bit type instructios 
+  - CPU executes control instructions 
+    - Save/Restore context workflow needed
+      - Shadow register
+      - Stack implementation
+  - Interrupt vector
+
 ## Memory ##
 
 ### Already done
 
   - Access bank implementation (pointers to program memory range)
+  - Last instruction clock step writes data to memory location from the data bus
 
 ### ToDo
+
+  - Define addresses to memory registers for implemented modules
+
+## Modules ##
+
+### ToDo
+
+  - Test module idea of putting module handlers in main clock handler or add more clocks
+
+#### DMA
+  
+  - Read and test how dma exactly works along the cpu
+
+#### TMR
+  
+  - Add TMR0 and test its operation

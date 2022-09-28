@@ -1,5 +1,5 @@
-main: main.cpp asemblator.c parser.cpp procesor.cpp
-	g++ -o main main.cpp asemblator.c parser.cpp procesor.cpp
+main: main.cpp parser.cpp procesor.cpp modules.cpp
+	g++ -o main main.cpp parser.cpp procesor.cpp modules.cpp
 
 clean:
-	rm main main.o program.o asemblator.o procesor.o
+	rm main main.o program.o procesor.o

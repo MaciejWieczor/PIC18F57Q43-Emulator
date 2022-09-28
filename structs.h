@@ -11,13 +11,20 @@
 #include<iterator>
 #include<regex>
 #include<fstream>
+
 using namespace std;
+
+/* CPU Memory registers defines */
 
 #define FSR0      0x4E9
 #define WREG      0x4E8
 #define BSR       0x4E0
 #define STATUS    0x4D8
 #define PROD      0x4F3
+
+/* TMR0 Memory registers defines */
+
+/* typedefs for unsigned types */
 
   typedef unsigned char u8;
   typedef unsigned short u16;
@@ -28,8 +35,10 @@ using namespace std;
   typedef signed int s32;
   typedef signed long s64;
 
+/* Overwrite for byte skip type */
 static vector<string> byte_skip_opcode = {"cpfseq", "cpfsgt", "cpfslt", "decfsz", "dcfsnz", "incfsz", "infsnz", "tstfsz"};
 
+/* Instruction type defines */
 enum instruction_type {
   ERROR_TYPE,
   /* Byte_file */
@@ -263,6 +272,7 @@ typedef struct Bus {
   Data_Bus data_Bus;
 } Bus;
 
+
 #endif /* STRUCTS_H */
 
 #ifndef OPCODE_NUM_H
@@ -301,7 +311,7 @@ typedef struct Bus {
 #define INSTR_INCFSZ   15
 #define INSTR_INFSNZ   18
 #define INSTR_CLRF     53
-#define INSTR_MOVWF    17
+#define INSTR_MOVWF    55
 #define INSTR_MULWF     1
 #define INSTR_NEGF     54
 #define INSTR_SETF     52

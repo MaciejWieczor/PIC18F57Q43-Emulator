@@ -19,6 +19,7 @@ int clk_Pulse(Clock * clock, int period);
 * @memory - 
 * @bus - */
 void machine_State(Code * code, Memory * memory, Bus * bus);
+//void machine_State(Code * code, Memory * memory, Bus * bus);
 
 int init_Memory(Code * code, Memory * memory, Bus * bus);
 

@@ -2,8 +2,8 @@
 #include<stdlib.h>
 
 #include "parser.h"
-#include "asemblator.h"
 #include "procesor.h"
+#include "modules.h"
 
 #define MAIN_CLOCK_PERIOD_NS 2e8
 
@@ -16,15 +16,17 @@
  */
 
 int main(){
-  Code code = split_Program_Code("program2.asm");
+  Code code = split_Program_Code("program.asm");
   //print_Program_Code(&code);
 
   /* I set the clock to 1e9 nanoseconds for debug */
   Memory memory;
   Bus bus;
+  Modules modules;
 
   init_Memory(&code, &memory, &bus);
   init_Clock(&code.main_clock);
+  init_Modules(&memory, &modules);
   parse_Code(&code, &memory);
   decode_Lines(&code, &memory, &bus);
 
@@ -33,6 +35,7 @@ int main(){
   while(1){
     if(clk_Pulse(&code.main_clock, MAIN_CLOCK_PERIOD_NS)){
       machine_State(&code, &memory, &bus);
+      module_tmr0(&modules, &bus);
     }
   }
 

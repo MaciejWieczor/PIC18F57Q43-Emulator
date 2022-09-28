@@ -111,7 +111,7 @@ static void byte_file_encode(Line * line, Memory * memory) {
   p_word.bit.f = strtol(line->words[1].c_str(), &p, 16);
   if (*p) {
       // conversion failed because the input wasn't a number
-    p_word.byte_nw.f = (line->coded_disasm & 0x00FF);
+    p_word.byte.f = (line->coded_disasm & 0x00FF);
   }
 
         if(line->words[2] == "F")
@@ -387,7 +387,7 @@ void decode_Lines(Code * code, Memory * memory, Bus * bus) {
 
   vector<string> byte_file_nw = {"cpfseq", "cpfsgt", "cpfslt", "clrf", 
                                  "movff", "movffl", "tstfsz",
-                                 "movwf", "mulwf", "negwf", "setf"};
+                                 "movwf", "mulwf", "negf", "setf"};
 
   /* Bit type always has three parameters f,b,a */ 
   vector<string> bit_file = {"bcf", "bsf", "btg", "btfsc", "btfss"};

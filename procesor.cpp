@@ -6,13 +6,26 @@
 #define CLOCK_LATCH_WRITE           3
 
 enum math_operation {
-	ADDITION,
-	SUBTRACTION,
-	LOGICAL_AND,
-	LOGICAL_IOR,
-	LOGICAL_XOR
+  M_DEC,
+	M_ADDITION,
+	M_SUBTRACTION,
+	M_LOGICAL_AND,
+	M_LOGICAL_IOR,
+	M_LOGICAL_XOR
 };
 
+static u16 data_address(u8 bsr, u8 f) {
+  return f + bsr * 0x100;
+}
+
+static int resolve_Access_Bank_Address(u8 i) {
+    if( i < 96 ) {
+      return data_address(5, i);
+    }
+    else {
+      return data_address(4, i);
+    }
+}
 
 static Program_Word read_Instruction_Bus(Code * code, Memory * memory, Bus * bus) {
   return bus->instruction_Bus; 
@@ -27,34 +40,35 @@ static void decode_memory(Memory * memory, Code * code) {
       tmp.program_word = tmp_p.program_word;
 }
 
-/* TBD: possible problems when working with negative numbers, to test later */
-/* POSSIBLE_IDEA: copy the numbers and the operation*/
 static void modify_status_reg(Memory * memory, u8 a, u8 wreg, u8 operation_type) {
   STATUS_R status;
   int temp;
   status.reg = memory->data_memory[STATUS];
 
   switch(operation_type) {
-		case ADDITION:
+    case M_DEC:
+      temp = wreg - a;
+      break;
+		case M_ADDITION:
       temp = a + wreg;
 			break;
-		case SUBTRACTION:
+		case M_SUBTRACTION:
       temp = a - wreg;
 			break;
-		case LOGICAL_AND:
+		case M_LOGICAL_AND:
       temp = a & wreg;
 			break;
-		case LOGICAL_IOR:
+		case M_LOGICAL_IOR:
       temp = a | wreg;
 			break;
-		case LOGICAL_XOR:
+		case M_LOGICAL_XOR:
       temp = a ^ wreg;
 			break;
     default:
       break;
   }
 
-  if(operation_type == ADDITION || operation_type == SUBTRACTION) {
+  if(operation_type == M_ADDITION || operation_type == M_SUBTRACTION) {
     if(temp & 0x100) status.C = 1;
     if(((a & 0x0F) + (wreg & 0x0F)) & 0x10) status.DC = 1;
     if((wreg & 0x80) != (temp & 0x80)) status.OV = 1;
@@ -65,12 +79,243 @@ static void modify_status_reg(Memory * memory, u8 a, u8 wreg, u8 operation_type)
   memory->data_memory[STATUS] = status.reg;
 }
 
-/* TBD: Implement the actual logic what each literal instruction does
- * and what data memory address it set to write the result to*/
+/* LEFT_TBD:
+ * DECFSZ
+ * DCFSNZ
+ * INCFSZ
+ * INFSNZ
+ * */
+static void execute_byte_file(Memory * memory, Bus * bus) {
+  int address;
+  WORD_UNION p_word;
+  p_word.program_word = memory->instruction_register.program_word;
+
+  /* Here we check for the ACCESS bit and we set the data memory 
+   * address (for the write_to_memory step) accordingly */
+  if(!p_word.byte.a) 
+    address = resolve_Access_Bank_Address(p_word.byte.f);
+  else 
+    address = data_address(memory->data_memory[BSR], p_word.byte.f);
+
+  if(p_word.byte.d)
+    memory->data_address = address;
+  else
+    memory->data_address = WREG;
+
+  /* Here we put data from the address specified in .f in a local variable 
+   * Later we just need to put the result on the data bus and everything else will 
+   * fall into place*/
+  u8 temp = memory->data_memory[address];
+  u8 wreg = memory->data_memory[WREG];
+  union STATUS_R status;
+  status.reg = memory->data_memory[STATUS];
+
+  switch(p_word.byte.opcode) {
+ 		case INSTR_ADDWF:
+      bus->data_Bus.data = temp + wreg;
+      modify_status_reg(memory, temp, wreg, M_ADDITION);
+			break;
+ 		case INSTR_ADDWFC:
+      bus->data_Bus.data = temp + wreg + status.C;
+      modify_status_reg(memory, temp+status.C, wreg, M_ADDITION);
+			break;
+ 		case INSTR_ANDWF:
+      bus->data_Bus.data = temp & wreg;
+      modify_status_reg(memory, temp, wreg, M_LOGICAL_AND);
+			break;
+ 		case INSTR_COMF:
+      bus->data_Bus.data = ~temp;
+      modify_status_reg(memory, ~temp, 0xFF, M_LOGICAL_AND);
+			break;
+ 		case INSTR_DECF:
+      bus->data_Bus.data = temp - 1;
+      modify_status_reg(memory, 1, temp, M_DEC);
+			break;
+ 		case INSTR_INCF:
+      bus->data_Bus.data = temp + 1;
+      modify_status_reg(memory, 1, temp, M_ADDITION);
+			break;
+ 		case INSTR_IORWF:
+      bus->data_Bus.data = temp | wreg;
+      modify_status_reg(memory, temp, wreg, M_LOGICAL_IOR);
+			break;
+    /* move f to wreg or back to f */
+ 		case INSTR_MOVF:
+      bus->data_Bus.data = temp;
+			break;
+ 		case INSTR_RLCF:
+      bus->data_Bus.data = temp << 1;
+      bus->data_Bus.data += status.C;
+      status.C = (temp & 0x80) >> 7;
+      memory->data_memory[STATUS] = status.reg;
+			break;
+ 		case INSTR_RLNCF:
+      bus->data_Bus.data = temp << 1;
+      bus->data_Bus.data += (temp & 0x80) >> 7;
+			break;
+ 		case INSTR_RRCF:
+      bus->data_Bus.data = temp >> 1;
+      bus->data_Bus.data += status.C << 7;
+      status.C = temp & 0x01;
+      memory->data_memory[STATUS] = status.reg;
+			break;
+ 		case INSTR_RRNCF:
+      bus->data_Bus.data = temp >> 1;
+      bus->data_Bus.data += (temp & 0x01) << 7;
+			break;
+ 		case INSTR_SUBFWB:
+      bus->data_Bus.data = wreg - temp - !status.C;
+      modify_status_reg(memory, wreg, temp+!status.C, M_SUBTRACTION);
+			break;
+ 		case INSTR_SUBWF:
+      bus->data_Bus.data = temp - wreg;
+      modify_status_reg(memory, temp, wreg, M_SUBTRACTION);
+			break;
+ 		case INSTR_SUBWFB:
+      bus->data_Bus.data = temp - wreg - !status.C;
+      modify_status_reg(memory, temp, wreg+!status.C, M_SUBTRACTION);
+			break;
+ 		case INSTR_SWAPF:
+      bus->data_Bus.data = ((temp & 0xF0) >> 4) + ((temp & 0x0F) << 4);
+			break;
+ 		case INSTR_XORWF:
+      bus->data_Bus.data = temp ^ wreg;
+      modify_status_reg(memory, temp, wreg, M_LOGICAL_XOR);
+			break;
+ 		case INSTR_DECFSZ:
+			break;
+ 		case INSTR_DCFSNZ:
+			break;
+ 		case INSTR_INCFSZ:
+			break;
+ 		case INSTR_INFSNZ:
+			break;
+    default:
+      break;
+  }
+}
+
+/* LEFT_TBD: 
+ * CPFSEQ
+ * CPFSGT
+ * CPFSLT
+ * MOVFF
+ * MOVFFL
+ * TSTFSZ
+ * */
+static void execute_byte_nw_file(Memory * memory, Bus * bus) {
+  int address;
+  WORD_UNION p_word;
+  p_word.program_word = memory->instruction_register.program_word;
+
+  if(!p_word.byte_nw.a) 
+    address = resolve_Access_Bank_Address(p_word.byte_nw.f);
+  else 
+    address = data_address(memory->data_memory[BSR], p_word.byte_nw.f);
+
+  u8 temp = memory->data_memory[address];
+  u8 wreg = memory->data_memory[WREG];
+  union STATUS_R status;
+  status.reg = memory->data_memory[STATUS];
+  bus->data_Bus.two_byte_write = 0;
+
+  switch(p_word.byte_nw.opcode) {
+
+		case INSTR_CPFSEQ:
+			break;
+		case INSTR_CPFSGT:
+			break;
+		case INSTR_CPFSLT:
+			break;
+		case INSTR_CLRF:
+      bus->data_Bus.data = 0;
+      memory->data_address = address;
+      status.Z = 1;
+      memory->data_memory[STATUS] = status.reg;
+			break;
+    /* I want to save fs and fd to int data inside the program words
+     * and then overwrite the address local variable by doing 
+     *
+     * fs = memory->instruction_register.data & 0xFFFF0000
+     * fd = memory->instruction_register.data & 0x0000FFFF
+     * */
+		case INSTR_MOVFF:
+			break;
+		case INSTR_MOVFFL:
+			break;
+		case INSTR_TSTFSZ:
+			break;
+		case INSTR_MOVWF:
+      printf("ADDRESS %X \n", address);
+      bus->data_Bus.data = wreg;
+      memory->data_address = address;
+			break;
+		case INSTR_MULWF:
+      bus->data_Bus.two_byte_write = 1;
+      bus->data_Bus.data = wreg * temp;
+      memory->data_address = PROD;
+			break;
+		case INSTR_NEGF:
+      bus->data_Bus.data = ~temp + 1;
+      memory->data_address = address;
+			break;
+		case INSTR_SETF:
+      bus->data_Bus.data = 0xFF;
+      memory->data_address = address;
+			break;
+    default:
+      break;
+  }
+}
+
+/* LEFT_TBD:
+ * BCF
+ * BSF
+ * BTG
+ * BTFSC
+ * BTFSS
+ * */
+static void execute_bit(Memory * memory, Bus * bus) {
+  int address;
+  WORD_UNION p_word;
+  p_word.program_word = memory->instruction_register.program_word;
+
+  if(!p_word.bit.a) 
+    address = resolve_Access_Bank_Address(p_word.bit.f);
+  else 
+    address = data_address(memory->data_memory[BSR], p_word.bit.f);
+  u8 bit_mask = 1 << p_word.bit.b;
+  u8 temp = memory->data_memory[address];
+  u8 wreg = memory->data_memory[WREG];
+  union STATUS_R status;
+  status.reg = memory->data_memory[STATUS];
+  bus->data_Bus.two_byte_write = 0;
+
+  switch(p_word.bit.opcode) {
+		case INSTR_BCF:
+      bus->data_Bus.data = temp & ~bit_mask;
+      memory->data_address = address;
+			break;
+		case INSTR_BSF:
+      bus->data_Bus.data = temp | bit_mask;
+      memory->data_address = address;
+			break;
+		case INSTR_BTG:
+      bus->data_Bus.data = temp ^ bit_mask;
+      memory->data_address = address;
+			break;
+		case INSTR_BTFSC:
+			break;
+		case INSTR_BTFSS:
+			break;
+    default:
+      break;
+  }
+}
+
 /* LEFT_TBD:
  * RETLW
  * */
-/* TBD: Add STATUS register changes based on arythmetic operations */
 static void execute_literal(Memory * memory, Bus * bus) {
   int address;
   WORD_UNION p_word;
@@ -97,31 +342,31 @@ static void execute_literal(Memory * memory, Bus * bus) {
 
     case INSTR_ADDLW:
       bus->data_Bus.data = p_word.literal.k + memory->data_memory[WREG];
-      modify_status_reg(memory, p_word.literal.k, memory->data_memory[WREG], ADDITION);
+      modify_status_reg(memory, p_word.literal.k, memory->data_memory[WREG], M_ADDITION);
       memory->data_address = WREG;
       break;
 
     case INSTR_SUBLW:
       bus->data_Bus.data = p_word.literal.k - memory->data_memory[WREG];
-      modify_status_reg(memory, p_word.literal.k, memory->data_memory[WREG], SUBTRACTION);
+      modify_status_reg(memory, p_word.literal.k, memory->data_memory[WREG], M_SUBTRACTION);
       memory->data_address = WREG;
       break;
 
     case INSTR_ANDLW:
       bus->data_Bus.data = p_word.literal.k & memory->data_memory[WREG];
-      modify_status_reg(memory, p_word.literal.k, memory->data_memory[WREG], LOGICAL_AND);
+      modify_status_reg(memory, p_word.literal.k, memory->data_memory[WREG], M_LOGICAL_AND);
       memory->data_address = WREG;
       break;
 
     case INSTR_XORLW:
       bus->data_Bus.data = p_word.literal.k ^ memory->data_memory[WREG];
-      modify_status_reg(memory, p_word.literal.k, memory->data_memory[WREG], LOGICAL_XOR);
+      modify_status_reg(memory, p_word.literal.k, memory->data_memory[WREG], M_LOGICAL_XOR);
       memory->data_address = WREG;
       break;
 
     case INSTR_IORLW:
       bus->data_Bus.data = p_word.literal.k | memory->data_memory[WREG];
-      modify_status_reg(memory, p_word.literal.k, memory->data_memory[WREG], LOGICAL_IOR);
+      modify_status_reg(memory, p_word.literal.k, memory->data_memory[WREG], M_LOGICAL_IOR);
       memory->data_address = WREG;
       break;
 
@@ -158,6 +403,7 @@ static void execute_literal(Memory * memory, Bus * bus) {
 /* TBD: put some actual operations inside here - at first at least 
  * literal/wreg operations and gotos*/
 static void execute_instruction(Memory * memory, Bus * bus) {
+      printf("INSTR TYPE: %d\n", memory->instruction_register.type);
       switch(memory->instruction_register.type) {
 
       /* File operations that take one byte as register address */
@@ -165,8 +411,10 @@ static void execute_instruction(Memory * memory, Bus * bus) {
         printf("ERROR - NO INSTRUCTION TYPE!");
 				break;
 			case BYTE_FILE:
+        execute_byte_file(memory, bus);
 				break;
 			case BYTE_FILE_NW:
+        execute_byte_nw_file(memory, bus);
 				break;
 			case BYTE_SKIP:
 				break;
@@ -338,11 +586,11 @@ static void print_coded_instr(Code * code, Memory * memory, Bus * bus) {
   printf("WREG : %d", memory->data_memory[WREG]);
   printf("\n");
   printf("ACCESS BANK : \n");
-  printf("     0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F\n");
+  printf("        0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F\n");
   for(int i = 0 ; i < 16 ; i++) {
-    printf("%X : ", i);
+    printf("%4X : ", i*16 + 0x0460);
     for(int j = 0 ; j < 16 ; j++) {
-      printf("%2X ", *memory->access_bank.data[i*16 + j]);
+      printf("%2X ", memory->data_memory[i*16 + j + 0x0460]);
     }
     printf("\n");
   }
@@ -350,10 +598,6 @@ static void print_coded_instr(Code * code, Memory * memory, Bus * bus) {
 
 static u16 merge_byte(u8 h, u8 l) {
   return h * 16 + l;
-}
-
-static u16 data_address(u8 bsr, u8 f) {
-  return f + bsr * 0x100;
 }
 
 int clk_Pulse(Clock * clock, int period) {
@@ -370,6 +614,7 @@ int clk_Pulse(Clock * clock, int period) {
   /* else return zero */
   else return 0;
 }
+
 
 int init_Memory(Code * code, Memory * memory, Bus * bus) {
   /* Here we first set the program counter to the base address */
@@ -388,17 +633,6 @@ int init_Memory(Code * code, Memory * memory, Bus * bus) {
       memory->data_memory.push_back(0);
     }
   }
-
-  /* Init virtual access bank */
-  for(int i = 0 ; i < 256 ; i++) {
-    if( i < 96 ) {
-      memory->access_bank.data[i] = &memory->data_memory[data_address(5, i)];
-    }
-    else {
-      memory->access_bank.data[i] = &memory->data_memory[data_address(4, i)];
-    }
-  }
-
   memory->data_memory[BSR] = 0;
 
   return 0;

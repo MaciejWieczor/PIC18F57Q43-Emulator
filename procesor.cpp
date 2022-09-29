@@ -85,12 +85,6 @@ static void flush_program_memory_data_latch(Memory * memory) {
   memory->instruction_data_latch.data = 0;
 }
 
-/* LEFT_TBD:
- * DECFSZ
- * DCFSNZ
- * INCFSZ
- * INFSNZ
- * */
 static void execute_byte_file(Memory * memory, Bus * bus) {
   int address;
   WORD_UNION p_word;
@@ -190,12 +184,20 @@ static void execute_byte_file(Memory * memory, Bus * bus) {
       modify_status_reg(memory, temp, wreg, M_LOGICAL_XOR);
 			break;
  		case INSTR_DECFSZ:
+      bus->data_Bus.data = temp - 1;
+      if(bus->data_Bus.data == 0) flush_program_memory_data_latch(memory);
 			break;
  		case INSTR_DCFSNZ:
+      bus->data_Bus.data = temp - 1;
+      if(bus->data_Bus.data != 0) flush_program_memory_data_latch(memory);
 			break;
  		case INSTR_INCFSZ:
+      bus->data_Bus.data = temp + 1;
+      if(bus->data_Bus.data == 0) flush_program_memory_data_latch(memory);
 			break;
  		case INSTR_INFSNZ:
+      bus->data_Bus.data = temp + 1;
+      if(bus->data_Bus.data != 0) flush_program_memory_data_latch(memory);
 			break;
     default:
       break;
@@ -203,12 +205,8 @@ static void execute_byte_file(Memory * memory, Bus * bus) {
 }
 
 /* LEFT_TBD: 
- * CPFSEQ
- * CPFSGT
- * CPFSLT
  * MOVFF
  * MOVFFL
- * TSTFSZ
  * */
 static void execute_byte_nw_file(Memory * memory, Bus * bus) {
   int address;
@@ -230,10 +228,16 @@ static void execute_byte_nw_file(Memory * memory, Bus * bus) {
   switch(p_word.byte_nw.opcode) {
 
 		case INSTR_CPFSEQ:
+      bus->data_Bus.write = 0;
+      if(temp == wreg) flush_program_memory_data_latch(memory);
 			break;
 		case INSTR_CPFSGT:
+      bus->data_Bus.write = 0;
+      if(temp > wreg) flush_program_memory_data_latch(memory);
 			break;
 		case INSTR_CPFSLT:
+      bus->data_Bus.write = 0;
+      if(temp < wreg) flush_program_memory_data_latch(memory);
 			break;
 		case INSTR_CLRF:
       bus->data_Bus.data = 0;
@@ -252,6 +256,8 @@ static void execute_byte_nw_file(Memory * memory, Bus * bus) {
 		case INSTR_MOVFFL:
 			break;
 		case INSTR_TSTFSZ:
+      bus->data_Bus.write = 0;
+      if(temp == 0) flush_program_memory_data_latch(memory);
 			break;
 		case INSTR_MOVWF:
       printf("ADDRESS %X \n", address);

@@ -79,6 +79,12 @@ static void modify_status_reg(Memory * memory, u8 a, u8 wreg, u8 operation_type)
   memory->data_memory[STATUS] = status.reg;
 }
 
+static void flush_program_memory_data_latch(Memory * memory) {
+  memory->instruction_data_latch.program_word = 0; 
+  memory->instruction_data_latch.type = NOP_TYPE;
+  memory->instruction_data_latch.data = 0;
+}
+
 /* LEFT_TBD:
  * DECFSZ
  * DCFSNZ
@@ -109,6 +115,7 @@ static void execute_byte_file(Memory * memory, Bus * bus) {
   u8 wreg = memory->data_memory[WREG];
   union STATUS_R status;
   status.reg = memory->data_memory[STATUS];
+  bus->data_Bus.write = 1;
 
   switch(p_word.byte.opcode) {
  		case INSTR_ADDWF:
@@ -218,6 +225,7 @@ static void execute_byte_nw_file(Memory * memory, Bus * bus) {
   union STATUS_R status;
   status.reg = memory->data_memory[STATUS];
   bus->data_Bus.two_byte_write = 0;
+  bus->data_Bus.write = 1;
 
   switch(p_word.byte_nw.opcode) {
 
@@ -268,13 +276,6 @@ static void execute_byte_nw_file(Memory * memory, Bus * bus) {
   }
 }
 
-/* LEFT_TBD:
- * BCF
- * BSF
- * BTG
- * BTFSC
- * BTFSS
- * */
 static void execute_bit(Memory * memory, Bus * bus) {
   int address;
   WORD_UNION p_word;
@@ -290,6 +291,7 @@ static void execute_bit(Memory * memory, Bus * bus) {
   union STATUS_R status;
   status.reg = memory->data_memory[STATUS];
   bus->data_Bus.two_byte_write = 0;
+  bus->data_Bus.write = 1;
 
   switch(p_word.bit.opcode) {
 		case INSTR_BCF:
@@ -305,11 +307,71 @@ static void execute_bit(Memory * memory, Bus * bus) {
       memory->data_address = address;
 			break;
 		case INSTR_BTFSC:
+      if(!(temp & bit_mask)) {
+        flush_program_memory_data_latch(memory);
+        bus->data_Bus.write = 0;
+      }
 			break;
 		case INSTR_BTFSS:
+      if(temp & bit_mask) {
+        flush_program_memory_data_latch(memory);
+        bus->data_Bus.write = 0;
+      }
 			break;
     default:
       break;
+  }
+}
+
+/* If the condition is true we need to flush the next instruction and overwrite 
+ * the PC with the address kept in the data field. We also should check if the 
+ * address is an offset that fits inside the 8 bit variable, but the disassembly 
+ * takes care of that problem */
+static void execute_branch_cond(Memory * memory, Bus * bus) {
+  int address;
+  WORD_UNION p_word;
+  p_word.program_word = memory->instruction_register.program_word;
+
+  u8 wreg = memory->data_memory[WREG];
+  union STATUS_R status;
+  status.reg = memory->data_memory[STATUS];
+  /* not true at the start */
+  u8 condition = 0;
+  bus->data_Bus.write = 0;
+
+  switch(p_word.bra_cond.opcode) {
+		case INSTR_BC:
+      if(status.C) condition = 1;
+			break;
+		case INSTR_BN:
+      if(status.N) condition = 1;
+			break;
+		case INSTR_BNC:
+      if(!status.C) condition = 1;
+			break;
+		case INSTR_BNN:
+      if(!status.N) condition = 1;
+			break;
+		case INSTR_BNOV:
+      if(!status.OV) condition = 1;
+			break;
+		case INSTR_BNZ:
+      if(!status.Z) condition = 1;
+			break;
+		case INSTR_BOV:
+      if(status.OV) condition = 1;
+			break;
+		case INSTR_BZ:
+      if(status.Z) condition = 1;
+			break;
+    default:
+      break;
+  }
+  /* If the condition was true we flush next instruction and overwrite the PC*/
+  if(condition) {
+    flush_program_memory_data_latch(memory);
+    /* Always do minus 2 on jumps because next two clock cycles will increment the PC */
+    memory->program_counter.DATA = memory->instruction_register.data - 2;
   }
 }
 
@@ -321,6 +383,7 @@ static void execute_literal(Memory * memory, Bus * bus) {
   WORD_UNION p_word;
   bus->data_Bus.two_byte_write = 0;
   p_word.program_word = memory->instruction_register.program_word;
+  bus->data_Bus.write = 1;
 
   switch(p_word.literal.opcode) {
 
@@ -407,7 +470,7 @@ static void execute_instruction(Memory * memory, Bus * bus) {
       switch(memory->instruction_register.type) {
 
       /* File operations that take one byte as register address */
-			case ERROR_TYPE:
+			case NOP_TYPE:
         printf("ERROR - NO INSTRUCTION TYPE!");
 				break;
 			case BYTE_FILE:
@@ -416,24 +479,25 @@ static void execute_instruction(Memory * memory, Bus * bus) {
 			case BYTE_FILE_NW:
         execute_byte_nw_file(memory, bus);
 				break;
-			case BYTE_SKIP:
-				break;
-			case BYTE_SKIP_NW:
-				break;
 			case BIT:
 				break;
 			case INHERENT:
 				break;
 			case BRA_COND:
+        execute_branch_cond(memory, bus);
 				break;
 			case BRA_UNCOND:
+        /* TBD: test if the offset is in 2048 range*/
+        memory->program_counter.DATA = memory->instruction_register.data - 2;
+        memory->instruction_data_latch.program_word = 0;
+        memory->instruction_data_latch.type = NOP_TYPE;
 				break;
 			case RET:
 				break;
 			case CALL:
 				break;
 			case GOTOI:
-        memory->program_counter.DATA = memory->instruction_register.data;
+        memory->program_counter.DATA = memory->instruction_register.data - 2;
 				break;
 			case LITERAL:
         execute_literal(memory, bus);
@@ -451,12 +515,15 @@ static void execute_instruction(Memory * memory, Bus * bus) {
  * it back either to f or to WREG */
 /* TBD: based on memory->data_address save the operation from the data_bus*/
 static void write_to_memory(Memory * memory, Bus * bus) {
-  if(bus->data_Bus.two_byte_write) {
-    memory->data_memory[memory->data_address] = bus->data_Bus.data & 0x00FF;
-    memory->data_memory[memory->data_address + 1] = (bus->data_Bus.data & 0xFF00) >> 8;
+  if(bus->data_Bus.write) {
+    if(bus->data_Bus.two_byte_write) {
+      memory->data_memory[memory->data_address] = bus->data_Bus.data & 0x00FF;
+      memory->data_memory[memory->data_address + 1] = (bus->data_Bus.data & 0xFF00) >> 8;
+    }
+    else
+      memory->data_memory[memory->data_address] = bus->data_Bus.data;
   }
-  else
-    memory->data_memory[memory->data_address] = bus->data_Bus.data;
+  bus->data_Bus.write = 0;
 }
 
 static int fetch_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock) {
@@ -524,7 +591,7 @@ static void print_encoded(Program_Word tmp_p, Memory * memory, Line * line) {
 
   switch(tmp_p.type) {
 
-		case ERROR_TYPE:
+		case NOP_TYPE:
       printf("ERROR TYPE!\n");
 			break;
 		case BYTE_FILE: 
@@ -540,19 +607,19 @@ static void print_encoded(Program_Word tmp_p, Memory * memory, Line * line) {
       printf("ENCODED : opcode %d\n", p_word.inherent.lsb);
 			break;
 		case BRA_COND: 
-      printf("ENCODED : opcode %d k %d\n", p_word.bra_cond.opcode, p_word.bra_cond.n);
+      printf("ENCODED : opcode %d k %X\n", p_word.bra_cond.opcode, tmp_p.data);
 			break;
 		case BRA_UNCOND: 
-      printf("ENCODED : opcode %d k %d\n", p_word.bra_uncond.opcode, p_word.bra_uncond.n);
+      printf("ENCODED : opcode %d k %X\n", p_word.bra_uncond.opcode, tmp_p.data);
 			break;
 		case RET: 
       printf("ENCODED : opcode %d k %d\n", p_word.ret.opcode, p_word.ret.s);
 			break;
 		case CALL: 
-      printf("ENCODED : opcode %d k %X\n", p_word.call.opcode, memory->program_memory[line->address/2].data);
+      printf("ENCODED : opcode %d k %X\n", p_word.call.opcode, tmp_p.data);
 			break;
 		case GOTOI: 
-      printf("ENCODED : opcode %d k %X\n", p_word.gotoi.opcode, memory->program_memory[line->address/2].data);
+      printf("ENCODED : opcode %d k %X\n", p_word.gotoi.opcode, tmp_p.data);
 			break;
 		case LITERAL:
       printf("ENCODED : opcode %d k %d\n", p_word.literal.opcode, p_word.literal.k);
@@ -621,7 +688,8 @@ int init_Memory(Code * code, Memory * memory, Bus * bus) {
   memory->program_counter.DATA = code->base_address - 2;
   memory->instruction_register.program_word = 0;
 
-  bus->instruction_Bus = {.program_word = 0, .type = ERROR_TYPE};
+  bus->instruction_Bus = {.program_word = 0, .type = NOP_TYPE};
+  bus->data_Bus.data = 0;
   bus->data_Bus.data = 0;
 
   code->current_Line = memory->program_counter.DATA / 2;

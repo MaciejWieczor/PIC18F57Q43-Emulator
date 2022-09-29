@@ -35,18 +35,13 @@ using namespace std;
   typedef signed int s32;
   typedef signed long s64;
 
-/* Overwrite for byte skip type */
-static vector<string> byte_skip_opcode = {"cpfseq", "cpfsgt", "cpfslt", "decfsz", "dcfsnz", "incfsz", "infsnz", "tstfsz"};
-
 /* Instruction type defines */
 enum instruction_type {
-  ERROR_TYPE,
+  NOP_TYPE,
   /* Byte_file */
   BYTE_FILE, 
   /* Byte_file_nw */
   BYTE_FILE_NW, 
-  BYTE_SKIP,
-  BYTE_SKIP_NW,
   /* Bit_file  */
   BIT, 
   /* Inherent */
@@ -264,6 +259,7 @@ typedef struct Memory {
 typedef struct Data_Bus {
   u8 two_byte_write;
   u16 data;
+  u8 write;
 } Data_Bus;
 
 /* Bus structure */

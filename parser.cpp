@@ -125,10 +125,7 @@ static void byte_file_encode(Line * line, Memory * memory) {
           p_word.byte.a = 1; /* Default */
 
   memory->program_memory[line->address/2].program_word = p_word.program_word;
-  if(find(byte_skip_opcode.begin(), byte_skip_opcode.end(), line->words[0]) != byte_skip_opcode.end()) 
-    memory->program_memory[line->address/2].type = BYTE_SKIP;
-  else
-    memory->program_memory[line->address/2].type = BYTE_FILE;
+  memory->program_memory[line->address/2].type = BYTE_FILE;
 }
 
 static void byte_file_nw_encode(Line * line, Memory * memory) {
@@ -151,10 +148,7 @@ static void byte_file_nw_encode(Line * line, Memory * memory) {
 
   printf("ENCODED : opcode %d a %d f %d\n", p_word.byte_nw.opcode, p_word.byte_nw.a, p_word.byte_nw.f);
   memory->program_memory[line->address/2].program_word = p_word.program_word;
-  if(find(byte_skip_opcode.begin(), byte_skip_opcode.end(), line->words[0]) != byte_skip_opcode.end()) 
-    memory->program_memory[line->address/2].type = BYTE_SKIP_NW;
-  else
-    memory->program_memory[line->address/2].type = BYTE_FILE_NW;
+  memory->program_memory[line->address/2].type = BYTE_FILE_NW;
 }
 
 static void bit_encode(Line * line, Memory * memory) {
@@ -224,15 +218,17 @@ static void control_encode(Line * line, Memory * memory, u8 index) {
   else if(opcode5_number.find(line->words[0]) != opcode5_number.end()) {
     p_word.bra_uncond.opcode = opcode5_number.find(line->words[0])->second;
     p_word.bra_uncond.n = stoul(line->words[1], NULL, 16);
+    memory->program_memory[line->address/2].data = stoul(line->words[1], NULL, 16);
     memory->program_memory[line->address/2].type = BRA_UNCOND;
-    printf("ENCODED : opcode %d k %d\n", p_word.bra_uncond.opcode, p_word.bra_uncond.n);
+    printf("ENCODED : opcode %d k %X\n", p_word.bra_uncond.opcode, memory->program_memory[line->address/2].data);
   }
   /* 8 bit opcode means conditional branch */
   else if(opcode8_number.find(line->words[0]) != opcode8_number.end()) {
     p_word.bra_cond.opcode = opcode8_number.find(line->words[0])->second;
     p_word.bra_cond.n = stoul(line->words[1], NULL, 16);
+    memory->program_memory[line->address/2].data = stoul(line->words[1], NULL, 16);
     memory->program_memory[line->address/2].type = BRA_COND;
-    printf("ENCODED : opcode %d k %d\n", p_word.bra_cond.opcode, p_word.bra_cond.n);
+    printf("ENCODED : opcode %d k %X\n", p_word.bra_cond.opcode, memory->program_memory[line->address/2].data);
   }
   memory->program_memory[line->address/2].program_word = p_word.program_word;
   
@@ -344,7 +340,7 @@ void parse_Code(Code * code, Memory * memory) {
   /* here we initialize space for an appropriate amount of program memory lines of code */
   int program_memory_size = 64 * 1024; // this is the amount of program_words we can have
   for(int j = 0 ; j < program_memory_size ; j++) {
-    Program_Word tmp = {.program_word = 0, .type = ERROR_TYPE, 
+    Program_Word tmp = {.program_word = 0, .type = NOP_TYPE, 
                         .address = 0, .index = 0, .data = 0};
     memory->program_memory.push_back(tmp);
   }

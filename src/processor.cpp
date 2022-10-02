@@ -1,4 +1,4 @@
-#include "procesor.h"
+#include "processor.h"
 
 #define CLOCK_PC_INC_LATCH_IR       0
 #define CLOCK_PC_INC_DECODE         1

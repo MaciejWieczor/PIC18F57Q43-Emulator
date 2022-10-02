@@ -2,7 +2,7 @@
 #include<stdlib.h>
 
 #include "parser.h"
-#include "procesor.h"
+#include "processor.h"
 #include "modules.h"
 
 #define MAIN_CLOCK_PERIOD_NS 2e8
@@ -16,7 +16,7 @@
  */
 
 int main(){
-  Code code = split_Program_Code("program.asm");
+  Code code = split_Program_Code("../src/program.asm");
   //print_Program_Code(&code);
 
   /* I set the clock to 1e9 nanoseconds for debug */

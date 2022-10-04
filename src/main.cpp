@@ -39,15 +39,10 @@ int main(int argc, char *argv[]){
 
   QPushButton button ("Hello world !");
   button.show();
+//  MyTimer timer = MyTimer(&code, &memory, &bus, &modules);
+  MyTimer timer(&code, &memory, &bus, &modules);
 
   return app.exec();
-
-  while(1){
-    if(clk_Pulse(&code.main_clock, MAIN_CLOCK_PERIOD_NS)){
-      machine_State(&code, &memory, &bus);
-      module_tmr0(&modules, &bus);
-    }
-  }
 
   return 0;
 }

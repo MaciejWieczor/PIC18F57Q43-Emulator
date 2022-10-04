@@ -2,3 +2,8 @@
 main
 *.json
 .ccls-cache
+kod
+build
+.moc/
+.qmake.stash
+Makefile

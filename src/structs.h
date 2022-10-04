@@ -176,6 +176,7 @@ typedef struct Access_Bank {
 } Access_Bank;
 
 /* Clock structure 
+ * @timer - QTimer used with the Qt framework
  * @tnow - timespec of when the clock was turned on
  * @period - clock period in nanoseconds
  * @active - 0/1 off/on*/

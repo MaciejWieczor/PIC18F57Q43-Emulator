@@ -7,3 +7,4 @@ build
 .moc/
 .qmake.stash
 Makefile
+ui/

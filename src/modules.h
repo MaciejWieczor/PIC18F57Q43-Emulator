@@ -30,33 +30,8 @@ union T0CON1_bits {
   };
 };
 
-union TMR0_16 {
-  u16 data;
-  struct {
-    u8 tmr0h;
-    u8 tmr0l;
-  };
-};
-
-struct TMR0 {
-  u8 * tmr0h_p;
-  u8 * tmr0l_p;
-  u8 * t0con1_p;
-  u8 * t0con0_p;
-};
-
 /* MODULES */
 
-typedef struct Modules {
-  struct TMR0 tmr0;
-} Modules;
-
-/* This function saves data memory location to pointers in module structs for easier
-* access */
-void init_Modules(Memory * memory, Modules * modules);
-
-/* Function handler when tmr0 gets a rising edge from its CS */
-void module_tmr0(Modules * modules, Bus * bus);
-
+void module_tmr0(Memory * memory, Bus * bus);
 
 #endif

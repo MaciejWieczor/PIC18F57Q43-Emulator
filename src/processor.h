@@ -21,6 +21,14 @@ int clk_Pulse(Clock * clock, int period);
 void machine_State(Code * code, Memory * memory, Bus * bus);
 //void machine_State(Code * code, Memory * memory, Bus * bus);
 
+void machine_State_Step(Code * code, Memory * memory, Bus * bus);
+
 int init_Memory(Code * code, Memory * memory, Bus * bus);
 
 int init_Clock(Clock * clock);
+
+int fetch_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock);
+
+int execute_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock);
+
+void print_coded_instr(Code * code, Memory * memory, Bus * bus);

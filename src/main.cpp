@@ -5,6 +5,7 @@
 #include "processor.h"
 #include "modules.h"
 #include "gui.h"
+#include "main_window.h"
 
 #define MAIN_CLOCK_PERIOD_NS 2e8
 
@@ -24,11 +25,9 @@ int main(int argc, char *argv[]){
   /* I set the clock to 1e9 nanoseconds for debug */
   Memory memory;
   Bus bus;
-  Modules modules;
 
   init_Memory(&code, &memory, &bus);
   init_Clock(&code.main_clock);
-  init_Modules(&memory, &modules);
   parse_Code(&code, &memory);
   decode_Lines(&code, &memory, &bus);
 
@@ -36,11 +35,11 @@ int main(int argc, char *argv[]){
 
   /* TESTING QT WINDOWS */
   QApplication app (argc, argv);
+  Ui_MainWindow w;
+  w.show();
 
-  QPushButton button ("Hello world !");
-  button.show();
-//  MyTimer timer = MyTimer(&code, &memory, &bus, &modules);
-  MyTimer timer(&code, &memory, &bus, &modules);
+//  StepButton button(&code, &memory, &bus);
+//  MyTimer timer(&code, &memory, &bus);
 
   return app.exec();
 

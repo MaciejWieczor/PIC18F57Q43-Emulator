@@ -532,7 +532,7 @@ static void write_to_memory(Memory * memory, Bus * bus) {
   bus->data_Bus.write = 0;
 }
 
-static int fetch_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock) {
+int fetch_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock) {
   /*In the fetch phase the Program Counter (PC) is incremented and 
    * the instruction is put out on to the bus - only in the next 
    * phase it is latched into Instruction Register*/
@@ -562,7 +562,7 @@ static int fetch_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock) 
   return 0;
 }
 
-static int execute_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock) {
+int execute_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock) {
   /*Instruction from the bus is latched into the Instruction 
    * Register. Next the instruction is decoded and executed over 
    * the next few clock cycles. Data memory is read and written 
@@ -642,7 +642,7 @@ static void print_encoded(Program_Word tmp_p, Memory * memory, Line * line) {
   }
 }
 
-static void print_coded_instr(Code * code, Memory * memory, Bus * bus) {
+void print_coded_instr(Code * code, Memory * memory, Bus * bus) {
   Program_Word tmp_p;
   WORD_UNION tmp;
   tmp_p = memory->instruction_register;
@@ -733,3 +733,5 @@ void machine_State(Code * code, Memory * memory, Bus * bus) {
     print_coded_instr(code, memory, bus);
   }
 }
+
+

@@ -35,9 +35,12 @@ int main(int argc, char *argv[]){
 
   /* TESTING QT WINDOWS */
   QApplication app (argc, argv);
-  Ui_MainWindow w;
-  w.show();
 
+  QMainWindow w;
+  Ui::MainWindow ui;
+  ui.setupUi(&w);
+
+  w.show();
 //  StepButton button(&code, &memory, &bus);
 //  MyTimer timer(&code, &memory, &bus);
 

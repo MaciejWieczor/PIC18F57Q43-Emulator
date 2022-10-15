@@ -19,31 +19,10 @@
  */
 
 int main(int argc, char *argv[]){
-  Code code = split_Program_Code("src/program.asm");
-  //print_Program_Code(&code);
 
-  /* I set the clock to 1e9 nanoseconds for debug */
-  Memory memory;
-  Bus bus;
-
-  init_Memory(&code, &memory, &bus);
-  init_Clock(&code.main_clock);
-  parse_Code(&code, &memory);
-  decode_Lines(&code, &memory, &bus);
-
-  cout << "PROGRAM MEMORY SIZE : " << memory.program_memory.size() << "\n";
-
-  /* TESTING QT WINDOWS */
   QApplication app (argc, argv);
-
-  QMainWindow w;
-  Ui::MainWindow ui;
-  ui.setupUi(&w);
-
-  w.show();
-//  StepButton button(&code, &memory, &bus);
-//  MyTimer timer(&code, &memory, &bus);
-
+  MainWindow ui;
+  ui.show();
   return app.exec();
 
   return 0;

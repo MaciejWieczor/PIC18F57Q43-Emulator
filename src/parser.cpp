@@ -40,9 +40,11 @@ static void remove_Comments(string * original) {
   *original = original->substr(0, original->find("---"));
 }
 
-static void save_C_Line(string * original) {
+static void save_C_Line(string * original, Code * code, int txt_index) {
     if(regex_match(*original, regex("^[0-9]+:(.*)"))) {
-    printf("FOUND C LINE\n");
+    printf("FOUND C LINE : %s, AT LINE NUMBER %d\n", original->c_str(), txt_index);
+    C_Line l = {.line = *original, .txt_index = txt_index};
+    code->c_lines.push_back(l);
     *original = "";
   }
 }
@@ -301,7 +303,7 @@ Code split_Program_Code(string name) {
       /* Remove whitespace from line */
       tmp = trim(line);
       /* Find and remove C line */
-      save_C_Line(&tmp);
+      save_C_Line(&tmp, &word_container, i);
       /* Remove comments from line */
       remove_Comments(&tmp);
       /* Check if this line has anything left after removals */
@@ -315,11 +317,13 @@ Code split_Program_Code(string name) {
         if( word_container.lines.size() == 1 )
           word_container.base_address = word_container.lines[0].address;
         word_container.lines[j].index = j;
+        word_container.lines[j].txt_index = i;
         j++;
       }
     }
     i++;
   }
+  word_container.txt_length = i;
   return word_container;
 }
 
@@ -361,6 +365,7 @@ void parse_Code(Code * code, Memory * memory) {
       /*here do some parsing */
       cout << word << " | ";
     }
+    cout << " - AT TXT LINE : " << line.txt_index;
     cout << "\n";
     i++;
   }
@@ -439,4 +444,54 @@ void decode_Lines(Code * code, Memory * memory, Bus * bus) {
   /* Some post initialization */
   bus->instruction_Bus = memory->program_memory[0];
 
+}
+
+/* This returns the first C_Line's txt_index that contains a substring str */
+static int find_C_Line(Code * code, string str) {
+  for(C_Line line : code->c_lines){
+    size_t found = line.line.find(str);
+    if (found!=string::npos)
+      /* FOUND */
+      return line.txt_index;
+  }
+  printf("DIDN'T FIND A C LINE WITH SUBSTRING %s IN IT\n", str.c_str());
+  return -1;
+}
+
+/* This returns the address of the first disasm line after C_Line at txt index */
+static int find_Next_Disasm_Prog_Word(Code * code, int txt_index) {
+  for(Line line : code->lines){
+    if(line.txt_index > txt_index)
+      return line.address;
+  }
+  printf("NEXT LINE AFTER C MAIN WAS NOT FOUND\n");
+  return -1;
+}
+
+void find_IRQs(Code * code, Memory * memory) {
+  /* Find main C_Line */
+  int main_index = find_C_Line(code, "main(");
+  /* Find next disasm line */
+  int main_disasm_adr = find_Next_Disasm_Prog_Word(code, main_index);
+
+  if(main_disasm_adr != -1) {
+    /* Set as the first address to start program from */
+    code->base_address = memory->program_memory[main_disasm_adr/2].address;
+    /* Overwrite program counter to the main instruction */
+    memory->program_counter.DATA = code->base_address - 2;
+  }
+
+  /* Find TMR0 IRQ address */
+  /* Check if string contains substring */ /* "IRQ_TMR0" */
+  int tmr0_index = find_C_Line(code, "IRQ_TMR0");
+  /* Find the next disasm line after the found C_Line */
+  int tmr0_disasm_adr = find_Next_Disasm_Prog_Word(code, tmr0_index);
+  /* Save interrupt handler address to memory modules structure */
+  if(tmr0_disasm_adr != -1) {
+    memory->modules.TMR0_module.enabled = 1;
+    memory->modules.TMR0_module.ivt_address = tmr0_disasm_adr;
+    memory->modules.IVT_module.interrupt_vector.insert({"tmr0", tmr0_disasm_adr});
+  }
+  else
+    memory->modules.TMR0_module.enabled = 0;
 }

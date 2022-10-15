@@ -6,155 +6,1201 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>1231</width>
+    <height>987</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QTabWidget" name="tabWidget">
-    <property name="geometry">
-     <rect>
-      <x>6</x>
-      <y>9</y>
-      <width>781</width>
-      <height>541</height>
-     </rect>
-    </property>
-    <property name="currentIndex">
-     <number>0</number>
-    </property>
-    <widget class="QWidget" name="tab">
-     <attribute name="title">
-      <string>Tab 1</string>
-     </attribute>
-     <widget class="QWidget" name="verticalLayoutWidget">
-      <property name="geometry">
-       <rect>
-        <x>9</x>
-        <y>9</y>
-        <width>761</width>
-        <height>491</height>
-       </rect>
-      </property>
-      <layout class="QVBoxLayout" name="verticalLayout">
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout">
-         <item>
-          <widget class="QPushButton" name="pushButton_2">
-           <property name="text">
-            <string>PushButton</string>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout_11">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout_10">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_11" stretch="0,0,0">
+        <property name="sizeConstraint">
+         <enum>QLayout::SetNoConstraint</enum>
+        </property>
+        <item>
+         <widget class="QScrollArea" name="scrollArea_9">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>400</height>
+           </size>
+          </property>
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="scrollAreaWidgetContents_9">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>347</width>
+             <height>473</height>
+            </rect>
            </property>
+           <layout class="QGridLayout" name="gridLayout_3">
+            <item row="1" column="0">
+             <widget class="QTextBrowser" name="text_c"/>
+            </item>
+           </layout>
           </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pushButton">
-           <property name="text">
-            <string>PushButton</string>
+         </widget>
+        </item>
+        <item>
+         <widget class="QScrollArea" name="scrollArea_10">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="text_disasm_scroll">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>346</width>
+             <height>473</height>
+            </rect>
            </property>
+           <layout class="QGridLayout" name="gridLayout_2">
+            <item row="0" column="0">
+             <widget class="QTextBrowser" name="text_disasm"/>
+            </item>
+           </layout>
           </widget>
-         </item>
-         <item>
-          <widget class="QRadioButton" name="radioButton">
-           <property name="text">
-            <string>RadioButton</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QRadioButton" name="radioButton_2">
-           <property name="text">
-            <string>RadioButton</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_3">
-         <item>
-          <widget class="QScrollArea" name="scrollArea">
+         </widget>
+        </item>
+        <item>
+         <widget class="QTabWidget" name="tabs_regs">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>390</width>
+            <height>475</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>500</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <widget class="QWidget" name="tab">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <property name="widgetResizable">
-            <bool>true</bool>
-           </property>
-           <widget class="QWidget" name="scrollAreaWidgetContents">
-            <property name="geometry">
-             <rect>
-              <x>0</x>
-              <y>0</y>
-              <width>374</width>
-              <height>452</height>
-             </rect>
-            </property>
-            <widget class="QTextBrowser" name="textBrowser">
-             <property name="geometry">
-              <rect>
-               <x>0</x>
-               <y>0</y>
-               <width>461</width>
-               <height>471</height>
-              </rect>
-             </property>
-            </widget>
-           </widget>
+           <attribute name="title">
+            <string>CPU</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_4">
+            <item>
+             <layout class="QVBoxLayout" name="verticalLayout_6" stretch="4,10">
+              <property name="sizeConstraint">
+               <enum>QLayout::SetDefaultConstraint</enum>
+              </property>
+              <item>
+               <widget class="QTableWidget" name="tableWidget_instr">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Ignored">
+                  <horstretch>1</horstretch>
+                  <verstretch>1</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>365</width>
+                  <height>100</height>
+                 </size>
+                </property>
+                <property name="baseSize">
+                 <size>
+                  <width>0</width>
+                  <height>100</height>
+                 </size>
+                </property>
+                <property name="rowCount">
+                 <number>3</number>
+                </property>
+                <property name="columnCount">
+                 <number>1</number>
+                </property>
+                <attribute name="horizontalHeaderDefaultSectionSize">
+                 <number>365</number>
+                </attribute>
+                <attribute name="horizontalHeaderStretchLastSection">
+                 <bool>true</bool>
+                </attribute>
+                <attribute name="verticalHeaderDefaultSectionSize">
+                 <number>32</number>
+                </attribute>
+                <attribute name="verticalHeaderStretchLastSection">
+                 <bool>true</bool>
+                </attribute>
+                <row>
+                 <property name="text">
+                  <string>Program Counter</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>Execute</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>Fetch</string>
+                 </property>
+                </row>
+                <column>
+                 <property name="text">
+                  <string>Instruction</string>
+                 </property>
+                </column>
+               </widget>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_5">
+                <item>
+                 <widget class="QTableWidget" name="tableWidget_cpu">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>177</width>
+                    <height>210</height>
+                   </size>
+                  </property>
+                  <attribute name="horizontalHeaderMinimumSectionSize">
+                   <number>50</number>
+                  </attribute>
+                  <attribute name="horizontalHeaderDefaultSectionSize">
+                   <number>165</number>
+                  </attribute>
+                  <attribute name="horizontalHeaderStretchLastSection">
+                   <bool>true</bool>
+                  </attribute>
+                  <attribute name="verticalHeaderDefaultSectionSize">
+                   <number>30</number>
+                  </attribute>
+                  <attribute name="verticalHeaderStretchLastSection">
+                   <bool>true</bool>
+                  </attribute>
+                  <row>
+                   <property name="text">
+                    <string>WREG</string>
+                   </property>
+                  </row>
+                  <row>
+                   <property name="text">
+                    <string>STATUS.N</string>
+                   </property>
+                  </row>
+                  <row>
+                   <property name="text">
+                    <string>STATUS.OV</string>
+                   </property>
+                  </row>
+                  <row>
+                   <property name="text">
+                    <string>STATUS.Z</string>
+                   </property>
+                  </row>
+                  <row>
+                   <property name="text">
+                    <string>STATUS.DC</string>
+                   </property>
+                  </row>
+                  <row>
+                   <property name="text">
+                    <string>STATUS.C</string>
+                   </property>
+                  </row>
+                  <row>
+                   <property name="text">
+                    <string>BSR</string>
+                   </property>
+                  </row>
+                  <row>
+                   <property name="text">
+                    <string>TOS</string>
+                   </property>
+                  </row>
+                  <row>
+                   <property name="text">
+                    <string>STKPTR</string>
+                   </property>
+                  </row>
+                  <column>
+                   <property name="text">
+                    <string>REG</string>
+                   </property>
+                  </column>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QTableWidget" name="tableWidget_ind_stack">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>177</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <attribute name="horizontalHeaderCascadingSectionResizes">
+                   <bool>false</bool>
+                  </attribute>
+                  <attribute name="horizontalHeaderDefaultSectionSize">
+                   <number>165</number>
+                  </attribute>
+                  <attribute name="horizontalHeaderStretchLastSection">
+                   <bool>true</bool>
+                  </attribute>
+                  <attribute name="verticalHeaderCascadingSectionResizes">
+                   <bool>false</bool>
+                  </attribute>
+                  <attribute name="verticalHeaderStretchLastSection">
+                   <bool>true</bool>
+                  </attribute>
+                  <row>
+                   <property name="text">
+                    <string>FSR0</string>
+                   </property>
+                  </row>
+                  <row>
+                   <property name="text">
+                    <string>FSR1</string>
+                   </property>
+                  </row>
+                  <row>
+                   <property name="text">
+                    <string>FSR2</string>
+                   </property>
+                  </row>
+                  <row>
+                   <property name="text">
+                    <string>INDF0</string>
+                   </property>
+                  </row>
+                  <row>
+                   <property name="text">
+                    <string>INDF1</string>
+                   </property>
+                  </row>
+                  <row>
+                   <property name="text">
+                    <string>INDF2</string>
+                   </property>
+                  </row>
+                  <row>
+                   <property name="text">
+                    <string>TOSU</string>
+                   </property>
+                  </row>
+                  <row>
+                   <property name="text">
+                    <string>TOSH</string>
+                   </property>
+                  </row>
+                  <row>
+                   <property name="text">
+                    <string>TOSL</string>
+                   </property>
+                  </row>
+                  <column>
+                   <property name="text">
+                    <string>REG</string>
+                   </property>
+                  </column>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </item>
+           </layout>
           </widget>
-         </item>
-         <item>
-          <layout class="QVBoxLayout" name="verticalLayout_2">
-           <item>
-            <widget class="QLabel" name="label_3">
-             <property name="text">
-              <string>TextLabel</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="label_2">
-             <property name="text">
-              <string>TextLabel</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="label">
-             <property name="text">
-              <string>TextLabel</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </widget>
-    </widget>
-    <widget class="QWidget" name="tab_2">
-     <attribute name="title">
-      <string>Tab 2</string>
-     </attribute>
-    </widget>
-   </widget>
+          <widget class="QWidget" name="tab_2">
+           <attribute name="title">
+            <string>FSR</string>
+           </attribute>
+           <layout class="QHBoxLayout" name="horizontalLayout_7">
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_8">
+              <item>
+               <widget class="QTableWidget" name="tableWidget_cpu_2">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>177</width>
+                  <height>210</height>
+                 </size>
+                </property>
+                <attribute name="horizontalHeaderMinimumSectionSize">
+                 <number>50</number>
+                </attribute>
+                <attribute name="horizontalHeaderDefaultSectionSize">
+                 <number>165</number>
+                </attribute>
+                <attribute name="verticalHeaderDefaultSectionSize">
+                 <number>30</number>
+                </attribute>
+                <row>
+                 <property name="text">
+                  <string>WREG</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>STATUS.N</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>STATUS.OV</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>STATUS.Z</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>STATUS.DC</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>STATUS.C</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>BSR</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>B</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>C</string>
+                 </property>
+                </row>
+                <column>
+                 <property name="text">
+                  <string>REG</string>
+                 </property>
+                </column>
+               </widget>
+              </item>
+              <item>
+               <widget class="QTableWidget" name="tableWidget_3">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>177</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <attribute name="horizontalHeaderDefaultSectionSize">
+                 <number>165</number>
+                </attribute>
+                <row>
+                 <property name="text">
+                  <string>A</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>B</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>C</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>D</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>E</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>F</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>G</string>
+                 </property>
+                </row>
+                <column>
+                 <property name="text">
+                  <string>REG</string>
+                 </property>
+                </column>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="tab_3">
+           <attribute name="title">
+            <string>TMR0/2/4</string>
+           </attribute>
+           <layout class="QHBoxLayout" name="horizontalLayout_9">
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_13">
+              <item>
+               <widget class="QTableWidget" name="tableWidget_cpu_3">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>177</width>
+                  <height>210</height>
+                 </size>
+                </property>
+                <attribute name="horizontalHeaderMinimumSectionSize">
+                 <number>50</number>
+                </attribute>
+                <attribute name="horizontalHeaderDefaultSectionSize">
+                 <number>165</number>
+                </attribute>
+                <attribute name="verticalHeaderDefaultSectionSize">
+                 <number>30</number>
+                </attribute>
+                <row>
+                 <property name="text">
+                  <string>TMR0CON0</string>
+                 </property>
+                </row>
+                <column>
+                 <property name="text">
+                  <string>REG</string>
+                 </property>
+                </column>
+               </widget>
+              </item>
+              <item>
+               <widget class="QTableWidget" name="tableWidget_4">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>177</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <attribute name="horizontalHeaderDefaultSectionSize">
+                 <number>165</number>
+                </attribute>
+                <row>
+                 <property name="text">
+                  <string>A</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>B</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>C</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>D</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>E</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>F</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>G</string>
+                 </property>
+                </row>
+                <column>
+                 <property name="text">
+                  <string>REG</string>
+                 </property>
+                </column>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="tab_4">
+           <attribute name="title">
+            <string>TMR1/3/5</string>
+           </attribute>
+           <layout class="QHBoxLayout" name="horizontalLayout_15">
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_14">
+              <item>
+               <widget class="QTableWidget" name="tableWidget_cpu_4">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>177</width>
+                  <height>210</height>
+                 </size>
+                </property>
+                <attribute name="horizontalHeaderMinimumSectionSize">
+                 <number>50</number>
+                </attribute>
+                <attribute name="horizontalHeaderDefaultSectionSize">
+                 <number>165</number>
+                </attribute>
+                <attribute name="verticalHeaderDefaultSectionSize">
+                 <number>30</number>
+                </attribute>
+                <row>
+                 <property name="text">
+                  <string>WREG</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>STATUS.N</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>STATUS.OV</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>STATUS.Z</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>STATUS.DC</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>STATUS.C</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>BSR</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>B</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>C</string>
+                 </property>
+                </row>
+                <column>
+                 <property name="text">
+                  <string>REG</string>
+                 </property>
+                </column>
+               </widget>
+              </item>
+              <item>
+               <widget class="QTableWidget" name="tableWidget_5">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>177</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <attribute name="horizontalHeaderDefaultSectionSize">
+                 <number>165</number>
+                </attribute>
+                <row>
+                 <property name="text">
+                  <string>A</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>B</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>C</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>D</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>E</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>F</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>G</string>
+                 </property>
+                </row>
+                <column>
+                 <property name="text">
+                  <string>REG</string>
+                 </property>
+                </column>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="interrupts">
+           <attribute name="title">
+            <string>INTERRUPTS</string>
+           </attribute>
+           <layout class="QHBoxLayout" name="horizontalLayout_17">
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_12">
+              <item>
+               <widget class="QTableWidget" name="tableWidget_cpu_5">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>177</width>
+                  <height>210</height>
+                 </size>
+                </property>
+                <attribute name="horizontalHeaderMinimumSectionSize">
+                 <number>50</number>
+                </attribute>
+                <attribute name="horizontalHeaderDefaultSectionSize">
+                 <number>165</number>
+                </attribute>
+                <attribute name="verticalHeaderDefaultSectionSize">
+                 <number>30</number>
+                </attribute>
+                <row>
+                 <property name="text">
+                  <string>INTCON 0</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>INTCON 1</string>
+                 </property>
+                </row>
+                <column>
+                 <property name="text">
+                  <string>REG</string>
+                 </property>
+                </column>
+               </widget>
+              </item>
+              <item>
+               <widget class="QTableWidget" name="tableWidget_6">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>177</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <attribute name="horizontalHeaderDefaultSectionSize">
+                 <number>165</number>
+                </attribute>
+                <row>
+                 <property name="text">
+                  <string>A</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>B</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>C</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>D</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>E</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>F</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>G</string>
+                 </property>
+                </row>
+                <column>
+                 <property name="text">
+                  <string>REG</string>
+                 </property>
+                </column>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="tab_6">
+           <attribute name="title">
+            <string>DMA</string>
+           </attribute>
+          </widget>
+          <widget class="QWidget" name="tab_7">
+           <attribute name="title">
+            <string>Placeholder</string>
+           </attribute>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout">
+          <property name="sizeConstraint">
+           <enum>QLayout::SetMaximumSize</enum>
+          </property>
+          <item>
+           <widget class="QRadioButton" name="radioButton_10">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>RadioButton</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="radioButton_9">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>RadioButton</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton_start">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>START SIMULATION</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton_c">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>STEP [C]</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton_disasm">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>STEP [DISASM]</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QTabWidget" name="Memory_Tabs">
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <widget class="QWidget" name="AccessBank" native="true">
+           <attribute name="title">
+            <string>Access Bank</string>
+           </attribute>
+           <layout class="QHBoxLayout" name="horizontalLayout_10">
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout" stretch="2,10">
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_5" stretch="4,8">
+                <item>
+                 <widget class="QTableWidget" name="tableWidget_2">
+                  <property name="rowCount">
+                   <number>3</number>
+                  </property>
+                  <property name="columnCount">
+                   <number>1</number>
+                  </property>
+                  <attribute name="horizontalHeaderStretchLastSection">
+                   <bool>true</bool>
+                  </attribute>
+                  <attribute name="verticalHeaderStretchLastSection">
+                   <bool>true</bool>
+                  </attribute>
+                  <row>
+                   <property name="text">
+                    <string>STATUS</string>
+                   </property>
+                  </row>
+                  <row>
+                   <property name="text">
+                    <string>WREG</string>
+                   </property>
+                  </row>
+                  <row>
+                   <property name="text">
+                    <string>BSR</string>
+                   </property>
+                  </row>
+                  <column>
+                   <property name="text">
+                    <string>Fast Register Stack</string>
+                   </property>
+                  </column>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QTableWidget" name="return_stack">
+                  <property name="rowCount">
+                   <number>8</number>
+                  </property>
+                  <property name="columnCount">
+                   <number>1</number>
+                  </property>
+                  <attribute name="horizontalHeaderStretchLastSection">
+                   <bool>true</bool>
+                  </attribute>
+                  <attribute name="verticalHeaderStretchLastSection">
+                   <bool>true</bool>
+                  </attribute>
+                  <row/>
+                  <row/>
+                  <row/>
+                  <row/>
+                  <row/>
+                  <row/>
+                  <row/>
+                  <row/>
+                  <column>
+                   <property name="text">
+                    <string>Return Stack</string>
+                   </property>
+                  </column>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <widget class="QTableWidget" name="tableWidget">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="selectionMode">
+                 <enum>QAbstractItemView::ExtendedSelection</enum>
+                </property>
+                <property name="rowCount">
+                 <number>16</number>
+                </property>
+                <property name="columnCount">
+                 <number>16</number>
+                </property>
+                <attribute name="horizontalHeaderVisible">
+                 <bool>true</bool>
+                </attribute>
+                <attribute name="horizontalHeaderMinimumSectionSize">
+                 <number>15</number>
+                </attribute>
+                <attribute name="horizontalHeaderDefaultSectionSize">
+                 <number>35</number>
+                </attribute>
+                <attribute name="verticalHeaderVisible">
+                 <bool>true</bool>
+                </attribute>
+                <attribute name="verticalHeaderMinimumSectionSize">
+                 <number>19</number>
+                </attribute>
+                <attribute name="verticalHeaderDefaultSectionSize">
+                 <number>25</number>
+                </attribute>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="tab_8">
+           <attribute name="title">
+            <string>Strona</string>
+           </attribute>
+           <layout class="QHBoxLayout" name="horizontalLayout_4">
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,10">
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,1,6">
+                <item>
+                 <widget class="QTextEdit" name="te_set_bank">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>60</height>
+                   </size>
+                  </property>
+                  <property name="baseSize">
+                   <size>
+                    <width>0</width>
+                    <height>100</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="pb_set_bank">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Set Register Bank</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <layout class="QVBoxLayout" name="verticalLayout_3"/>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <widget class="QTableWidget" name="bank_select_table"/>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>1231</width>
      <height>22</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionLoad_File"/>
+   </widget>
+   <addaction name="menuFile"/>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionLoad_File">
+   <property name="text">
+    <string>Load File</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

@@ -23,3 +23,5 @@ void parse_Code(Code * code, Memory * memory);
  * on the type of instruction)
  * @code - Parsed code*/
 void decode_Lines(Code * code, Memory * memory, Bus * bus);
+
+void find_IRQs(Code * code, Memory * memory);

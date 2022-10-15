@@ -32,3 +32,11 @@ int fetch_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock);
 int execute_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock);
 
 void print_coded_instr(Code * code, Memory * memory, Bus * bus);
+
+void pre_Copy_Pointer_Data(Code * code, Memory * memory, Bus * bus);
+
+void post_Copy_Pointer_Data(Code * code, Memory * memory, Bus * bus);
+
+u32 merge_int(u8 u, u8 h, u8 l);
+
+u16 merge_byte(u8 h, u8 l);

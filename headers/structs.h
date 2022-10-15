@@ -1,6 +1,7 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
+#include"modules.h"
 #include<vector>
 #include<iostream>
 #include<signal.h>           /* Definition of SIGEV_* constants */
@@ -14,13 +15,27 @@
 
 using namespace std;
 
-/* CPU Memory registers defines */
+/* CPU Memory registers definitions */
 
+#define FSR2      0x4D9
+#define FSR1      0x4E1
 #define FSR0      0x4E9
 #define WREG      0x4E8
 #define BSR       0x4E0
 #define STATUS    0x4D8
 #define PROD      0x4F3
+#define PC        0x4F9
+#define STKPTR    0x4FC
+#define TOS       0x4FD
+
+#define INDF0     0x4EF
+#define INDF1     0x4E7
+#define INDF2     0x4DF
+
+#define PLUSW0     0x4EB
+#define PREINC0    0x4EC
+#define POSTDEC0   0x4ED
+#define POSTINC0   0x4EF
 
 /* TMR0 Memory registers defines */
 
@@ -200,8 +215,15 @@ typedef struct Line {
   int number; 
   int length;
   int index;
+  int txt_index;
+  int gui_len;
   u16 coded_disasm;
 } Line;
+
+typedef struct C_Line {
+  string line;
+  int txt_index;
+} C_Line;
 
 /* Code structure 
  * @base_address - the PC value of the first instruction
@@ -216,7 +238,9 @@ typedef struct Line {
 typedef struct Code {
   int base_address;
   vector<Line> lines;
+  vector<C_Line> c_lines;
   int length;
+  int txt_length;
   u8 clock_Cycle;
   u8 pc_Changed;
   u32 current_Line;
@@ -255,6 +279,10 @@ typedef struct Memory {
   vector<u8> data_memory;
 
   vector<Program_Word> program_memory;
+  int return_stack [127];
+  vector<u8> fast_register_stack;
+
+  Modules modules;
 } Memory;
 
 typedef struct Data_Bus {

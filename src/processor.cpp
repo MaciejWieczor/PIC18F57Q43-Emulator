@@ -18,6 +18,66 @@ static u16 data_address(u8 bsr, u8 f) {
   return f + bsr * 0x100;
 }
 
+u16 merge_byte(u8 h, u8 l) { return h * 256 + l; }
+
+u32 merge_int(u8 u, u8 h, u8 l) { return u * 65536 + h * 256 + l; }
+
+/* PUSH TOS further onto the stack - and load the x parameter into the TOS */
+/* TBD: check for STKPTR Overflow */
+static void move_to_TOS(u32 x, Memory * memory) {
+  memory->data_memory[STKPTR]++;
+  memory->data_memory[TOS+2] = (x & 0x00FF0000) >> 16;
+  memory->data_memory[TOS+1] = (x & 0x0000FF00) >> 8;
+  memory->data_memory[TOS] = x & 0x000000FF;
+}
+
+/* Updates data_memory */
+/* Copy the stack into the TOS registers (in case instruction changes the value of the STKPTR)*/
+static void stack_to_TOS(Memory * memory) {
+  memory->data_memory[TOS+2] = (memory->return_stack[memory->data_memory[STKPTR]] & 0x00FF0000) >> 16;
+  memory->data_memory[TOS+1] = (memory->return_stack[memory->data_memory[STKPTR]] & 0x0000FF00) >> 8; 
+  memory->data_memory[TOS] = memory->return_stack[memory->data_memory[STKPTR]] & 0x000000FF;
+}
+
+/* TBD: check for STKPTR Underflow */
+static void remove_TOS(Memory * memory) {
+  memory->data_memory[STKPTR]--;
+  stack_to_TOS(memory);
+}
+
+/* Updates return stack */
+/* Copy the TOS back to the stack's top element (in case instruction changed TOSL or TOSH or TOSU)*/
+static void TOS_to_stack(Memory * memory) {
+  int tos = merge_int(memory->data_memory[TOS+2], memory->data_memory[TOS+1], memory->data_memory[TOS]);
+  memory->return_stack[memory->data_memory[STKPTR]] = tos;
+}
+
+/* Saves crucial register values like Status, wreg and bsr to the fast register stack */
+static void save_Context(Memory * memory) {
+  memory->fast_register_stack.push_back(memory->data_memory[STATUS]);
+  memory->fast_register_stack.push_back(memory->data_memory[WREG]);
+  memory->fast_register_stack.push_back(memory->data_memory[BSR]);
+}
+
+/* Restores crucial register values like Status, wreg and bsr from the fast register stack */
+static void restore_Context(Memory * memory) {
+
+  /* Remove first three elements while saving them back into data memory*/
+  memory->data_memory[BSR] = memory->fast_register_stack.back();
+  memory->fast_register_stack.pop_back();
+  memory->data_memory[WREG] = memory->fast_register_stack.back();
+  memory->fast_register_stack.pop_back();
+  memory->data_memory[STATUS] = memory->fast_register_stack.back();
+  memory->fast_register_stack.pop_back();
+
+}
+
+static void update_PC(Memory * memory) {
+  memory->data_memory[PC] = memory->program_counter.L;
+  memory->data_memory[PC+1] = memory->program_counter.H;
+  memory->data_memory[PC+2] = memory->program_counter.U;
+}
+
 static int resolve_Access_Bank_Address(u8 i) {
     if( i < 96 ) {
       return data_address(5, i);
@@ -80,9 +140,125 @@ static void modify_status_reg(Memory * memory, u8 a, u8 wreg, u8 operation_type)
 }
 
 static void flush_program_memory_data_latch(Memory * memory) {
+  memory->instruction_data_latch.index = memory->instruction_register.index; 
   memory->instruction_data_latch.program_word = 0; 
   memory->instruction_data_latch.type = NOP_TYPE;
   memory->instruction_data_latch.data = 0;
+}
+
+static void indirect_pre_ops(Memory * memory, int address) {
+  int fsr_address; 
+  int tmp_fsr = 0;
+  int preinc_reg = 0;
+  int plusw_reg = 0;
+  int post_reg = 0;
+  switch(address) {
+    case PREINC0:
+      tmp_fsr = FSR0;
+      preinc_reg = PREINC0;
+      break;
+    case PREINC0-8:
+      tmp_fsr = FSR1;
+      preinc_reg = PREINC0-8;
+      break;
+    case PREINC0-16:
+      tmp_fsr = FSR2;
+      preinc_reg = PREINC0-16;
+      break;
+    case PLUSW0:
+      tmp_fsr = FSR0;
+      plusw_reg = PLUSW0;
+      break;
+    case PLUSW0-8:
+      tmp_fsr = FSR1;
+      plusw_reg = PLUSW0-8;
+      break;
+    case PLUSW0-16:
+      tmp_fsr = FSR2;
+      plusw_reg = PLUSW0-16;
+      break;
+    case POSTDEC0:
+      tmp_fsr = FSR0;
+      post_reg = POSTDEC0;
+    case POSTDEC0-8:
+      tmp_fsr = FSR1;
+      post_reg = POSTDEC0-8;
+    case POSTDEC0-16:
+      tmp_fsr = FSR2;
+      post_reg = POSTDEC0-16;
+    case POSTINC0:
+      tmp_fsr = FSR0;
+      post_reg = POSTINC0;
+    case POSTINC0-8:
+      tmp_fsr = FSR1;
+      post_reg = POSTINC0-8;
+    case POSTINC0-16:
+      tmp_fsr = FSR2;
+      post_reg = POSTINC0-16;
+    default:
+      break;
+  }
+
+  /* MODIFY THE FSR VALUE */
+  if(tmp_fsr) {
+    fsr_address = memory->data_memory[tmp_fsr+1] * 0x100 + memory->data_memory[tmp_fsr];
+    /* IF WE INCREMENTED THE FSR */
+    if(preinc_reg) {
+      fsr_address++;
+      memory->data_memory[preinc_reg] = memory->data_memory[fsr_address];
+      memory->data_memory[tmp_fsr] = fsr_address & 0x00FF;
+      memory->data_memory[tmp_fsr+1] = (fsr_address & 0xFF00) >> 8;
+    }
+    /* IF WE JUST DID THE PLUSW */
+    if(plusw_reg) {
+      fsr_address += (signed char)memory->data_memory[WREG];
+      memory->data_memory[preinc_reg] = memory->data_memory[fsr_address];
+    }
+    if(post_reg)
+      memory->data_memory[post_reg] = memory->data_memory[fsr_address];
+  }
+}
+
+static void indirect_post_ops(Memory * memory, int address) {
+  int fsr_address; 
+  int tmp_fsr = 0;
+  int post_reg_dec = 0;
+  int post_reg_inc = 0;
+  switch(address) {
+    case POSTDEC0:
+      tmp_fsr = FSR0;
+      post_reg_dec = POSTDEC0;
+    case POSTDEC0-8:
+      tmp_fsr = FSR1;
+      post_reg_dec = POSTDEC0-8;
+    case POSTDEC0-16:
+      tmp_fsr = FSR2;
+      post_reg_dec = POSTDEC0-16;
+    case POSTINC0:
+      tmp_fsr = FSR0;
+      post_reg_inc = POSTINC0;
+    case POSTINC0-8:
+      tmp_fsr = FSR1;
+      post_reg_inc = POSTINC0-8;
+    case POSTINC0-16:
+      tmp_fsr = FSR2;
+      post_reg_inc = POSTINC0-16;
+    default:
+      break;
+  }
+
+  /* MODIFY THE FSR VALUE */
+  if(tmp_fsr) {
+    fsr_address = memory->data_memory[tmp_fsr+1] * 0x100 + memory->data_memory[tmp_fsr];
+    if(post_reg_dec) {
+      fsr_address--;
+    }
+    if(post_reg_inc) {
+      fsr_address++;
+    }
+    memory->data_memory[tmp_fsr] = fsr_address & 0x00FF;
+    memory->data_memory[tmp_fsr+1] = (fsr_address & 0xFF00) >> 8;
+  }
 }
 
 static void execute_byte_file(Memory * memory, Bus * bus) {
@@ -96,6 +272,8 @@ static void execute_byte_file(Memory * memory, Bus * bus) {
     address = resolve_Access_Bank_Address(p_word.byte.f);
   else 
     address = data_address(memory->data_memory[BSR], p_word.byte.f);
+
+
 
   if(p_word.byte.d)
     memory->data_address = address;
@@ -329,6 +507,21 @@ static void execute_bit(Memory * memory, Bus * bus) {
   }
 }
 
+static void execute_inherent(Memory * memory, Bus * bus) {
+  WORD_UNION p_word;
+  p_word.program_word = memory->instruction_register.program_word;
+  switch(p_word.inherent.lsb) {
+    case INSTR_PUSH:
+      move_to_TOS(memory->program_counter.DATA, memory);
+      break;
+    case INSTR_POP:
+      remove_TOS(memory);
+      break;
+    default:
+      break;  
+  }
+}
+
 /* If the condition is true we need to flush the next instruction and overwrite 
  * the PC with the address kept in the data field. We also should check if the 
  * address is an offset that fits inside the 8 bit variable, but the disassembly 
@@ -378,6 +571,40 @@ static void execute_branch_cond(Memory * memory, Bus * bus) {
     flush_program_memory_data_latch(memory);
     /* Always do minus 2 on jumps because next two clock cycles will increment the PC */
     memory->program_counter.DATA = memory->instruction_register.data - 2;
+    update_PC(memory);
+  }
+}
+
+/* TBD: pop from return stack and read TOS into PC */
+static void execute_ret(Memory * memory, Bus * bus) {
+  WORD_UNION p_word;
+  p_word.program_word = memory->instruction_register.program_word;
+  /* Get TOS back into the PC */
+  memory->program_counter.DATA = memory->return_stack[memory->data_memory[STKPTR]];
+  update_PC(memory);
+  /* Change stackpointer to "remove" the top element */
+  remove_TOS(memory);
+  flush_program_memory_data_latch(memory);
+  /* If s == 1 then use the fast register stack */
+  /* Otherwise don't */
+  if(p_word.call.s) {
+    restore_Context(memory);
+  }
+}
+
+/* TBD: use fast stack register */
+static void execute_call(Memory * memory, Bus * bus) {
+  TOS_to_stack(memory);
+  move_to_TOS(memory->program_counter.DATA, memory);
+  memory->program_counter.DATA = memory->instruction_register.data - 2;
+  update_PC(memory);
+  flush_program_memory_data_latch(memory);
+  WORD_UNION p_word;
+  p_word.program_word = memory->instruction_register.program_word;
+  /* If s == 1 then use the fast register stack */
+  /* Otherwise don't */
+  if(p_word.call.s) {
+    save_Context(memory);
   }
 }
 
@@ -469,15 +696,13 @@ static void execute_literal(Memory * memory, Bus * bus) {
 
 /* Here we change the values of registers according to the opcode 
  * and the parameters */
-/* TBD: put some actual operations inside here - at first at least 
- * literal/wreg operations and gotos*/
 static void execute_instruction(Memory * memory, Bus * bus) {
       printf("INSTR TYPE: %d\n", memory->instruction_register.type);
       switch(memory->instruction_register.type) {
 
       /* File operations that take one byte as register address */
 			case NOP_TYPE:
-        printf("ERROR - NO INSTRUCTION TYPE!");
+        printf("NOP!");
 				break;
 			case BYTE_FILE:
         execute_byte_file(memory, bus);
@@ -486,31 +711,33 @@ static void execute_instruction(Memory * memory, Bus * bus) {
         execute_byte_nw_file(memory, bus);
 				break;
 			case BIT:
+        execute_bit(memory, bus);
 				break;
 			case INHERENT:
+        execute_inherent(memory, bus);
 				break;
 			case BRA_COND:
         execute_branch_cond(memory, bus);
 				break;
 			case BRA_UNCOND:
-        /* TBD: test if the offset is in 2048 range*/
         memory->program_counter.DATA = memory->instruction_register.data - 2;
-        memory->instruction_data_latch.program_word = 0;
-        memory->instruction_data_latch.type = NOP_TYPE;
+        update_PC(memory);
+        flush_program_memory_data_latch(memory);
 				break;
 			case RET:
+        execute_ret(memory, bus);
 				break;
 			case CALL:
+        /* Push the TOS not the current address */
+        execute_call(memory, bus);
 				break;
 			case GOTOI:
         memory->program_counter.DATA = memory->instruction_register.data - 2;
+        update_PC(memory);
+        flush_program_memory_data_latch(memory);
 				break;
 			case LITERAL:
         execute_literal(memory, bus);
-				break;
-			case LITERAL_FSR:
-				break;
-			case LFSR:
 				break;
       default:
         break;
@@ -540,6 +767,7 @@ int fetch_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock) {
 
     case CLOCK_PC_INC_LATCH_IR:
       memory->program_counter.DATA += 2;
+      update_PC(memory);
       code->current_Line = memory->program_counter.DATA / 2;
       break;
 
@@ -661,16 +889,12 @@ void print_coded_instr(Code * code, Memory * memory, Bus * bus) {
   printf("ACCESS BANK : \n");
   printf("        0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F\n");
   for(int i = 0 ; i < 16 ; i++) {
-    printf("%4X : ", i*16 + 0x0460);
+    printf("%4X : ", i*0x10 + 0x0460);
     for(int j = 0 ; j < 16 ; j++) {
-      printf("%2X ", memory->data_memory[i*16 + j + 0x0460]);
+      printf("%2X ", memory->data_memory[i*0x10 + j + 0x0460]);
     }
     printf("\n");
   }
-}
-
-static u16 merge_byte(u8 h, u8 l) {
-  return h * 16 + l;
 }
 
 int clk_Pulse(Clock * clock, int period) {
@@ -693,6 +917,7 @@ int init_Memory(Code * code, Memory * memory, Bus * bus) {
   /* Here we first set the program counter to the base address */
   memory->program_counter.DATA = code->base_address - 2;
   memory->instruction_register.program_word = 0;
+  memory->instruction_register.index = 0;
 
   bus->instruction_Bus = {.program_word = 0, .type = NOP_TYPE};
   bus->data_Bus.data = 0;
@@ -708,6 +933,12 @@ int init_Memory(Code * code, Memory * memory, Bus * bus) {
     }
   }
   memory->data_memory[BSR] = 0;
+  memory->data_memory[STKPTR] = 0;
+  update_PC(memory);
+
+  for(int i = 0 ; i < 127 ; i++) {
+    memory->return_stack[i] = 0;
+  }
 
   return 0;
 }
@@ -716,6 +947,36 @@ int init_Clock(Clock * clock) {
   clock->tnow={0,0};
   clock_gettime(CLOCK_MONOTONIC, &clock->tnow);
   return 0;
+}
+
+void pre_Copy_Pointer_Data(Code * code, Memory * memory, Bus * bus) {
+  /* Copy the INDF contents to their locations */
+  /* FSR0 */
+  int fsr_address = memory->data_memory[FSR0+1] * 0x100 + memory->data_memory[FSR0];
+  memory->data_memory[INDF0] = memory->data_memory[fsr_address];
+  /* FSR1 */
+  fsr_address = memory->data_memory[FSR1+1] * 0x100 + memory->data_memory[FSR1];
+  memory->data_memory[INDF1] = memory->data_memory[fsr_address];
+  /* FSR2 */
+  fsr_address = memory->data_memory[FSR2+1] * 0x100 + memory->data_memory[FSR2];
+  memory->data_memory[INDF2] = memory->data_memory[fsr_address];
+
+  /* Copy PC into data memory */
+  memory->data_memory[PC] = memory->program_counter.L;
+  memory->data_memory[PC+1] = memory->program_counter.H;
+  memory->data_memory[PC+2] = memory->program_counter.U;
+  /* TOS from STKPTR */
+  stack_to_TOS(memory);
+}
+
+void post_Copy_Pointer_Data(Code * code, Memory * memory, Bus * bus) {
+  /* Copy PC from data memory into the PC variable */
+  memory->program_counter.L = memory->data_memory[PC];
+  memory->program_counter.H = memory->data_memory[PC+1];
+  memory->program_counter.U = memory->data_memory[PC+2];
+
+  /* save TOS back to the top of the return stack structure */
+  TOS_to_stack(memory);
 }
 
 void machine_State(Code * code, Memory * memory, Bus * bus) {

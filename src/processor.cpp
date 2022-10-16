@@ -788,9 +788,11 @@ int fetch_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock) {
   switch(code->clock_Cycle) {
 
     case CLOCK_PC_INC_LATCH_IR:
-      memory->program_counter.DATA += 2;
-      update_PC(memory);
-      code->current_Line = memory->program_counter.DATA / 2;
+      if(memory->pc_EN) {
+        memory->program_counter.DATA += 2;
+        update_PC(memory);
+        code->current_Line = memory->program_counter.DATA / 2;
+      }
       break;
 
     case CLOCK_PC_INC_DECODE:
@@ -940,6 +942,7 @@ int init_Memory(Code * code, Memory * memory, Bus * bus) {
   memory->program_counter.DATA = code->base_address - 2;
   memory->instruction_register.program_word = 0;
   memory->instruction_register.index = 0;
+  memory->pc_EN = 1;
 
   bus->instruction_Bus = {.program_word = 0, .type = NOP_TYPE};
   bus->data_Bus.data = 0;
@@ -961,6 +964,8 @@ int init_Memory(Code * code, Memory * memory, Bus * bus) {
   for(int i = 0 ; i < 127 ; i++) {
     memory->return_stack[i] = 0;
   }
+
+  memory->modules.IVT_module.context = POLLING_CONT;
 
   return 0;
 }

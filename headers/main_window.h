@@ -27,6 +27,6 @@ private:
     Memory priv_memory;
     Bus priv_bus;
     int a = 0;
-    QString filename = "programs/program.asm";
+    QString filename = "programs/program2.asm";
     int gui_cur_line = 0;
 };

@@ -47,6 +47,7 @@ using namespace std;
 
 /* IVT/interrupt definitions */
 
+#define PIR0    0x4AE
 #define PIR1    0x4AF
 #define PIR2    0x4B0
 #define PIR3    0x4B1
@@ -62,12 +63,28 @@ using namespace std;
 #define IVTLOCK 0x459
 
 enum context {
+  /* Main context */
   POLLING_CONT,
+  /* Low context */
+  LOW_CONT,
+  /* High while main */ 
+  HIGH_M_CONT,
+  /* High while low */ 
+  HIGH_L_CONT,
   INT_LAT_0_2_CONT,
   INT_LAT_0_3_CONT,
   INT_LAT_1_CONT,
   INT_LAT_2_CONT,
 };
+
+enum prior_lvl {
+  LOW_PRIORITY_LVL,
+  HIGH_PRIORITY_LVL,
+};
+
+/* IVT IRQ IDs */
+
+#define TMR0_ID   0x1F
 
 /* typedefs for unsigned types */
 
@@ -325,6 +342,8 @@ typedef struct Interrupt_Vector_Module {
   map<string, int> interrupt_vector;
   u8 context;
   u8 instruction_len;
+  int current_isr_addr;
+  u8 current_isr_prior_lvl;
 } Interrupt_Vector_Module;
 
 
@@ -438,6 +457,7 @@ typedef struct Memory {
   vector<u8> fast_register_stack;
 
   Modules modules;
+  u8 pc_EN;
 } Memory;
 
 typedef struct Data_Bus {
@@ -566,6 +586,6 @@ static map<string, u8> opcode8_number = {{"bc", 226},{"bn", 230},{"bnc", 227},{"
 
 #endif /* OPCODE_NUM_H */
 
-void module_interrupt(Memory * memory, Bus * bus, int clock);
+void module_interrupt(Memory * memory, Bus * bus, Code * code, int clock);
 
 void module_tmr0(Memory * memory, Bus * bus, int clock);

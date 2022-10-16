@@ -258,7 +258,7 @@ void MainWindow::machine_State_Step() {
   pre_Copy_Pointer_Data(&priv_code, &priv_memory, &priv_bus);
 
   for(int i = 0 ; i < 4 ; i++) {
-    module_interrupt(&priv_memory, &priv_bus, priv_code.clock_Cycle);
+    module_interrupt(&priv_memory, &priv_bus, &priv_code, priv_code.clock_Cycle);
     fetch_Instruction(&priv_code, &priv_memory, &priv_bus, priv_code.clock_Cycle);
     execute_Instruction(&priv_code, &priv_memory, &priv_bus, priv_code.clock_Cycle);
     module_tmr0(&priv_memory, &priv_bus, priv_code.clock_Cycle);

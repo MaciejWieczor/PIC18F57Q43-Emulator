@@ -37,7 +37,37 @@ using namespace std;
 #define POSTDEC0   0x4ED
 #define POSTINC0   0x4EF
 
-/* TMR0 Memory registers defines */
+
+/* TMR0 definitions */
+
+#define TMR0L     0x318
+#define TMR0H     0x319
+#define T0CON0    0x31A
+#define T0CON1    0x31B
+
+/* IVT/interrupt definitions */
+
+#define PIR1    0x4AF
+#define PIR2    0x4B0
+#define PIR3    0x4B1
+#define INTCON0 0x4D6
+#define INTCON1 0x4D7
+#define PIE0    0x49E
+#define PIE1    0x49F
+#define PIE2    0x4A0
+#define PIE3    0x4A1
+
+#define IVTBASE 0x45D
+#define IVTAD   0x45A
+#define IVTLOCK 0x459
+
+enum context {
+  POLLING_CONT,
+  INT_LAT_0_2_CONT,
+  INT_LAT_0_3_CONT,
+  INT_LAT_1_CONT,
+  INT_LAT_2_CONT,
+};
 
 /* typedefs for unsigned types */
 
@@ -49,6 +79,110 @@ using namespace std;
   typedef signed short s16;
   typedef signed int s32;
   typedef signed long s64;
+
+
+/* TMR0 unions */
+union T0CON0_bits {
+  u8 data;
+  struct {
+  u8 EN   : 1;
+  u8 empty: 1;
+  u8 OUT  : 1;
+  u8 MD16 : 1;
+  u8 OUTPS: 4;
+  };
+};
+
+union T0CON1_bits {
+  u8 data;
+  struct {
+  u8 CS   : 3;
+  u8 empty: 1;
+  u8 OUT  : 4;
+  };
+};
+
+/* IVT unions */
+union PIR1_R {
+  u8 data;
+  struct {
+    u8 SMT1PWAIF : 1;
+    u8 SMT1PRAIF : 1;
+    u8 SMT1IF : 1;
+    u8 CMP1F : 1;
+    u8 ACTIF : 1;
+    u8 ADIF : 1;
+    u8 ZCDIF : 1;
+    u8 INT0IF : 1;
+  };
+};
+
+union PIE1_R {
+  u8 data;
+  struct {
+    u8 SMT1PWAIE : 1;
+    u8 SMT1PRAIE : 1;
+    u8 SMT1IE : 1;
+    u8 CMP1F : 1;
+    u8 ACTIE : 1;
+    u8 ADIE : 1;
+    u8 ZCDIE : 1;
+    u8 INT0IE : 1;
+  };
+};
+
+union PIR3_R {
+  u8 data;
+  struct {
+    u8 TMR0IF : 1;
+    u8 CCP1IF : 1;
+    u8 TMR1GIF : 1;
+    u8 TMR1IF : 1;
+    u8 TMR2IF : 1;
+    u8 SPI1IF : 1;
+    u8 SPI1TXIF : 1;
+    u8 SPI1RXIF : 1;
+  };
+};
+
+union PIE3_R {
+  u8 data;
+  struct {
+    u8 TMR0IE : 1;
+    u8 CCP1IE : 1;
+    u8 TMR1GIE : 1;
+    u8 TMR1IE : 1;
+    u8 TMR2IE : 1;
+    u8 SPI1IE : 1;
+    u8 SPI1TXIE : 1;
+    u8 SPI1RXIE : 1;
+  };
+};
+
+union INTCON0_R {
+  u8 data;
+  struct {
+    u8 GIEGIEH : 1;
+    u8 GIEL : 1;
+    u8 IPEN : 1;
+    u8 empty : 2;
+    u8 INT2EDG : 1;
+    u8 INT1EDG : 1;
+    u8 INT0EDG : 1;
+  };
+};
+
+union INTCON1_R {
+  u8 data; 
+  struct {
+    /* 11: High ISR while Low ISR
+     * 10: High ISR while Main 
+     * 01: Low ISR while Main 
+     * 00: Main*/
+    u8 STAT : 2;
+    u8 empty : 6;
+  };
+};
 
 /* Instruction type defines */
 enum instruction_type {
@@ -185,6 +319,27 @@ union R_16 {
     u8 H;
   };
 };
+
+/* MODULE DEFINITIONS */
+typedef struct Interrupt_Vector_Module {
+  map<string, int> interrupt_vector;
+  u8 context;
+  u8 instruction_len;
+} Interrupt_Vector_Module;
+
+
+typedef struct TMR0_Module {
+  u8 enabled;
+  int ivt_address;
+} TMR0_module;
+
+/* MODULES */
+
+typedef struct Modules {
+  Interrupt_Vector_Module IVT_module;
+  TMR0_Module TMR0_module;
+} Modules;
+
 
 typedef struct Access_Bank {
   u8* data[256];
@@ -410,3 +565,7 @@ static map<string, u8> opcode8_number = {{"bc", 226},{"bn", 230},{"bnc", 227},{"
                                  {"mullw", 13},{"retlw", 12},{"subfsr", 233},{"sublw", 8}};
 
 #endif /* OPCODE_NUM_H */
+
+void module_interrupt(Memory * memory, Bus * bus, int clock);
+
+void module_tmr0(Memory * memory, Bus * bus, int clock);

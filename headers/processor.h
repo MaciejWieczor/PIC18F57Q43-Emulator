@@ -20,6 +20,11 @@ int clk_Pulse(Clock * clock, int period);
 * @bus - */
 void machine_State(Code * code, Memory * memory, Bus * bus);
 //void machine_State(Code * code, Memory * memory, Bus * bus);
+void flush_program_memory_data_latch(Memory * memory);
+
+void save_Context_ISR(Memory * memory);
+
+void restore_Context_ISR(Memory * memory);
 
 void machine_State_Step(Code * code, Memory * memory, Bus * bus);
 

@@ -59,8 +59,30 @@ static void save_Context(Memory * memory) {
   memory->fast_register_stack.push_back(memory->data_memory[BSR]);
 }
 
+/* TBD: include more registers */
+/* Saves crucial register values like Status, wreg and bsr to the fast register stack */
+void save_Context_ISR(Memory * memory) {
+  memory->fast_register_stack.push_back(memory->data_memory[STATUS]);
+  memory->fast_register_stack.push_back(memory->data_memory[WREG]);
+  memory->fast_register_stack.push_back(memory->data_memory[BSR]);
+}
+
 /* Restores crucial register values like Status, wreg and bsr from the fast register stack */
 static void restore_Context(Memory * memory) {
+
+  /* Remove first three elements while saving them back into data memory*/
+  memory->data_memory[BSR] = memory->fast_register_stack.back();
+  memory->fast_register_stack.pop_back();
+  memory->data_memory[WREG] = memory->fast_register_stack.back();
+  memory->fast_register_stack.pop_back();
+  memory->data_memory[STATUS] = memory->fast_register_stack.back();
+  memory->fast_register_stack.pop_back();
+
+}
+
+/* TBD: include more registers */
+/* Restores crucial register values like Status, wreg and bsr from the fast register stack */
+void restore_Context_ISR(Memory * memory) {
 
   /* Remove first three elements while saving them back into data memory*/
   memory->data_memory[BSR] = memory->fast_register_stack.back();
@@ -139,7 +161,7 @@ static void modify_status_reg(Memory * memory, u8 a, u8 wreg, u8 operation_type)
   memory->data_memory[STATUS] = status.reg;
 }
 
-static void flush_program_memory_data_latch(Memory * memory) {
+void flush_program_memory_data_latch(Memory * memory) {
   memory->instruction_data_latch.index = memory->instruction_register.index; 
   memory->instruction_data_latch.program_word = 0; 
   memory->instruction_data_latch.type = NOP_TYPE;

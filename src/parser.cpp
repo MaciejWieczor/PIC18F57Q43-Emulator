@@ -470,16 +470,16 @@ static int find_Next_Disasm_Prog_Word(Code * code, int txt_index) {
 
 void find_IRQs(Code * code, Memory * memory) {
   /* Find main C_Line */
-  int main_index = find_C_Line(code, "main(");
+  /* int main_index = find_C_Line(code, "main("); */
   /* Find next disasm line */
-  int main_disasm_adr = find_Next_Disasm_Prog_Word(code, main_index);
+  /* int main_disasm_adr = find_Next_Disasm_Prog_Word(code, main_index); */
 
-  if(main_disasm_adr != -1) {
+  /* if(main_disasm_adr != -1) { */
     /* Set as the first address to start program from */
-    code->base_address = memory->program_memory[main_disasm_adr/2].address;
+    /* code->base_address = memory->program_memory[main_disasm_adr/2].address; */
     /* Overwrite program counter to the main instruction */
-    memory->program_counter.DATA = code->base_address - 2;
-  }
+    /* memory->program_counter.DATA = code->base_address - 2; */
+  /* } */
 
   /* Find TMR0 IRQ address */
   /* Check if string contains substring */ /* "IRQ_TMR0" */
@@ -491,6 +491,7 @@ void find_IRQs(Code * code, Memory * memory) {
     memory->modules.TMR0_module.enabled = 1;
     memory->modules.TMR0_module.ivt_address = tmr0_disasm_adr;
     memory->modules.IVT_module.interrupt_vector.insert({"tmr0", tmr0_disasm_adr});
+    printf("TMR0 ISR ADDRESS = %X\n", tmr0_disasm_adr);
   }
   else
     memory->modules.TMR0_module.enabled = 0;

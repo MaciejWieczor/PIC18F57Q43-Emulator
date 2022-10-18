@@ -6,39 +6,25 @@ typedef struct IRQ_NUM_BIT {
   u8 bit_pos;
 } IRQ_NUM_BIT;
 
-/* TBD: */
+typedef map<int, IRQ_NUM_BIT> ID_TO_PIR;
+
+ID_TO_PIR id_to_pir = {{0x1F, {.addr = PIR3, .bit_pos = 7}} /* TMR0 */,
+                       {}};
+
 /* This will return PIR address and bit position to the interrupt which ID is passed as argument */
-IRQ_NUM_BIT resolve_irq_id_to_pir_addr(Memory * memory, int id) {
-  IRQ_NUM_BIT ret;
-  switch(id) {
-    case TMR0_ID:
-      ret = {.addr = PIR3, .bit_pos = 7};
-      break;
-    default:
-      break;
-  }
-  return ret;
+IRQ_NUM_BIT resolve_irq_id_to_pir_addr(Memory * memory, int id, ID_TO_PIR id_to_pir) {
+  return id_to_pir.find(id)->second;
 }
 
-/* TBD: */
 /* This will return irq ID from pir addr and bit pos (reverse upper function)*/
-int resolve_pir_addr_to_irq_id(Memory * memory, IRQ_NUM_BIT addr) {
-  int ret;
-  switch(addr.addr) {
-    case PIR3:
-      switch(addr.bit_pos) {
-        case 7:
-          /* PIR3.7 == TMR0*/
-          ret = TMR0_ID;
-          break;
-        default:
-          break;
+int resolve_pir_addr_to_irq_id(Memory * memory, IRQ_NUM_BIT addr, ID_TO_PIR id_to_pir) {
+   int key = 0;
+   for (auto &i : id_to_pir) {
+      if (i.second.addr == addr.addr && i.second.bit_pos == addr.bit_pos) {
+         return i.first;
       }
-      break;
-    default:
-      break;
-  }
-  return ret;
+   }
+  return 0;
 }
 
 /* TBD: */
@@ -47,12 +33,12 @@ int resolve_irq_id_to_pc_val(Memory * memory, int id) {
   int ret;
   switch(id) {
     case TMR0_ID:
-      ret = memory->modules.TMR0_module.ivt_address - 2;
+      ret = memory->modules.TMR0_module.ivt_address;
       break;
     default:
       break;
   }
-  return ret;
+  return ret-2;
 }
 
 /* TBD: */
@@ -69,7 +55,7 @@ vector<int> polling(Memory * memory) {
       /* If the last bit is set */
       if(memory->data_memory[base_pir + i] % 2 == 1) {
         irq_num_bit_tmp = {.addr = base_pir + i, .bit_pos = j};
-        id = resolve_pir_addr_to_irq_id(memory, irq_num_bit_tmp);
+        id = resolve_pir_addr_to_irq_id(memory, irq_num_bit_tmp, id_to_pir);
         ret.push_back(id);
       }
     }
@@ -106,13 +92,18 @@ int resolve_priority(Memory * memory, vector<int> pirs) {
 void module_interrupt(Memory * memory, Bus * bus, Code * code, int clock) {
   vector<int> polled_pirs;
   int id;
+  INTCON0_R intcon0_r;
+  intcon0_r.data = memory->data_memory[INTCON0];
+
   /* Parse all PIR */
   switch(memory->modules.IVT_module.context) {
     /* If we are in the main context we just poll the IFs for something to handle */
     case POLLING_CONT:
       /* ONLY EXECUTE THIS PART IF INTERRUPTS ARE ENABLED */
       /* If we found IRQ we let the currently loaded instruction finish */
-      polled_pirs = polling(memory);
+      /* IPEN = 0, GIE = 1 */
+      if(intcon0_r.GIEGIEH && !intcon0_r.IPEN)
+        polled_pirs = polling(memory);
       /* If size != 0 then we found an interrupt */
       if(polled_pirs.size()) {
         if(code->lines[memory->instruction_data_latch.index].length > 1)
@@ -134,10 +125,9 @@ void module_interrupt(Memory * memory, Bus * bus, Code * code, int clock) {
       /* TBD: Implement priority level */
       break;
     case HIGH_M_CONT:
-      /* Check if we just executed a RETFIE - if we did then restore context and go back 
+      /* Check if we just executed (it auto restores context) and if yes then go back
        * to MAIN context */
       if(code->lines[memory->instruction_register.index].words[0] == "retfie") {
-        restore_Context_ISR(memory);
         memory->modules.IVT_module.context = POLLING_CONT;
       }
       break;
@@ -193,17 +183,19 @@ void module_tmr0(Memory * memory, Bus * bus, int clock) {
   tmr0_con0_tmp.data = memory->data_memory[T0CON0];
   tmr0_con1_tmp.data = memory->data_memory[T0CON1];
 
-  /* Check mode */
+  /* Check if turned on*/
+  if(tmr0_con0_tmp.EN) {
 
-  /* Clock source check */ 
-  
-  /* Sync/Async */
+    /* Check mode */
 
-  /* Prescaler, postscaler */
+    /* Clock source check */ 
+    
+    /* Sync/Async */
 
-  /* See if mode condition is met*/
+    /* Prescaler, postscaler */
 
-  /* Set interrupt flag */
+    /* See if mode condition is met*/
 
-  /* Check if turned on - and count */
+    /* Set interrupt flag */
+  }
 }

@@ -155,7 +155,8 @@ static void modify_status_reg(Memory * memory, u8 a, u8 wreg, u8 operation_type)
     if(((a & 0x0F) + (wreg & 0x0F)) & 0x10) status.DC = 1;
     if((wreg & 0x80) != (temp & 0x80)) status.OV = 1;
   }
-  if(temp == 0) status.Z = 1;
+  /* This handles if temp == 0 and also if temp first byte is zero */
+  if((temp & 0xFF) == 0) status.Z = 1;
   if(temp < 0 ) status.N = 1;
 
   memory->data_memory[STATUS] = status.reg;
@@ -609,8 +610,11 @@ static void execute_ret(Memory * memory, Bus * bus) {
   flush_program_memory_data_latch(memory);
   /* If s == 1 then use the fast register stack */
   /* Otherwise don't */
-  if(p_word.call.s) {
+  if(p_word.ret.s && p_word.ret.opcode == INSTR_RETURN) {
     restore_Context(memory);
+  }
+  if(p_word.ret.s && p_word.ret.opcode == INSTR_RETFIE) {
+    restore_Context_ISR(memory);
   }
 }
 
@@ -966,6 +970,7 @@ int init_Memory(Code * code, Memory * memory, Bus * bus) {
   }
 
   memory->modules.IVT_module.context = POLLING_CONT;
+  memory->modules.IVT_module.current_isr_addr = 0;
 
   return 0;
 }

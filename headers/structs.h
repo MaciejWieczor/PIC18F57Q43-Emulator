@@ -99,23 +99,23 @@ enum prior_lvl {
 
 
 /* TMR0 unions */
-union T0CON0_bits {
+union T0CON0_R {
   u8 data;
   struct {
-  u8 EN   : 1;
-  u8 empty: 1;
-  u8 OUT  : 1;
-  u8 MD16 : 1;
   u8 OUTPS: 4;
+  u8 MD16 : 1;
+  u8 OUT  : 1;
+  u8 empty: 1;
+  u8 EN   : 1;
   };
 };
 
-union T0CON1_bits {
+union T0CON1_R {
   u8 data;
   struct {
+  u8 CKPS  : 4;
+  u8 ASYNC: 1;
   u8 CS   : 3;
-  u8 empty: 1;
-  u8 OUT  : 4;
   };
 };
 
@@ -123,69 +123,69 @@ union T0CON1_bits {
 union PIR1_R {
   u8 data;
   struct {
-    u8 SMT1PWAIF : 1;
-    u8 SMT1PRAIF : 1;
-    u8 SMT1IF : 1;
-    u8 CMP1F : 1;
-    u8 ACTIF : 1;
-    u8 ADIF : 1;
-    u8 ZCDIF : 1;
     u8 INT0IF : 1;
+    u8 ZCDIF : 1;
+    u8 ADIF : 1;
+    u8 ACTIF : 1;
+    u8 CM1IF : 1;
+    u8 SMT1IF : 1;
+    u8 SMT1PRAIF : 1;
+    u8 SMT1PWAIF : 1;
   };
 };
 
 union PIE1_R {
   u8 data;
   struct {
-    u8 SMT1PWAIE : 1;
-    u8 SMT1PRAIE : 1;
-    u8 SMT1IE : 1;
-    u8 CMP1F : 1;
-    u8 ACTIE : 1;
-    u8 ADIE : 1;
-    u8 ZCDIE : 1;
     u8 INT0IE : 1;
+    u8 ZCDIE : 1;
+    u8 ADIE : 1;
+    u8 ACTIE : 1;
+    u8 CM1IF : 1;
+    u8 SMT1IE : 1;
+    u8 SMT1PRAIE : 1;
+    u8 SMT1PWAIE : 1;
   };
 };
 
 union PIR3_R {
   u8 data;
   struct {
-    u8 TMR0IF : 1;
-    u8 CCP1IF : 1;
-    u8 TMR1GIF : 1;
-    u8 TMR1IF : 1;
-    u8 TMR2IF : 1;
-    u8 SPI1IF : 1;
-    u8 SPI1TXIF : 1;
     u8 SPI1RXIF : 1;
+    u8 SPI1TXIF : 1;
+    u8 SPI1IF : 1;
+    u8 TMR2IF : 1;
+    u8 TMR1IF : 1;
+    u8 TMR1GIF : 1;
+    u8 CCP1IF : 1;
+    u8 TMR0IF : 1;
   };
 };
 
 union PIE3_R {
   u8 data;
   struct {
-    u8 TMR0IE : 1;
-    u8 CCP1IE : 1;
-    u8 TMR1GIE : 1;
-    u8 TMR1IE : 1;
-    u8 TMR2IE : 1;
-    u8 SPI1IE : 1;
-    u8 SPI1TXIE : 1;
     u8 SPI1RXIE : 1;
+    u8 SPI1TXIE : 1;
+    u8 SPI1IE : 1;
+    u8 TMR2IE : 1;
+    u8 TMR1IE : 1;
+    u8 TMR1GIE : 1;
+    u8 CCP1IE : 1;
+    u8 TMR0IE : 1;
   };
 };
 
 union INTCON0_R {
   u8 data;
   struct {
-    u8 GIEGIEH : 1;
-    u8 GIEL : 1;
-    u8 IPEN : 1;
-    u8 empty : 2;
-    u8 INT2EDG : 1;
-    u8 INT1EDG : 1;
     u8 INT0EDG : 1;
+    u8 INT1EDG : 1;
+    u8 INT2EDG : 1;
+    u8 empty : 2;
+    u8 IPEN : 1;
+    u8 GIEL : 1;
+    u8 GIEGIEH : 1;
   };
 };
 
@@ -196,8 +196,8 @@ union INTCON1_R {
      * 10: High ISR while Main 
      * 01: Low ISR while Main 
      * 00: Main*/
-    u8 STAT : 2;
     u8 empty : 6;
+    u8 STAT : 2;
   };
 };
 
@@ -227,14 +227,14 @@ enum instruction_type {
 union STATUS_R {
   u8 reg;
   struct {
-  u8 undef : 1;
-  u8 TO : 1;
-  u8 PD : 1;
-  u8 N : 1;
-  u8 OV : 1;
-  u8 Z : 1;
-  u8 DC : 1;
   u8 C : 1;
+  u8 DC : 1;
+  u8 Z : 1;
+  u8 OV : 1;
+  u8 N : 1;
+  u8 PD : 1;
+  u8 TO : 1;
+  u8 undef : 1;
   };
 };
 
@@ -242,77 +242,77 @@ union WORD_UNION {
   u16 program_word;
 
   struct {
-    u8 opcode : 6;
-    u8 d : 1;
-    u8 a : 1;
     u8 f : 8;
+    u8 a : 1;
+    u8 d : 1;
+    u8 opcode : 6;
   } byte;
 
   struct {
-    u8 opcode : 7;
-    u8 a : 1;
     u8 f : 8;
+    u8 a : 1;
+    u8 opcode : 7;
   } byte_nw;
 
   struct {
     /* For nop just set msb to 0xFX or 0x0X*/
-    u8 msb : 8;
     u8 lsb : 8;
+    u8 msb : 8;
   } inherent;
 
   struct {
-    u8 opcode : 8;
     u8 n : 8;
+    u8 opcode : 8;
   } bra_cond;
 
   /* For BRA and RCALL */
   struct {
-    u8 opcode : 5;
     u16 n : 11;
+    u8 opcode : 5;
   } bra_uncond;
 
   /* For RETURN i RETFIE */
   struct {
-    u8 zeros : 8;
-    u8 opcode : 7;
     u8 s : 1;
+    u8 opcode : 7;
+    u8 zeros : 8;
   } ret;
 
   struct {
-    u8 opcode : 7;
+    u8 k : 8;
     u8 s : 1;
-    u8 k : 7;
+    u8 opcode : 7;
   } call;
 
   struct {
-    u8 opcode : 8;
     u8 k : 8;
+    u8 opcode : 8;
   } gotoi;
 
   struct {
-    u8 opcode : 4;
-    u8 b : 3;
-    u8 a : 1;
     u8 f : 8;
+    u8 a : 1;
+    u8 b : 3;
+    u8 opcode : 4;
   } bit;
 
   /* Literal formats defined */
   struct {
-    u8 opcode : 8;
     u8 k : 8;
+    u8 opcode : 8;
   } literal;
 
   struct {
-    u8 opcode : 8;
-    u8 f : 2;
     u8 k : 6;
+    u8 f : 2;
+    u8 opcode : 8;
   } addl_fsr;
 
   struct {
-    u8 opcode : 8;
-    u8 zeros : 2;
-    u8 fn : 2;
     u8 k : 4;
+    u8 fn : 2;
+    u8 zeros : 2;
+    u8 opcode : 8;
   } lfsr;
 };
 

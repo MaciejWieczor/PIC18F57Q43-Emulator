@@ -132,13 +132,64 @@ static string print_encoded(Program_Word tmp_p, Memory * memory, Line * line) {
 }
 
 void MainWindow::update_LabelTableReturnStack () {
-
   char buffer [20];
 
   for(int i = 0 ; i < 8 ; i++) {
     sprintf(buffer, "0x%X", priv_memory.return_stack[i]); 
     ui.return_stack->setItem(i, 0,  new QTableWidgetItem(buffer));
   }
+}
+
+void MainWindow::update_LabelTableTmr0 () {
+  char buffer [20];
+  /* T0CON0 */
+  sprintf(buffer, "%d", priv_memory.data_memory[T0CON0]); 
+  ui.tableWidget_int->setItem(0, 0,  new QTableWidgetItem(buffer));
+  /* T0CON0 BITS */
+  T0CON0_R t0con0_tmp;
+  t0con0_tmp.data = priv_memory.data_memory[T0CON0];
+  /* EN */
+  sprintf(buffer, "%d", t0con0_tmp.EN); 
+  ui.tableWidget_int->setItem(1, 0,  new QTableWidgetItem(buffer));
+}
+
+void MainWindow::update_LabelTableInt () {
+  char buffer [20];
+  /* INTCON0 */
+  sprintf(buffer, "%d", priv_memory.data_memory[INTCON0]); 
+  ui.tableWidget_int->setItem(0, 0,  new QTableWidgetItem(buffer));
+  /* STATUS BITS */
+  INTCON0_R intcon0_tmp;
+  intcon0_tmp.data = priv_memory.data_memory[INTCON0];
+  /* GIEH */
+  sprintf(buffer, "%d", intcon0_tmp.GIEGIEH); 
+  ui.tableWidget_int->setItem(1, 0,  new QTableWidgetItem(buffer));
+  /* GIEL */
+  sprintf(buffer, "%d", intcon0_tmp.GIEL); 
+  ui.tableWidget_int->setItem(2, 0,  new QTableWidgetItem(buffer));
+  /* IPEN */
+  sprintf(buffer, "%d", intcon0_tmp.IPEN); 
+  ui.tableWidget_int->setItem(3, 0,  new QTableWidgetItem(buffer));
+  /* INT2EDG */
+  sprintf(buffer, "%d", intcon0_tmp.INT2EDG); 
+  ui.tableWidget_int->setItem(4, 0,  new QTableWidgetItem(buffer));
+  /* INT1EDG */
+  sprintf(buffer, "%d", intcon0_tmp.INT1EDG); 
+  ui.tableWidget_int->setItem(5, 0,  new QTableWidgetItem(buffer));
+  /* INT0EDG */ 
+  sprintf(buffer, "%d", intcon0_tmp.INT0EDG); 
+  ui.tableWidget_int->setItem(6, 0,  new QTableWidgetItem(buffer));
+  /* INTCON1 */
+  sprintf(buffer, "%d", priv_memory.data_memory[INTCON1]); 
+  ui.tableWidget_int->setItem(7, 0,  new QTableWidgetItem(buffer));
+  INTCON1_R intcon1_tmp;
+  intcon1_tmp.data = priv_memory.data_memory[INTCON1];
+  /* STAT */
+  sprintf(buffer, "%d", intcon1_tmp.STAT); 
+  ui.tableWidget_int->setItem(8, 0,  new QTableWidgetItem(buffer));
+  /* IVTAD */
+  sprintf(buffer, "%d", priv_memory.modules.IVT_module.current_isr_addr); 
+  ui.tableWidget_int->setItem(9, 0,  new QTableWidgetItem(buffer));
 }
 
 void MainWindow::update_LabelTableCpu () {
@@ -241,6 +292,8 @@ void MainWindow::update_Labels() {
   /* Update label 1 */
   update_LabelTableInstr();
   update_LabelTableCpu();
+  update_LabelTableInt();
+  update_LabelTableTmr0();
   update_LabelTableReturnStack();
 
   update_Table();

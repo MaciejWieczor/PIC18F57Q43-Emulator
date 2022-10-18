@@ -16,6 +16,8 @@ private slots:
     void machine_State_Step();
     void update_LabelTableInstr();
     void update_LabelTableCpu();
+    void update_LabelTableInt();
+    void update_LabelTableTmr0();
     void update_LabelTableReturnStack();
     void update_Table();
     void update_Labels();

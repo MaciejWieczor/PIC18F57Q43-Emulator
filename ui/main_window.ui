@@ -117,7 +117,7 @@
            </size>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>3</number>
           </property>
           <widget class="QWidget" name="tab">
            <property name="sizePolicy">
@@ -368,160 +368,15 @@
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="tab_2">
-           <attribute name="title">
-            <string>FSR</string>
-           </attribute>
-           <layout class="QHBoxLayout" name="horizontalLayout_7">
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_8">
-              <item>
-               <widget class="QTableWidget" name="tableWidget_cpu_2">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>177</width>
-                  <height>210</height>
-                 </size>
-                </property>
-                <attribute name="horizontalHeaderMinimumSectionSize">
-                 <number>50</number>
-                </attribute>
-                <attribute name="horizontalHeaderDefaultSectionSize">
-                 <number>165</number>
-                </attribute>
-                <attribute name="verticalHeaderDefaultSectionSize">
-                 <number>30</number>
-                </attribute>
-                <row>
-                 <property name="text">
-                  <string>WREG</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>STATUS.N</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>STATUS.OV</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>STATUS.Z</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>STATUS.DC</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>STATUS.C</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>BSR</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>B</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>C</string>
-                 </property>
-                </row>
-                <column>
-                 <property name="text">
-                  <string>REG</string>
-                 </property>
-                </column>
-               </widget>
-              </item>
-              <item>
-               <widget class="QTableWidget" name="tableWidget_3">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>177</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <attribute name="horizontalHeaderDefaultSectionSize">
-                 <number>165</number>
-                </attribute>
-                <row>
-                 <property name="text">
-                  <string>A</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>B</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>C</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>D</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>E</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>F</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>G</string>
-                 </property>
-                </row>
-                <column>
-                 <property name="text">
-                  <string>REG</string>
-                 </property>
-                </column>
-               </widget>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </widget>
           <widget class="QWidget" name="tab_3">
            <attribute name="title">
-            <string>TMR0/2/4</string>
+            <string>TMR0/1</string>
            </attribute>
            <layout class="QHBoxLayout" name="horizontalLayout_9">
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_13">
               <item>
-               <widget class="QTableWidget" name="tableWidget_cpu_3">
+               <widget class="QTableWidget" name="tableWidget_tmr0">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                   <horstretch>0</horstretch>
@@ -546,6 +401,56 @@
                 <row>
                  <property name="text">
                   <string>TMR0CON0</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>TMR0CON0.EN</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>TMR0CON0.OUT</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>TMR0CON0.MD16</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>TMR0CON0.OUTPS</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>TMR0CON1</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>TMR0CON1.CS</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>TMR0CON1.ASYNC</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>TMR0CON1.CKPS</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>TMR0H</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>TMR0L</string>
                  </property>
                 </row>
                 <column>
@@ -620,7 +525,7 @@
           </widget>
           <widget class="QWidget" name="tab_4">
            <attribute name="title">
-            <string>TMR1/3/5</string>
+            <string>TMR2/3</string>
            </attribute>
            <layout class="QHBoxLayout" name="horizontalLayout_15">
             <item>
@@ -771,7 +676,7 @@
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_12">
               <item>
-               <widget class="QTableWidget" name="tableWidget_cpu_5">
+               <widget class="QTableWidget" name="tableWidget_int">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                   <horstretch>0</horstretch>
@@ -795,12 +700,52 @@
                 </attribute>
                 <row>
                  <property name="text">
-                  <string>INTCON 0</string>
+                  <string>INTCON0</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>INTCON 1</string>
+                  <string>INTCON0.GIEH</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>INTCON0.GIEL</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>INTCON0.IPEN</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>INTCON0.INT2EDG</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>INTCON0.INT1EDG</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>INTCON0.INT0EDG</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>INTCON1</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>INTCON1.STAT</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>IVTAD</string>
                  </property>
                 </row>
                 <column>
@@ -811,7 +756,198 @@
                </widget>
               </item>
               <item>
-               <widget class="QTableWidget" name="tableWidget_6">
+               <widget class="QTableWidget" name="tableWidget_pir">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>177</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <attribute name="horizontalHeaderDefaultSectionSize">
+                 <number>70</number>
+                </attribute>
+                <attribute name="horizontalHeaderStretchLastSection">
+                 <bool>true</bool>
+                </attribute>
+                <attribute name="verticalHeaderStretchLastSection">
+                 <bool>true</bool>
+                </attribute>
+                <row>
+                 <property name="text">
+                  <string>0</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>1</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>2</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>3</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>4</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>5</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>6</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>7</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>8</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>9</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>10</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>11</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>12</string>
+                 </property>
+                </row>
+                <column>
+                 <property name="text">
+                  <string>PIR</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>PIE</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>IPR</string>
+                 </property>
+                </column>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="tab_2">
+           <attribute name="title">
+            <string>FSR</string>
+           </attribute>
+           <layout class="QHBoxLayout" name="horizontalLayout_7">
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_8">
+              <item>
+               <widget class="QTableWidget" name="tableWidget_cpu_2">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>177</width>
+                  <height>210</height>
+                 </size>
+                </property>
+                <attribute name="horizontalHeaderMinimumSectionSize">
+                 <number>50</number>
+                </attribute>
+                <attribute name="horizontalHeaderDefaultSectionSize">
+                 <number>165</number>
+                </attribute>
+                <attribute name="verticalHeaderDefaultSectionSize">
+                 <number>30</number>
+                </attribute>
+                <row>
+                 <property name="text">
+                  <string>WREG</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>STATUS.N</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>STATUS.OV</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>STATUS.Z</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>STATUS.DC</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>STATUS.C</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>BSR</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>B</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>C</string>
+                 </property>
+                </row>
+                <column>
+                 <property name="text">
+                  <string>REG</string>
+                 </property>
+                </column>
+               </widget>
+              </item>
+              <item>
+               <widget class="QTableWidget" name="tableWidget_3">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                   <horstretch>0</horstretch>
@@ -966,7 +1102,7 @@
           <property name="currentIndex">
            <number>0</number>
           </property>
-          <widget class="QWidget" name="AccessBank" native="true">
+          <widget class="QWidget" name="AccessBank">
            <attribute name="title">
             <string>Access Bank</string>
            </attribute>

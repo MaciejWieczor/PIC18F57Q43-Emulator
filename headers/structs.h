@@ -47,6 +47,7 @@ using namespace std;
 
 /* IVT/interrupt definitions */
 
+#define IPR0    0x362
 #define PIR0    0x4AE
 #define PIR1    0x4AF
 #define PIR2    0x4B0
@@ -350,6 +351,12 @@ typedef struct Interrupt_Vector_Module {
 typedef struct TMR0_Module {
   u8 enabled;
   int ivt_address;
+  /* ACC is the counter */
+  int acc;
+  int pre_acc;
+  int post_acc;
+  int pre;
+  int post;
 } TMR0_module;
 
 /* MODULES */
@@ -390,6 +397,7 @@ typedef struct Line {
   int length;
   int index;
   int txt_index;
+  int last_c_index;
   int gui_len;
   u16 coded_disasm;
 } Line;
@@ -397,6 +405,8 @@ typedef struct Line {
 typedef struct C_Line {
   string line;
   int txt_index;
+  int index;
+  int gui_len;
 } C_Line;
 
 /* Code structure 

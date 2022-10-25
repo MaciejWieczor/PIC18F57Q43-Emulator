@@ -45,3 +45,7 @@ void post_Copy_Pointer_Data(Code * code, Memory * memory, Bus * bus);
 u32 merge_int(u8 u, u8 h, u8 l);
 
 u16 merge_byte(u8 h, u8 l);
+
+void TOS_to_stack(Memory * memory);
+
+void move_to_TOS(u32 x, Memory * memory);

@@ -6,6 +6,7 @@ HEADERS += headers/*.h
 SOURCES += src/*.cpp
 FORMS += ui/main_window.ui
 
+CONFIG += qwt
 INCLUDEPATH += headers
 BUILD_DIR = ./build
 OBJECTS_DIR = ./.objects

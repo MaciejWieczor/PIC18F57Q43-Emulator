@@ -468,6 +468,31 @@ static int find_Next_Disasm_Prog_Word(Code * code, int txt_index) {
   return -1;
 }
 
+/* Return the last C_Line instruction for a given disasm line */
+static int find_Last_C_Line(Code * code, int disasm_index) {
+  int last_index = 0;
+  for(C_Line line : code->c_lines) {
+    if(line.txt_index > disasm_index)
+      return last_index;
+    else
+      last_index = line.index;
+  }
+  return 0;
+}
+
+/* Fill the last_c_index for every disasm line */
+void find_Last_C_Lines(Code * code) {
+  int i = 0;
+  int gui_len;
+  for(C_Line &line : code->c_lines) {
+    line.index = i;
+    i++;
+  }
+  for(Line &line : code->lines) {
+    line.last_c_index = find_Last_C_Line(code, line.txt_index);
+  }
+}
+
 void find_IRQs(Code * code, Memory * memory) {
   /* Find main C_Line */
   /* int main_index = find_C_Line(code, "main("); */

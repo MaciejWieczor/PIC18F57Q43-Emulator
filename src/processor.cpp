@@ -24,7 +24,7 @@ u32 merge_int(u8 u, u8 h, u8 l) { return u * 65536 + h * 256 + l; }
 
 /* PUSH TOS further onto the stack - and load the x parameter into the TOS */
 /* TBD: check for STKPTR Overflow */
-static void move_to_TOS(u32 x, Memory * memory) {
+void move_to_TOS(u32 x, Memory * memory) {
   memory->data_memory[STKPTR]++;
   memory->data_memory[TOS+2] = (x & 0x00FF0000) >> 16;
   memory->data_memory[TOS+1] = (x & 0x0000FF00) >> 8;
@@ -47,7 +47,7 @@ static void remove_TOS(Memory * memory) {
 
 /* Updates return stack */
 /* Copy the TOS back to the stack's top element (in case instruction changed TOSL or TOSH or TOSU)*/
-static void TOS_to_stack(Memory * memory) {
+void TOS_to_stack(Memory * memory) {
   int tos = merge_int(memory->data_memory[TOS+2], memory->data_memory[TOS+1], memory->data_memory[TOS]);
   memory->return_stack[memory->data_memory[STKPTR]] = tos;
 }
@@ -971,6 +971,9 @@ int init_Memory(Code * code, Memory * memory, Bus * bus) {
 
   memory->modules.IVT_module.context = POLLING_CONT;
   memory->modules.IVT_module.current_isr_addr = 0;
+
+  memory->modules.TMR0_module.pre_acc = 0;
+  memory->modules.TMR0_module.post_acc = 0;
 
   return 0;
 }

@@ -84,8 +84,8 @@ Generated From:
 016A  6F1B     MOVWF 0x1B, BANKED
 44:            {
 45:                T0CON1 = 0x94;        /* Select LFINTOSC, set the prescaler to 1:16, Disable TMR0 sync */
-46:                TMR0H = 0xC1;         /* Load the compare value to TMR0H */ 
-016C  0EC1     MOVLW 0xC1
+46:                TMR0H = 0x10;         /* Load the compare value to TMR0H */ 
+016C  0EC1     MOVLW 0x10
 016E  6F19     MOVWF 0x19, BANKED
 47:                TMR0L = 0x00;         /* Load the reset value to TMR0L */ 
 0170  0E00     MOVLW 0x0

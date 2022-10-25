@@ -44,21 +44,27 @@ int resolve_irq_id_to_pc_val(Memory * memory, int id) {
 /* TBD: */
 /* This will poll the PIR registers and return a vector with numbers of enabled interrupt requests */
 vector<int> polling(Memory * memory) {
-  int base_pir = PIR0;
   int id;
   IRQ_NUM_BIT irq_num_bit_tmp;
   vector<int> ret;
+  u8 tmp_pir;
   /* Parse all PIR registers */
   for(int i = 0 ; i < 16 ; i++) {
     /* Now parse each bit by checking parity, then bit shifting */
+    tmp_pir = memory->data_memory[PIR0 + i];
+    printf("PIR%d = %d : ", i, tmp_pir);
     for(u8 j = 0 ; j < 8 ; j++) {
       /* If the last bit is set */
-      if(memory->data_memory[base_pir + i] % 2 == 1) {
-        irq_num_bit_tmp = {.addr = base_pir + i, .bit_pos = j};
+      printf("%d ", tmp_pir % 2);
+      if(tmp_pir % 2 == 1) {
+        irq_num_bit_tmp = {.addr = PIR0 + i, .bit_pos = j};
         id = resolve_pir_addr_to_irq_id(memory, irq_num_bit_tmp, id_to_pir);
         ret.push_back(id);
+        printf("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
       }
+      tmp_pir /= 2;
     }
+    printf("\n");
   }
   return ret;
 }
@@ -94,17 +100,22 @@ void module_interrupt(Memory * memory, Bus * bus, Code * code, int clock) {
   int id;
   INTCON0_R intcon0_r;
   intcon0_r.data = memory->data_memory[INTCON0];
+  INTCON1_R intcon1_r;
+  intcon1_r.data = memory->data_memory[INTCON1];
 
   /* Parse all PIR */
   switch(memory->modules.IVT_module.context) {
     /* If we are in the main context we just poll the IFs for something to handle */
     case POLLING_CONT:
+      /* TBD: IF IPEN == 1 CHECK FOR GIEL BIT AS WELL */
       /* ONLY EXECUTE THIS PART IF INTERRUPTS ARE ENABLED */
       /* If we found IRQ we let the currently loaded instruction finish */
       /* IPEN = 0, GIE = 1 */
       if(intcon0_r.GIEGIEH && !intcon0_r.IPEN)
         polled_pirs = polling(memory);
+
       /* If size != 0 then we found an interrupt */
+      printf("POLLED PIRS SIZE = %d\n", polled_pirs.size());
       if(polled_pirs.size()) {
         if(code->lines[memory->instruction_data_latch.index].length > 1)
           memory->modules.IVT_module.context = INT_LAT_0_2_CONT;
@@ -116,6 +127,14 @@ void module_interrupt(Memory * memory, Bus * bus, Code * code, int clock) {
         id = resolve_priority(memory, polled_pirs);
         /* Get function address from IVT based on the id that won the priority */
         memory->modules.IVT_module.current_isr_addr = resolve_irq_id_to_pc_val(memory, id);
+
+      /* TBD: IF IPEN == 1 check the priority and set STAT accordingly */
+      if(intcon0_r.IPEN) {
+        }
+      else {
+          /* If IPEN == 0 set context number to HIGH CONTEXT because there is no LOW*/
+          intcon1_r.STAT = HIGH_M_CONT;
+        }
       }
       break;
     case LOW_CONT:
@@ -129,6 +148,8 @@ void module_interrupt(Memory * memory, Bus * bus, Code * code, int clock) {
        * to MAIN context */
       if(code->lines[memory->instruction_register.index].words[0] == "retfie") {
         memory->modules.IVT_module.context = POLLING_CONT;
+        /* Set context number to NORMAL CONTEXT*/
+        intcon1_r.STAT = POLLING_CONT;
       }
       break;
     case INT_LAT_0_2_CONT:
@@ -156,6 +177,9 @@ void module_interrupt(Memory * memory, Bus * bus, Code * code, int clock) {
       memory->pc_EN = 1;
       /* The CPU can then just increment this and load it for execution - now we are in interrupt context */
       /* STARTCLOCK: */
+
+      TOS_to_stack(memory);
+      move_to_TOS(memory->program_counter.DATA, memory);
       memory->program_counter.DATA = memory->modules.IVT_module.current_isr_addr;
       /* TBD: create two levels for interrupts */
       /* RIGHT_NOW: after doing the latency thing and going to the ISR we just go to 
@@ -172,27 +196,82 @@ void module_interrupt(Memory * memory, Bus * bus, Code * code, int clock) {
     default:
       break;
   }
+  memory->data_memory[INTCON1] = intcon1_r.data;
 }
 
 /* TBD: */
 void module_tmr0(Memory * memory, Bus * bus, int clock) {
   /* TBD: Create logic for tmr0 configurations and
   *       operation */
-  T0CON0_bits tmr0_con0_tmp;
-  T0CON1_bits tmr0_con1_tmp;
+  T0CON0_R tmr0_con0_tmp;
+  T0CON1_R tmr0_con1_tmp;
   tmr0_con0_tmp.data = memory->data_memory[T0CON0];
   tmr0_con1_tmp.data = memory->data_memory[T0CON1];
 
   /* Check if turned on*/
   if(tmr0_con0_tmp.EN) {
 
-    /* Check mode */
+    memory->modules.TMR0_module.acc++;
+
+    /* Prescaler, postscaler */
+    memory->modules.TMR0_module.post = tmr0_con0_tmp.OUTPS + 1;
+    memory->modules.TMR0_module.pre = 1;
+    for(int i = 0 ; i < tmr0_con1_tmp.CKPS ; i++) {
+      memory->modules.TMR0_module.pre *= 2;
+    }
+
+    if(memory->modules.TMR0_module.acc >= 4) {
+      memory->modules.TMR0_module.acc = 0;
+      memory->modules.TMR0_module.pre_acc++;
+    }
+
+    /* If prescaler overloads we increment postscaler */
+    if(memory->modules.TMR0_module.pre_acc >= memory->modules.TMR0_module.pre) {
+      memory->modules.TMR0_module.pre_acc = 0;
+      memory->modules.TMR0_module.post_acc++;
+    }
+
+    if(memory->modules.TMR0_module.post_acc >= memory->modules.TMR0_module.post) {
+      memory->modules.TMR0_module.post_acc = 0;
+      /* Check mode */
+      /* 16 bit */
+      if(tmr0_con0_tmp.MD16) {
+        if(memory->data_memory[TMR0L] == 255) {
+          memory->data_memory[TMR0H]++;
+          memory->data_memory[TMR0L] = 0;
+        }
+        if(memory->data_memory[TMR0H] == 255) {
+          memory->data_memory[TMR0H] = 0;
+          tmr0_con0_tmp.OUT = !tmr0_con0_tmp.OUT;
+          memory->data_memory[TMR0L] = 0;
+          PIR3_R pir3_tmp;
+          pir3_tmp.data = memory->data_memory[PIR3];
+          pir3_tmp.TMR0IF = 1;
+          memory->data_memory[T0CON0] = tmr0_con0_tmp.data;
+          memory->data_memory[PIR3] = pir3_tmp.data;
+        }
+      }
+      /* 8 bit */
+      else {
+        memory->data_memory[TMR0L]++;
+        if(memory->data_memory[TMR0L] == memory->data_memory[TMR0H]) {
+          /* If tmr matches we toggle the out bit */
+          tmr0_con0_tmp.OUT++;
+          memory->data_memory[TMR0L] = 0;
+          PIR3_R pir3_tmp;
+          pir3_tmp.data = memory->data_memory[PIR3];
+          pir3_tmp.TMR0IF = 1;
+          memory->data_memory[T0CON0] = tmr0_con0_tmp.data;
+          memory->data_memory[PIR3] = pir3_tmp.data;
+        }
+      }
+    }
+     
 
     /* Clock source check */ 
     
     /* Sync/Async */
 
-    /* Prescaler, postscaler */
 
     /* See if mode condition is met*/
 

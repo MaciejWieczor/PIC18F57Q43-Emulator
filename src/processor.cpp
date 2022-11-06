@@ -57,6 +57,7 @@ static void save_Context(Memory * memory) {
   memory->fast_register_stack.push_back(memory->data_memory[STATUS]);
   memory->fast_register_stack.push_back(memory->data_memory[WREG]);
   memory->fast_register_stack.push_back(memory->data_memory[BSR]);
+  memory->data_memory[STATUS] = 0;
 }
 
 /* TBD: include more registers */
@@ -65,6 +66,7 @@ void save_Context_ISR(Memory * memory) {
   memory->fast_register_stack.push_back(memory->data_memory[STATUS]);
   memory->fast_register_stack.push_back(memory->data_memory[WREG]);
   memory->fast_register_stack.push_back(memory->data_memory[BSR]);
+  memory->data_memory[STATUS] = 0;
 }
 
 /* Restores crucial register values like Status, wreg and bsr from the fast register stack */
@@ -169,7 +171,8 @@ void flush_program_memory_data_latch(Memory * memory) {
   memory->instruction_data_latch.data = 0;
 }
 
-static void indirect_pre_ops(Memory * memory, int address) {
+static void indirect_pre_ops(Memory * memory, Bus * bus, int address) {
+  printf("INDIRECT PRE ADDRESS : 0x%X\n", address);
   int fsr_address; 
   int tmp_fsr = 0;
   int preinc_reg = 0;
@@ -203,21 +206,27 @@ static void indirect_pre_ops(Memory * memory, int address) {
     case POSTDEC0:
       tmp_fsr = FSR0;
       post_reg = POSTDEC0;
+      break;
     case POSTDEC0-8:
       tmp_fsr = FSR1;
       post_reg = POSTDEC0-8;
+      break;
     case POSTDEC0-16:
       tmp_fsr = FSR2;
       post_reg = POSTDEC0-16;
+      break;
     case POSTINC0:
       tmp_fsr = FSR0;
       post_reg = POSTINC0;
+      break;
     case POSTINC0-8:
       tmp_fsr = FSR1;
       post_reg = POSTINC0-8;
+      break;
     case POSTINC0-16:
       tmp_fsr = FSR2;
       post_reg = POSTINC0-16;
+      break;
     default:
       break;
   }
@@ -225,47 +234,65 @@ static void indirect_pre_ops(Memory * memory, int address) {
   /* MODIFY THE FSR VALUE */
   if(tmp_fsr) {
     fsr_address = memory->data_memory[tmp_fsr+1] * 0x100 + memory->data_memory[tmp_fsr];
+    bus->data_Bus.indirect_address = fsr_address;
     /* IF WE INCREMENTED THE FSR */
     if(preinc_reg) {
       fsr_address++;
       memory->data_memory[preinc_reg] = memory->data_memory[fsr_address];
       memory->data_memory[tmp_fsr] = fsr_address & 0x00FF;
       memory->data_memory[tmp_fsr+1] = (fsr_address & 0xFF00) >> 8;
+      bus->data_Bus.indirect_reg = preinc_reg;
     }
     /* IF WE JUST DID THE PLUSW */
     if(plusw_reg) {
       fsr_address += (signed char)memory->data_memory[WREG];
-      memory->data_memory[preinc_reg] = memory->data_memory[fsr_address];
+      memory->data_memory[plusw_reg] = memory->data_memory[fsr_address];
+      bus->data_Bus.indirect_reg = plusw_reg;
     }
     if(post_reg)
       memory->data_memory[post_reg] = memory->data_memory[fsr_address];
+      printf("POST 0x%X : ADDR 0x%X, VAL 0x%X\n", post_reg, fsr_address, memory->data_memory[post_reg]);
+      bus->data_Bus.indirect_reg = post_reg;
   }
 }
 
-static void indirect_post_ops(Memory * memory, int address) {
+static void indirect_copy(Memory * memory, Bus * bus) {
+  /* MODIFY THE FSR VALUE */
+  if(bus->data_Bus.indirect_reg) {
+      memory->data_memory[bus->data_Bus.indirect_address] = memory->data_memory[bus->data_Bus.indirect_reg];
+  }
+}
+
+static void indirect_post_ops(Memory * memory, Bus * bus) {
   int fsr_address; 
   int tmp_fsr = 0;
   int post_reg_dec = 0;
   int post_reg_inc = 0;
-  switch(address) {
+  switch(bus->data_Bus.indirect_reg) {
     case POSTDEC0:
       tmp_fsr = FSR0;
       post_reg_dec = POSTDEC0;
+      break;
     case POSTDEC0-8:
       tmp_fsr = FSR1;
       post_reg_dec = POSTDEC0-8;
+      break;
     case POSTDEC0-16:
       tmp_fsr = FSR2;
       post_reg_dec = POSTDEC0-16;
+      break;
     case POSTINC0:
       tmp_fsr = FSR0;
       post_reg_inc = POSTINC0;
+      break;
     case POSTINC0-8:
       tmp_fsr = FSR1;
       post_reg_inc = POSTINC0-8;
+      break;
     case POSTINC0-16:
       tmp_fsr = FSR2;
       post_reg_inc = POSTINC0-16;
+      break;
     default:
       break;
   }
@@ -274,9 +301,11 @@ static void indirect_post_ops(Memory * memory, int address) {
   if(tmp_fsr) {
     fsr_address = memory->data_memory[tmp_fsr+1] * 0x100 + memory->data_memory[tmp_fsr];
     if(post_reg_dec) {
+      printf("DECREMENTING FSR\n");
       fsr_address--;
     }
     if(post_reg_inc) {
+      printf("INCREMENTING FSR\n");
       fsr_address++;
     }
     memory->data_memory[tmp_fsr] = fsr_address & 0x00FF;
@@ -296,8 +325,6 @@ static void execute_byte_file(Memory * memory, Bus * bus) {
   else 
     address = data_address(memory->data_memory[BSR], p_word.byte.f);
 
-
-
   if(p_word.byte.d)
     memory->data_address = address;
   else
@@ -311,6 +338,8 @@ static void execute_byte_file(Memory * memory, Bus * bus) {
   union STATUS_R status;
   status.reg = memory->data_memory[STATUS];
   bus->data_Bus.write = 1;
+
+  indirect_pre_ops(memory, bus, address);
 
   switch(p_word.byte.opcode) {
  		case INSTR_ADDWF:
@@ -403,6 +432,7 @@ static void execute_byte_file(Memory * memory, Bus * bus) {
     default:
       break;
   }
+
 }
 
 /* LEFT_TBD: 
@@ -425,6 +455,8 @@ static void execute_byte_nw_file(Memory * memory, Bus * bus) {
   status.reg = memory->data_memory[STATUS];
   bus->data_Bus.two_byte_write = 0;
   bus->data_Bus.write = 1;
+
+  indirect_pre_ops(memory, bus, address);
 
   switch(p_word.byte_nw.opcode) {
 
@@ -481,6 +513,7 @@ static void execute_byte_nw_file(Memory * memory, Bus * bus) {
     default:
       break;
   }
+
 }
 
 static void execute_bit(Memory * memory, Bus * bus) {
@@ -499,6 +532,8 @@ static void execute_bit(Memory * memory, Bus * bus) {
   status.reg = memory->data_memory[STATUS];
   bus->data_Bus.two_byte_write = 0;
   bus->data_Bus.write = 1;
+
+  indirect_pre_ops(memory, bus, address);
 
   switch(p_word.bit.opcode) {
 		case INSTR_BCF:
@@ -782,6 +817,9 @@ static void write_to_memory(Memory * memory, Bus * bus) {
     else
       memory->data_memory[memory->data_address] = bus->data_Bus.data;
   }
+
+  indirect_copy(memory, bus);
+  indirect_post_ops(memory, bus);
   bus->data_Bus.write = 0;
 }
 
@@ -950,7 +988,9 @@ int init_Memory(Code * code, Memory * memory, Bus * bus) {
 
   bus->instruction_Bus = {.program_word = 0, .type = NOP_TYPE};
   bus->data_Bus.data = 0;
-  bus->data_Bus.data = 0;
+  bus->data_Bus.write = 0;
+  bus->data_Bus.indirect_address = 0;
+  bus->data_Bus.indirect_reg = 0;
 
   code->current_Line = memory->program_counter.DATA / 2;
   code->clock_Cycle = 0;
@@ -970,10 +1010,24 @@ int init_Memory(Code * code, Memory * memory, Bus * bus) {
   }
 
   memory->modules.IVT_module.context = POLLING_CONT;
+  memory->modules.IVT_module.last_context = POLLING_CONT;
+  memory->modules.IVT_module.current_isr_prior_lvl = MAIN_PRIORITY_LVL;
   memory->modules.IVT_module.current_isr_addr = 0;
 
   memory->modules.TMR0_module.pre_acc = 0;
   memory->modules.TMR0_module.post_acc = 0;
+  memory->modules.TMR1_module.pre_acc = 0;
+
+  for(int i = 0 ; i < 6 ; i++){
+    for(int j = 0 ; j < 8 ; j++) {
+      memory->modules.Ports_module.port_pins[i][j].val = 0;
+    }
+  }
+
+  memory->modules.ADC_module.state = ADC_WAITING;
+  memory->Fosc_period_nano = (1e9 * (1/1e6));
+  memory->Fosc_moment = 0;
+  memory->time_moment = 0;
 
   return 0;
 }
@@ -988,12 +1042,15 @@ void pre_Copy_Pointer_Data(Code * code, Memory * memory, Bus * bus) {
   /* Copy the INDF contents to their locations */
   /* FSR0 */
   int fsr_address = memory->data_memory[FSR0+1] * 0x100 + memory->data_memory[FSR0];
+  bus->data_Bus.last_fsr0 = fsr_address;
   memory->data_memory[INDF0] = memory->data_memory[fsr_address];
   /* FSR1 */
   fsr_address = memory->data_memory[FSR1+1] * 0x100 + memory->data_memory[FSR1];
+  bus->data_Bus.last_fsr1 = fsr_address;
   memory->data_memory[INDF1] = memory->data_memory[fsr_address];
   /* FSR2 */
   fsr_address = memory->data_memory[FSR2+1] * 0x100 + memory->data_memory[FSR2];
+  bus->data_Bus.last_fsr2 = fsr_address;
   memory->data_memory[INDF2] = memory->data_memory[fsr_address];
 
   /* Copy PC into data memory */
@@ -1009,6 +1066,39 @@ void post_Copy_Pointer_Data(Code * code, Memory * memory, Bus * bus) {
   memory->program_counter.L = memory->data_memory[PC];
   memory->program_counter.H = memory->data_memory[PC+1];
   memory->program_counter.U = memory->data_memory[PC+2];
+
+  /* If there was an FSR operation on INDF registers we need to copy the data back */
+  /* FSR0 */
+  if(!bus->data_Bus.indirect_reg) {
+    int fsr_address = memory->data_memory[FSR0+1] * 0x100 + memory->data_memory[FSR0];
+    if(fsr_address == bus->data_Bus.last_fsr0) {
+      memory->data_memory[fsr_address] = memory->data_memory[INDF0];
+      memory->data_memory[PREINC0] = memory->data_memory[INDF0];
+      memory->data_memory[POSTINC0] = memory->data_memory[INDF0];
+      memory->data_memory[POSTDEC0] = memory->data_memory[INDF0];
+      memory->data_memory[PLUSW0] = memory->data_memory[INDF0];
+    }
+    /* FSR1 */
+    fsr_address = memory->data_memory[FSR1+1] * 0x100 + memory->data_memory[FSR1];
+    if(fsr_address == bus->data_Bus.last_fsr1) {
+      memory->data_memory[fsr_address] = memory->data_memory[INDF1];
+      memory->data_memory[PREINC0-8] = memory->data_memory[INDF1];
+      memory->data_memory[POSTINC0-8] = memory->data_memory[INDF1];
+      memory->data_memory[POSTDEC0-8] = memory->data_memory[INDF1];
+      memory->data_memory[PLUSW0-8] = memory->data_memory[INDF1];
+    }
+    /* FSR2 */
+    fsr_address = memory->data_memory[FSR2+1] * 0x100 + memory->data_memory[FSR2];
+    if(fsr_address == bus->data_Bus.last_fsr2) {
+      memory->data_memory[fsr_address] = memory->data_memory[INDF2];
+      memory->data_memory[PREINC0-16] = memory->data_memory[INDF2];
+      memory->data_memory[POSTINC0-16] = memory->data_memory[INDF2];
+      memory->data_memory[POSTDEC0-16] = memory->data_memory[INDF2];
+      memory->data_memory[PLUSW0-16] = memory->data_memory[INDF2];
+    }
+  }
+  bus->data_Bus.indirect_address = 0;
+  bus->data_Bus.indirect_reg = 0;
 
   /* save TOS back to the top of the return stack structure */
   TOS_to_stack(memory);

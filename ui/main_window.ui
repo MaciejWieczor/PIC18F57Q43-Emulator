@@ -117,9 +117,9 @@
            </size>
           </property>
           <property name="currentIndex">
-           <number>6</number>
+           <number>4</number>
           </property>
-          <widget class="QWidget" name="tab">
+          <widget class="QWidget" name="tab_cpu">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
              <horstretch>0</horstretch>
@@ -368,7 +368,7 @@
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="tab_3">
+          <widget class="QWidget" name="tab_tmr">
            <attribute name="title">
             <string>TMR0/1</string>
            </attribute>
@@ -466,7 +466,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QTableWidget" name="tableWidget_4">
+               <widget class="QTableWidget" name="tableWidget_tmr1">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                   <horstretch>0</horstretch>
@@ -484,37 +484,82 @@
                 </attribute>
                 <row>
                  <property name="text">
-                  <string>A</string>
+                  <string>TMR1CON</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>B</string>
+                  <string>TMR1CON.ON</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>C</string>
+                  <string>TMR1CON.RD16</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>D</string>
+                  <string>TMR1CON.SYNC</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>E</string>
+                  <string>TMR1CON.CKPS</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>F</string>
+                  <string>TMR1GCON</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>G</string>
+                  <string>TMR1GCON.GVAL</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>TMR1GCON.GGO</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>TMR1GCON.GSPM</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>TMR1GCON.GTM</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>TMR1GCON.GPOL</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>TMR1GCON.GE</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>T1CLK</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>T1GATE</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>TMR1</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>ISR ADDR</string>
                  </property>
                 </row>
                 <column>
@@ -528,15 +573,15 @@
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="tab_4">
+          <widget class="QWidget" name="tab_adc">
            <attribute name="title">
-            <string>TMR2/3</string>
+            <string>ADC</string>
            </attribute>
            <layout class="QHBoxLayout" name="horizontalLayout_15">
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_14">
               <item>
-               <widget class="QTableWidget" name="tableWidget_cpu_4">
+               <widget class="QTableWidget" name="tableWidget_adc0">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                   <horstretch>0</horstretch>
@@ -555,52 +600,90 @@
                 <attribute name="horizontalHeaderDefaultSectionSize">
                  <number>165</number>
                 </attribute>
+                <attribute name="horizontalHeaderStretchLastSection">
+                 <bool>true</bool>
+                </attribute>
                 <attribute name="verticalHeaderDefaultSectionSize">
                  <number>30</number>
                 </attribute>
                 <row>
                  <property name="text">
-                  <string>WREG</string>
+                  <string>ADCON0</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>STATUS.N</string>
+                  <string>ADCON0.ON</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>STATUS.OV</string>
+                  <string>ADCON0.CONT</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>STATUS.Z</string>
+                  <string>ADCON0.CS</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>STATUS.DC</string>
+                  <string>ADCON0.FM</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>STATUS.C</string>
+                  <string>ADCON0.GO</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>BSR</string>
+                  <string>ADCON1</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>B</string>
+                  <string>ADCON1.PPOL</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>C</string>
+                  <string>ADCON1.IPEN</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>ADCON1.GPOL</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>ADCON1.DSEN</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>ADCON2</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>ADCON2.PSIS</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>ADCON2.CRS</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>ADCON2.ACLR</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>ADCON2.MD</string>
                  </property>
                 </row>
                 <column>
@@ -611,7 +694,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QTableWidget" name="tableWidget_5">
+               <widget class="QTableWidget" name="tableWidget_adc1">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                   <horstretch>0</horstretch>
@@ -627,39 +710,62 @@
                 <attribute name="horizontalHeaderDefaultSectionSize">
                  <number>165</number>
                 </attribute>
+                <attribute name="horizontalHeaderStretchLastSection">
+                 <bool>true</bool>
+                </attribute>
                 <row>
                  <property name="text">
-                  <string>A</string>
+                  <string>ADCLK</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>B</string>
+                  <string>ADPCH</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>C</string>
+                  <string>ADPRE</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>D</string>
+                  <string>ADACQ</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>E</string>
+                  <string>ADRES</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>F</string>
+                  <string>ADPREV</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>G</string>
+                  <string>ADACT</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>ADCON3</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>ADCON3.CALC</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>ADCON3.SOI</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>ADCON3.TMD</string>
                  </property>
                 </row>
                 <column>
@@ -673,7 +779,7 @@
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="interrupts">
+          <widget class="QWidget" name="tab_interrupts">
            <attribute name="title">
             <string>INTERRUPTS</string>
            </attribute>
@@ -869,15 +975,15 @@
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="tab_2">
+          <widget class="QWidget" name="tab_">
            <attribute name="title">
-            <string>FSR</string>
+            <string>UART</string>
            </attribute>
-           <layout class="QHBoxLayout" name="horizontalLayout_7">
+           <layout class="QHBoxLayout" name="horizontalLayout_24">
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_8">
+             <layout class="QHBoxLayout" name="horizontalLayout_25">
               <item>
-               <widget class="QTableWidget" name="tableWidget_cpu_2">
+               <widget class="QTableWidget" name="tableWidget_uart_0">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                   <horstretch>0</horstretch>
@@ -896,52 +1002,85 @@
                 <attribute name="horizontalHeaderDefaultSectionSize">
                  <number>165</number>
                 </attribute>
+                <attribute name="horizontalHeaderStretchLastSection">
+                 <bool>true</bool>
+                </attribute>
                 <attribute name="verticalHeaderDefaultSectionSize">
                  <number>30</number>
                 </attribute>
                 <row>
                  <property name="text">
-                  <string>WREG</string>
+                  <string>U1CON0</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>STATUS.N</string>
+                  <string>U1CON0.BRGS</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>STATUS.OV</string>
+                  <string>U1CON0.ABDEN</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>STATUS.Z</string>
+                  <string>U1CON0.TXEN</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>STATUS.DC</string>
+                  <string>U1CON0.RXEN</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>STATUS.C</string>
+                  <string>U1CON0.MODE</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>BSR</string>
+                  <string>U1CON1</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>B</string>
+                  <string>U1CON1.ON</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>C</string>
+                  <string>U1CON1.WUE</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>U1CON1.RXBIMD</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>U1CON1.BRKOVR</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>U1CON1.SENDB</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>U1BRG</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>U1RXB</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>U1TXB</string>
                  </property>
                 </row>
                 <column>
@@ -952,7 +1091,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QTableWidget" name="tableWidget_3">
+               <widget class="QTableWidget" name="tableWidget_uart_1">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                   <horstretch>0</horstretch>
@@ -968,39 +1107,87 @@
                 <attribute name="horizontalHeaderDefaultSectionSize">
                  <number>165</number>
                 </attribute>
+                <attribute name="horizontalHeaderStretchLastSection">
+                 <bool>true</bool>
+                </attribute>
                 <row>
                  <property name="text">
-                  <string>A</string>
+                  <string>U1CON2</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>B</string>
+                  <string>U1CON2.RUNOVF</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>C</string>
+                  <string>U1CON2.RXPOL</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>D</string>
+                  <string>U1CON2.STP</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>E</string>
+                  <string>U1CON2.C0EN</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>F</string>
+                  <string>U1CON2.TXPOL</string>
                  </property>
                 </row>
                 <row>
                  <property name="text">
-                  <string>G</string>
+                  <string>U1CON2.FLO</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>U1FIFO</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>U1FIFO.TXWRE</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>U1FIFO.STPMD</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>U1FIFO.TXBE</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>U1FIFO.TXBF</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>U1FIFO.RXIDL</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>U1FIFO.XON</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>U1.FIFO.RXBE</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>U1.FIFO.RXBF</string>
                  </property>
                 </row>
                 <column>
@@ -1014,15 +1201,199 @@
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="tab_6">
+          <widget class="QWidget" name="tab_ports_pps">
            <attribute name="title">
-            <string>DMA</string>
+            <string>PORTS</string>
            </attribute>
-          </widget>
-          <widget class="QWidget" name="tab_7">
-           <attribute name="title">
-            <string>Placeholder</string>
-           </attribute>
+           <layout class="QHBoxLayout" name="horizontalLayout_27">
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_26">
+              <item>
+               <widget class="QTableWidget" name="tableWidget_ports0">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>177</width>
+                  <height>210</height>
+                 </size>
+                </property>
+                <attribute name="horizontalHeaderMinimumSectionSize">
+                 <number>50</number>
+                </attribute>
+                <attribute name="horizontalHeaderDefaultSectionSize">
+                 <number>165</number>
+                </attribute>
+                <attribute name="horizontalHeaderStretchLastSection">
+                 <bool>true</bool>
+                </attribute>
+                <attribute name="verticalHeaderDefaultSectionSize">
+                 <number>30</number>
+                </attribute>
+                <attribute name="verticalHeaderStretchLastSection">
+                 <bool>false</bool>
+                </attribute>
+                <row>
+                 <property name="text">
+                  <string>PORTA</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>PORTB</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>PORTC</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>PORTD</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>PORTE</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>PORTF</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>TRISA</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>TRISB</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>TRISC</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>TRISD</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>TRISE</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>TRISF</string>
+                 </property>
+                </row>
+                <column>
+                 <property name="text">
+                  <string>REG</string>
+                 </property>
+                </column>
+               </widget>
+              </item>
+              <item>
+               <widget class="QTableWidget" name="tableWidget_ports1">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>177</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <attribute name="horizontalHeaderDefaultSectionSize">
+                 <number>165</number>
+                </attribute>
+                <attribute name="horizontalHeaderStretchLastSection">
+                 <bool>true</bool>
+                </attribute>
+                <row>
+                 <property name="text">
+                  <string>LATA</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>LATB</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>LATC</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>LATD</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>LATE</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>LATF</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>ANSELA</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>ANSELB</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>ANSELC</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>ANSELD</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>ANSELE</string>
+                 </property>
+                </row>
+                <row>
+                 <property name="text">
+                  <string>ANSELF</string>
+                 </property>
+                </row>
+                <column>
+                 <property name="text">
+                  <string>REG</string>
+                 </property>
+                </column>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
           </widget>
          </widget>
         </item>
@@ -1049,7 +1420,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButton">
+           <widget class="QPushButton" name="pushButton_breakpoint_line">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Minimum" vsizetype="Ignored">
               <horstretch>0</horstretch>
@@ -1137,7 +1508,7 @@
               <item>
                <layout class="QVBoxLayout" name="verticalLayout_5" stretch="4,8">
                 <item>
-                 <widget class="QTableWidget" name="tableWidget_2">
+                 <widget class="QTableWidget" name="tableWidget_frs">
                   <property name="rowCount">
                    <number>3</number>
                   </property>
@@ -1278,7 +1649,7 @@
           </widget>
           <widget class="QWidget" name="tab_8">
            <attribute name="title">
-            <string>Strona</string>
+            <string>Register Page</string>
            </attribute>
            <layout class="QHBoxLayout" name="horizontalLayout_4">
             <item>
@@ -1326,7 +1697,58 @@
                </layout>
               </item>
               <item>
-               <widget class="QTableWidget" name="bank_select_table"/>
+               <widget class="QTableWidget" name="bank_select_table">
+                <property name="rowCount">
+                 <number>16</number>
+                </property>
+                <property name="columnCount">
+                 <number>16</number>
+                </property>
+                <attribute name="horizontalHeaderMinimumSectionSize">
+                 <number>35</number>
+                </attribute>
+                <attribute name="horizontalHeaderDefaultSectionSize">
+                 <number>38</number>
+                </attribute>
+                <attribute name="verticalHeaderMinimumSectionSize">
+                 <number>17</number>
+                </attribute>
+                <attribute name="verticalHeaderDefaultSectionSize">
+                 <number>25</number>
+                </attribute>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+               </widget>
               </item>
              </layout>
             </item>
@@ -1341,6 +1763,378 @@
              <widget class="QWidget" name="verticalWidget_plots" native="true">
               <layout class="QVBoxLayout" name="verticalLayout_7"/>
              </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="tab_5">
+           <attribute name="title">
+            <string>Ports</string>
+           </attribute>
+           <layout class="QHBoxLayout" name="horizontalLayout_16">
+            <item>
+             <layout class="QVBoxLayout" name="verticalLayout_9">
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_6">
+                <item>
+                 <widget class="QPushButton" name="pushButton_porta">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>PORTA</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QTextEdit" name="textEdit_porta">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_20">
+                <item>
+                 <widget class="QPushButton" name="pushButton_portb">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>PORTB</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QTextEdit" name="textEdit_portb">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_18">
+                <item>
+                 <widget class="QPushButton" name="pushButton_portc">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>PORTC</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QTextEdit" name="textEdit_portc">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QVBoxLayout" name="verticalLayout_13">
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_23">
+                <item>
+                 <widget class="QPushButton" name="pushButton_portd">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>PORTD</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QTextEdit" name="textEdit_portd">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_19">
+                <item>
+                 <widget class="QPushButton" name="pushButton_porte">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>PORTE</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QTextEdit" name="textEdit_porte">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_22">
+                <item>
+                 <widget class="QPushButton" name="pushButton_portf">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>PORTF</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QTextEdit" name="textEdit_portf">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="tab">
+           <attribute name="title">
+            <string>Signals</string>
+           </attribute>
+           <layout class="QHBoxLayout" name="horizontalLayout_29">
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_28">
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_14">
+                <item>
+                 <widget class="QPushButton" name="pushButton_setaddr">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Set register [address] to value [value]</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="label_3">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Address [0 - 3FFF]</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QTextEdit" name="textEdit_addr">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="label_4">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Ignored">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Value [0 - 255]</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QTextEdit" name="textEdit_value">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_16">
+                <item>
+                 <widget class="QLabel" name="label">
+                  <property name="text">
+                   <string>UART TX history</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QTextBrowser" name="textBrowser">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_15">
+                <item>
+                 <widget class="QLabel" name="label_2">
+                  <property name="text">
+                   <string>UART RX history</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QTextBrowser" name="textBrowser_2">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_18">
+                <item>
+                 <widget class="QCheckBox" name="checkBox">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Enable signal</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QRadioButton" name="radioButton">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Sine wave</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QRadioButton" name="radioButton_2">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Square wave</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_7">
+                  <item>
+                   <widget class="QLabel" name="label_5">
+                    <property name="text">
+                     <string>Frequency</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QTextEdit" name="textEdit">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </item>
+             </layout>
             </item>
            </layout>
           </widget>

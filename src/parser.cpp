@@ -520,4 +520,20 @@ void find_IRQs(Code * code, Memory * memory) {
   }
   else
     memory->modules.TMR0_module.enabled = 0;
+
+
+  /* Find TMR0 IRQ address */
+  /* Check if string contains substring */ /* "IRQ_TMR0" */
+  int tmr1_index = find_C_Line(code, "IRQ_TMR1");
+  /* Find the next disasm line after the found C_Line */
+  int tmr1_disasm_adr = find_Next_Disasm_Prog_Word(code, tmr1_index);
+  /* Save interrupt handler address to memory modules structure */
+  if(tmr1_disasm_adr != -1) {
+    memory->modules.TMR1_module.enabled = 1;
+    memory->modules.TMR1_module.ivt_address = tmr1_disasm_adr;
+    memory->modules.IVT_module.interrupt_vector.insert({"tmr1", tmr1_disasm_adr});
+    printf("TMR1 ISR ADDRESS = %X\n", tmr1_disasm_adr);
+  }
+  else
+    memory->modules.TMR1_module.enabled = 0;
 }

@@ -1,6 +1,7 @@
 QT += core
 QT += widgets
 QT += gui
+QT += KWidgetsAddons
 
 HEADERS += headers/*.h
 SOURCES += src/*.cpp

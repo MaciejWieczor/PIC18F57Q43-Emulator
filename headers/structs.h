@@ -1,6 +1,7 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
+#include <math.h>
 #include"modules.h"
 #include<vector>
 #include<iostream>
@@ -35,8 +36,63 @@ using namespace std;
 #define PLUSW0     0x4EB
 #define PREINC0    0x4EC
 #define POSTDEC0   0x4ED
-#define POSTINC0   0x4EF
+#define POSTINC0   0x4EE
 
+/* UART */
+
+#define U1CON0    0x2AB
+#define U1CON1    0x2AC
+#define U1CON2    0x2AD
+#define U1BRG     0x2AE
+#define U1RXB     0x2A1
+#define U1TXB     0x2A3
+#define U1FIFO    0x2B0
+
+/* PORTS */
+
+#define PORTA     0x4CE
+#define TRISA     0x4C6
+/* LATB = ANSELA + 1 */
+#define LATA      0x4BE
+/* ANSELB = ANSELA + 8 */
+#define ANSELA    0x400
+
+/* ADC definitions */
+
+#define ADCON0    0x3F3
+#define ADCON1    0x3F4
+#define ADCON2    0x3F5
+#define ADCON3    0x3F6
+#define ADCLK     0x3FA
+#define ADPCH     0x3EC
+#define ADPRE     0x3F1
+#define ADACQ     0x3EE
+#define ADRES     0x3EA
+#define ADPREV    0x3E8
+#define ADACT     0x3F9
+
+/* TMR1 definitions */
+
+#define T1CON     0x31E
+#define T3CON     0x32A
+#define T5CON     0x336
+
+#define T1CLK     0x321
+#define T3CLK     0x32D
+#define T5CLK     0x339
+
+#define T1GATE    0x320
+#define T3GATE    0x32C
+#define T5GATE    0x338
+
+#define TMR1L     0x31C
+#define TMR1H     0x31D
+#define TMR3L     0x328
+#define TMR5L     0x334
+
+#define T1GCON    0x31F
+#define T3GCON    0x32B
+#define T5GCON    0x337
 
 /* TMR0 definitions */
 
@@ -63,6 +119,10 @@ using namespace std;
 #define IVTAD   0x45A
 #define IVTLOCK 0x459
 
+enum signals_adc {
+  SINE_WAVE,
+};
+
 enum context {
   /* Main context */
   POLLING_CONT,
@@ -79,6 +139,7 @@ enum context {
 };
 
 enum prior_lvl {
+  MAIN_PRIORITY_LVL,
   LOW_PRIORITY_LVL,
   HIGH_PRIORITY_LVL,
 };
@@ -86,6 +147,7 @@ enum prior_lvl {
 /* IVT IRQ IDs */
 
 #define TMR0_ID   0x1F
+#define TMR1_ID   0x1C
 
 /* typedefs for unsigned types */
 
@@ -98,6 +160,145 @@ enum prior_lvl {
   typedef signed int s32;
   typedef signed long s64;
 
+/* UART unions */ 
+
+union U1CON0_R {
+  u8 data;
+  struct {
+    u8 MODE : 4;
+    u8 RXEN : 1;
+    u8 TXEN : 1;
+    u8 ABDEN : 1;
+    u8 BRGS : 1;
+  };
+};
+
+union U1CON1_R {
+  u8 data;
+  struct {
+    u8 SENDB : 1;
+    u8 BRKOVR : 1;
+    u8 empty_0 : 1;
+    u8 RXBIMD : 1;
+    u8 WUE : 1;
+    u8 empty_1 : 2;
+    u8 ON : 1;
+  };
+};
+
+union U1CON2_R {
+  u8 data;
+  struct {
+    u8 FLO : 2;
+    u8 TXPOL : 1;
+    u8 C0EN : 1;
+    u8 STP : 2;
+    u8 RXPOL : 1;
+    u8 RUNOVF : 1;
+  };
+};
+
+union U1FIFO_R {
+  u8 data;
+  struct {
+    u8 RXBF : 1;
+    u8 RXBE : 1;
+    u8 XON : 1;
+    u8 RXIDL : 1;
+    u8 TXBF : 1;
+    u8 TXBE : 1;
+    u8 STMPD : 1;
+    u8 TXWRE : 1;
+  };
+};
+
+/* ADC unionts */ 
+union ADCON0_R {
+  u8 data;
+  struct {
+    u8 GO : 1;
+    u8 empty_2 : 1;
+    u8 FM : 1;
+    u8 empty_1 : 1;
+    u8 CS : 1;
+    u8 empty : 1;
+    u8 CONT : 1;
+    u8 ON : 1;
+  };
+};
+
+union ADCON1_R {
+  u8 data;
+  struct {
+    u8 DSEN : 1;
+    u8 empty : 4;
+    u8 GPOL : 1;
+    u8 IPEN : 1;
+    u8 PPOL : 1;
+  };
+};
+
+union ADCON2_R {
+  u8 data;
+  struct {
+    u8 MD : 3;
+    u8 ACLR : 1;
+    u8 CRS : 3;
+    u8 PSIS : 1;
+  };
+};
+
+union ADCON3_R {
+  u8 data;
+  struct {
+    u8 TMD : 3;
+    u8 SOI : 1;
+    u8 CALC : 3;
+    u8 empty : 1;
+  };
+};
+
+/* TMR1 unions */ 
+union T1CON_R {
+  u8 data;
+  struct {
+    u8 ON : 1;
+    u8 RD16 : 1;
+    u8 SYNC : 1;
+    u8 empty_1 : 1;
+    u8 CKPS : 2;
+    u8 empty_0 : 2;
+  };
+};
+
+union T1GCON_R {
+  u8 data;
+  struct {
+    u8 empty : 2;
+    u8 GVAL : 1;
+    u8 GGO : 1;
+    u8 GSPM : 1;
+    u8 GTM : 1;
+    u8 GPOL : 1;
+    u8 GE : 1;
+  };
+};
+
+union T1CLK_R {
+  u8 data;
+  struct {
+    u8 CS : 5;
+    u8 empty : 3;
+  };
+};
+
+union T1GATE_R {
+  u8 data;
+  struct {
+    u8 GSS : 6;
+    u8 empty : 2;
+  };
+};
 
 /* TMR0 unions */
 union T0CON0_R {
@@ -342,6 +543,7 @@ union R_16 {
 typedef struct Interrupt_Vector_Module {
   map<string, int> interrupt_vector;
   u8 context;
+  u8 last_context;
   u8 instruction_len;
   int current_isr_addr;
   u8 current_isr_prior_lvl;
@@ -359,11 +561,67 @@ typedef struct TMR0_Module {
   int post;
 } TMR0_module;
 
+typedef struct TMR1_Module {
+  u8 enabled;
+  int ivt_address;
+  /* ACC is the counter */
+  int acc;
+  int pre_acc;
+  int pre;
+  /* This value is used for 
+   * checking if there was a rising/falling edge*/
+  u8 last_cs_val;
+} TMR1_module;
+
+typedef struct TMR3_Module {
+  u8 enabled;
+  int ivt_address;
+  /* ACC is the counter */
+  int acc;
+  int pre_acc;
+  int pre;
+} TMR3_module;
+
+typedef struct TMR5_Module {
+  u8 enabled;
+  int ivt_address;
+  /* ACC is the counter */
+  int acc;
+  int pre_acc;
+  int pre;
+} TMR5_module;
+
+typedef struct Analog_Pin {
+  short val : 12;
+} Analog_Pin;
+
+typedef struct Ports_Module {
+  Analog_Pin port_pins[6][8];
+} Ports_Module;
+
+enum ADC_STATE {
+	ADC_WAITING,
+	ADC_PRECHARGE,
+	ADC_ACQUIRE,
+	ADC_CONVERT,
+};
+
+typedef struct ADC_Module {
+  long long nano_clock;
+  long long nano_end;
+  ADC_STATE state;
+} ADC_Module;
+
 /* MODULES */
 
 typedef struct Modules {
   Interrupt_Vector_Module IVT_module;
   TMR0_Module TMR0_module;
+  TMR1_Module TMR1_module;
+  TMR3_Module TMR3_module;
+  TMR5_Module TMR5_module;
+  Ports_Module Ports_module;
+  ADC_Module ADC_module;
 } Modules;
 
 
@@ -468,11 +726,20 @@ typedef struct Memory {
 
   Modules modules;
   u8 pc_EN;
+
+  long long time_moment;
+  long long Fosc_moment;
+  long long Fosc_period_nano;
 } Memory;
 
 typedef struct Data_Bus {
   u8 two_byte_write;
   u16 data;
+  u32 indirect_address;
+  u32 indirect_reg;
+  u16 last_fsr0;
+  u16 last_fsr1;
+  u16 last_fsr2;
   u8 write;
 } Data_Bus;
 
@@ -599,3 +866,13 @@ static map<string, u8> opcode8_number = {{"bc", 226},{"bn", 230},{"bnc", 227},{"
 void module_interrupt(Memory * memory, Bus * bus, Code * code, int clock);
 
 void module_tmr0(Memory * memory, Bus * bus, int clock);
+
+void module_tmr1(Memory * memory, Bus * bus, int clock);
+
+void module_adc(Memory * memory, Bus * bus, int clock);
+
+void module_uart(Memory * memory, Bus * bus, int clock);
+
+void module_pps(Memory * memory, Bus * bus, int clock);
+
+void module_ports(Memory * memory, Bus * bus, int clock);

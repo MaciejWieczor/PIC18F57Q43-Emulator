@@ -9,6 +9,7 @@ typedef struct IRQ_NUM_BIT {
 typedef map<int, IRQ_NUM_BIT> ID_TO_PIR;
 
 ID_TO_PIR id_to_pir = {{0x1F, {.addr = PIR3, .bit_pos = 7}} /* TMR0 */,
+                       {0x1C, {.addr = PIR3, .bit_pos = 4}} /* TMR1 */,
                        {}};
 
 /* This will return PIR address and bit position to the interrupt which ID is passed as argument */
@@ -27,7 +28,6 @@ int resolve_pir_addr_to_irq_id(Memory * memory, IRQ_NUM_BIT addr, ID_TO_PIR id_t
   return 0;
 }
 
-/* TBD: */
 /* This takes the irq id and return the memory->modules.MODULE.ivt_address - 2 from the correct MODULE */
 int resolve_irq_id_to_pc_val(Memory * memory, int id) {
   int ret;
@@ -35,34 +35,47 @@ int resolve_irq_id_to_pc_val(Memory * memory, int id) {
     case TMR0_ID:
       ret = memory->modules.TMR0_module.ivt_address;
       break;
+    case TMR1_ID:
+      ret = memory->modules.TMR1_module.ivt_address;
     default:
       break;
   }
   return ret-2;
 }
 
-/* TBD: */
-/* This will poll the PIR registers and return a vector with numbers of enabled interrupt requests */
-vector<int> polling(Memory * memory) {
+typedef struct PIR_IPR {
   int id;
+  int priority;
+} PIR_IPR;
+
+/* This will poll the PIR registers and return a vector with numbers of enabled interrupt requests */
+vector<PIR_IPR> polling(Memory * memory) {
+  int id;
+  int prior;
   IRQ_NUM_BIT irq_num_bit_tmp;
-  vector<int> ret;
+  vector<PIR_IPR> ret;
   u8 tmp_pir;
+  u8 tmp_pie;
+  u8 tmp_ipr;
   /* Parse all PIR registers */
   for(int i = 0 ; i < 16 ; i++) {
     /* Now parse each bit by checking parity, then bit shifting */
     tmp_pir = memory->data_memory[PIR0 + i];
-    printf("PIR%d = %d : ", i, tmp_pir);
+    tmp_pie = memory->data_memory[PIE0 + i];
+    tmp_ipr = memory->data_memory[IPR0 + i];
     for(u8 j = 0 ; j < 8 ; j++) {
-      /* If the last bit is set */
-      printf("%d ", tmp_pir % 2);
-      if(tmp_pir % 2 == 1) {
+      /* If the last bit is set in both PIR and PIE registers*/
+      /* Sometimes modules set the IF but don't want to call the interrupt (UART for example)*/
+      if(tmp_pir % 2 == 1 && tmp_pie % 2 == 1) {
         irq_num_bit_tmp = {.addr = PIR0 + i, .bit_pos = j};
         id = resolve_pir_addr_to_irq_id(memory, irq_num_bit_tmp, id_to_pir);
-        ret.push_back(id);
-        printf("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+        prior = tmp_ipr % 2;
+        PIR_IPR tmp = {.id = id, .priority = prior};
+        ret.push_back(tmp);
       }
       tmp_pir /= 2;
+      tmp_pie /= 2;
+      tmp_ipr /= 2;
     }
     printf("\n");
   }
@@ -70,20 +83,50 @@ vector<int> polling(Memory * memory) {
 }
 
 /* Find the biggest id and return it from the pirs that need servicing */
-int find_biggest_id_in_vector(vector<int> pirs) {
-  int it = *max_element(begin(pirs), end(pirs)); // C++11
-  return it;
+int find_biggest_id_in_vector(vector<PIR_IPR> pirs) {
+  int max = -1;
+  for(PIR_IPR elem : pirs) {
+    if(elem.id > max) max = elem.id;
+  }
+  return max;
 }
 
-/* TBD: */
+/* Find the biggest id and return it from the pirs that need servicing */
+int find_biggest_high_id_in_vector(vector<PIR_IPR> pirs) {
+  int max = -1;
+  for(PIR_IPR elem : pirs) {
+    if(elem.id > max && elem.priority) max = elem.id;
+  }
+  return max;
+}
+
+/* Find the biggest id and return it from the pirs that need servicing */
+int find_biggest_low_id_in_vector(vector<PIR_IPR> pirs) {
+  int max = -1;
+  for(PIR_IPR elem : pirs) {
+    if(elem.id > max && !elem.priority) max = elem.id;
+  }
+  return max;
+}
+
 /* This will return interrupt number that that won priority resolving */
-int resolve_priority(Memory * memory, vector<int> pirs) {
+int resolve_priority(Memory * memory, vector<PIR_IPR> pirs) {
   INTCON0_R intcon0_r;
   intcon0_r.data = memory->data_memory[INTCON0];
   int id;
   /* If user set priority then first check the ones with set IPR bits 
    * and later the ones with them cleared*/
   if(intcon0_r.IPEN) {
+    id = find_biggest_high_id_in_vector(pirs);
+    if(id > 0) {
+      memory->modules.IVT_module.current_isr_prior_lvl = HIGH_PRIORITY_LVL;
+      return id;
+    }
+    id = find_biggest_low_id_in_vector(pirs);
+    if(id > 0) {
+      memory->modules.IVT_module.current_isr_prior_lvl = LOW_PRIORITY_LVL;
+      return id;
+    }
   }
   /* If IPEN is cleared then just find the smallest number in the vector and service the winner */
   /* Natural priority has only high level priority in the emulator */
@@ -96,7 +139,7 @@ int resolve_priority(Memory * memory, vector<int> pirs) {
 
 /* TBD: */
 void module_interrupt(Memory * memory, Bus * bus, Code * code, int clock) {
-  vector<int> polled_pirs;
+  vector<PIR_IPR> polled_pirs;
   int id;
   INTCON0_R intcon0_r;
   intcon0_r.data = memory->data_memory[INTCON0];
@@ -111,7 +154,7 @@ void module_interrupt(Memory * memory, Bus * bus, Code * code, int clock) {
       /* ONLY EXECUTE THIS PART IF INTERRUPTS ARE ENABLED */
       /* If we found IRQ we let the currently loaded instruction finish */
       /* IPEN = 0, GIE = 1 */
-      if(intcon0_r.GIEGIEH && !intcon0_r.IPEN)
+      if(intcon0_r.GIEGIEH)
         polled_pirs = polling(memory);
 
       /* If size != 0 then we found an interrupt */
@@ -128,20 +171,61 @@ void module_interrupt(Memory * memory, Bus * bus, Code * code, int clock) {
         /* Get function address from IVT based on the id that won the priority */
         memory->modules.IVT_module.current_isr_addr = resolve_irq_id_to_pc_val(memory, id);
 
-      /* TBD: IF IPEN == 1 check the priority and set STAT accordingly */
-      if(intcon0_r.IPEN) {
-        }
-      else {
-          /* If IPEN == 0 set context number to HIGH CONTEXT because there is no LOW*/
-          intcon1_r.STAT = HIGH_M_CONT;
-        }
+        /* TBD: IF IPEN == 1 check the priority and set STAT accordingly */
+        if(intcon0_r.IPEN) {
+            if(memory->modules.IVT_module.current_isr_prior_lvl == HIGH_PRIORITY_LVL) {
+              intcon1_r.STAT = HIGH_M_CONT;
+              memory->modules.IVT_module.last_context = HIGH_M_CONT;
+            }
+            else {
+              intcon1_r.STAT = LOW_CONT;
+              memory->modules.IVT_module.last_context = LOW_CONT;
+            }
+          }
+        else {
+            /* If IPEN == 0 set context number to HIGH CONTEXT because there is no LOW*/
+            intcon1_r.STAT = HIGH_M_CONT;
+          }
       }
       break;
     case LOW_CONT:
-      /* TBD: Implement priority level */
+      /* ONLY EXECUTE THIS PART IF INTERRUPTS ARE ENABLED */
+      /* If we found IRQ we let the currently loaded instruction finish */
+      if(intcon0_r.GIEGIEH)
+        polled_pirs = polling(memory);
+
+      /* If size != 0 then we found an interrupt */
+      /* We are only looking for high priority interrupts */
+      printf("POLLED PIRS SIZE = %d\n", polled_pirs.size());
+      if(polled_pirs.size()) {
+        if(memory->modules.IVT_module.current_isr_prior_lvl == HIGH_PRIORITY_LVL) {
+          memory->modules.IVT_module.last_context = HIGH_L_CONT;
+          intcon1_r.STAT = HIGH_L_CONT;
+          if(code->lines[memory->instruction_data_latch.index].length > 1)
+            memory->modules.IVT_module.context = INT_LAT_0_2_CONT;
+          else
+            memory->modules.IVT_module.context = INT_LAT_1_CONT;
+          /* We load all found IRQs into a temp vector to figure out the priority */
+          /* We save IRQ ID that won the priority fight to memory*/
+          id = resolve_priority(memory, polled_pirs);
+          /* Get function address from IVT based on the id that won the priority */
+          memory->modules.IVT_module.current_isr_addr = resolve_irq_id_to_pc_val(memory, id);
+        }
+      }
+      /* If no high priority interrupts were found check if we are not leaving the ISR */
+      else if(code->lines[memory->instruction_register.index].words[0] == "retfie") {
+        memory->modules.IVT_module.context = POLLING_CONT;
+        /* Set context number to NORMAL CONTEXT*/
+        intcon1_r.STAT = POLLING_CONT;
+      }
       break;
     case HIGH_L_CONT:
       /* TBD: Implement priority level */
+      if(code->lines[memory->instruction_register.index].words[0] == "retfie") {
+        memory->modules.IVT_module.context = LOW_CONT;
+        /* Set context number to NORMAL CONTEXT*/
+        intcon1_r.STAT = LOW_CONT;
+      }
       break;
     case HIGH_M_CONT:
       /* Check if we just executed (it auto restores context) and if yes then go back
@@ -191,7 +275,14 @@ void module_interrupt(Memory * memory, Bus * bus, Code * code, int clock) {
        * to the main context - polling. If we are in low and we find high we jump into it and then after 
        * retfie we go to LOW_CONT enum.*/
       /* For now we pretend every interrupt is high after main (so we can't interrupt it) */
-      memory->modules.IVT_module.context = HIGH_M_CONT;
+
+      /* If IPEN we look for last state to tell if we jump into low, high or high after low*/
+      if(intcon0_r.IPEN) {
+        memory->modules.IVT_module.context = memory->modules.IVT_module.last_context;
+      } 
+      /* Else just go to high after main */
+      else
+        memory->modules.IVT_module.context = HIGH_M_CONT;
       break;
     default:
       break;
@@ -200,6 +291,79 @@ void module_interrupt(Memory * memory, Bus * bus, Code * code, int clock) {
 }
 
 /* TBD: */
+void module_tmr1(Memory * memory, Bus * bus, int clock) {
+  T1CON_R t1con_tmp;
+  T1CLK_R t1clk_tmp;
+  T0CON0_R tmr0_con0_tmp;
+  tmr0_con0_tmp.data = memory->data_memory[T0CON0];
+  t1con_tmp.data = memory->data_memory[T1CON];
+  t1clk_tmp.data = memory->data_memory[T1CLK];
+
+  /* Check if turned on*/
+  if(t1con_tmp.ON) {
+
+
+    /* Prescaler, postscaler */
+    memory->modules.TMR1_module.pre = 1;
+    for(int i = 0 ; i < t1con_tmp.CKPS ; i++) {
+      memory->modules.TMR1_module.pre *= 2;
+    }
+
+    /* CHECK: SIGNAL SET IN CLK REGISTER 
+     * RISING EDGE/FALLING EDGE*/
+
+    switch(t1clk_tmp.CS) {
+      /* Fosc/4 */
+      case 1:
+        memory->modules.TMR1_module.acc++;
+        if(memory->modules.TMR1_module.acc >= 4) {
+          memory->modules.TMR1_module.acc = 0;
+          memory->modules.TMR1_module.pre_acc++;
+        }
+        break;
+      /* Fosc */
+      case 2:
+        memory->modules.TMR1_module.acc++;
+        if(memory->modules.TMR1_module.acc >= 16) {
+          memory->modules.TMR1_module.acc = 0;
+          memory->modules.TMR1_module.pre_acc++;
+        }
+        break;
+      /* TMR0_OUT */
+      case 10:
+        /* If rising edge detected */
+        if(tmr0_con0_tmp.OUT == 1 && memory->modules.TMR1_module.last_cs_val == 0) {
+          memory->modules.TMR1_module.pre_acc++;
+        }
+        memory->modules.TMR1_module.last_cs_val = tmr0_con0_tmp.OUT;
+        break;
+      default:
+        break;
+    }
+
+    /* If prescaler overloads we increment postscaler */
+    if(memory->modules.TMR1_module.pre_acc >= memory->modules.TMR1_module.pre) {
+      memory->modules.TMR1_module.pre_acc = 0;
+      /* OVERFLOW */
+      if(memory->data_memory[TMR1H] == 255 && memory->data_memory[TMR1L] == 255) {
+        memory->data_memory[TMR1H] = 0;
+        memory->data_memory[TMR1L] = 0;
+        PIR3_R pir3_tmp;
+        pir3_tmp.data = memory->data_memory[PIR3];
+        pir3_tmp.TMR1IF = 1;
+        memory->data_memory[T1CON] = t1con_tmp.data;
+        memory->data_memory[PIR3] = pir3_tmp.data;
+      }
+      else if(memory->data_memory[TMR1L] == 255) {
+        memory->data_memory[TMR1H]++;
+        memory->data_memory[TMR1L] = 0;
+      }
+      else
+        memory->data_memory[TMR1L]++;
+    }
+  }
+}
+
 void module_tmr0(Memory * memory, Bus * bus, int clock) {
   /* TBD: Create logic for tmr0 configurations and
   *       operation */
@@ -266,15 +430,84 @@ void module_tmr0(Memory * memory, Bus * bus, int clock) {
         }
       }
     }
-     
+  }
+}
 
-    /* Clock source check */ 
-    
-    /* Sync/Async */
+/* TBD: add something to be read from the pin */
+void module_ports(Memory * memory, Bus * bus, int clock) {
+  int signal = SINE_WAVE;
+  for(int i = 0 ; i < 6 ; i++) {
+    u8 bits_tmp = memory->data_memory[ANSELA + i*8];
+    for(int j = 0 ; j < 8 ; j++) {
+      if(bits_tmp % 2 == 1) {
+        // CODE IF A PORT IS IN ANALOG MODE
+      }
+      bits_tmp /= 2;
+    }
+  }
+}
 
+/* TBD: ADC Logic */
+void module_adc(Memory * memory, Bus * bus, int clock) {
+  
+  printf("ADC : STATE=%d, CURR_TIME=%lld, END_TIME=%lld\n", memory->modules.ADC_module.state, memory->Fosc_moment * memory->Fosc_period_nano, memory->modules.ADC_module.nano_end);
+  ADCON0_R adcon0_tmp;
+  adcon0_tmp.data = memory->data_memory[ADCON0];
+  long long tmp;
+  switch(memory->modules.ADC_module.state) {
+    case ADC_WAITING:
+      if(adcon0_tmp.GO && adcon0_tmp.ON) {
+        if(adcon0_tmp.CS)
+          memory->modules.ADC_module.nano_clock = (1e9 * (1/6e5));
+        else
+          memory->modules.ADC_module.nano_clock = memory->Fosc_period_nano * pow(2, 1 + memory->data_memory[ADCLK]);
 
-    /* See if mode condition is met*/
+        if(memory->data_memory[ADPRE]) {
+          memory->modules.ADC_module.state = ADC_PRECHARGE;
+          memory->modules.ADC_module.nano_end = memory->modules.ADC_module.nano_clock * memory->data_memory[ADPRE];
+        }
+        else if(memory->data_memory[ADACQ]) {
+          memory->modules.ADC_module.state = ADC_ACQUIRE;
+          memory->modules.ADC_module.nano_end = memory->modules.ADC_module.nano_clock * memory->data_memory[ADACQ];
+        }
+        else {
+          memory->modules.ADC_module.state = ADC_CONVERT;
+          memory->modules.ADC_module.nano_end = memory->modules.ADC_module.nano_clock * 24;
+        }
 
-    /* Set interrupt flag */
+        memory->modules.ADC_module.nano_end += memory->Fosc_moment * memory->Fosc_period_nano;
+      }
+      break;
+    case ADC_PRECHARGE:
+      tmp = memory->Fosc_moment * memory->Fosc_period_nano;
+      if(tmp > memory->modules.ADC_module.nano_end) {
+        if(memory->data_memory[ADACQ]) {
+          memory->modules.ADC_module.state = ADC_ACQUIRE;
+          memory->modules.ADC_module.nano_end = memory->modules.ADC_module.nano_clock * memory->data_memory[ADACQ];
+        }
+        else {
+          memory->modules.ADC_module.state = ADC_CONVERT;
+          memory->modules.ADC_module.nano_end = memory->modules.ADC_module.nano_clock * 24;
+        }
+        memory->modules.ADC_module.nano_end += tmp;
+      }
+      break;
+    case ADC_ACQUIRE:
+      tmp = memory->Fosc_moment * memory->Fosc_period_nano;
+      if(tmp > memory->modules.ADC_module.nano_end) {
+        memory->modules.ADC_module.state = ADC_CONVERT;
+        memory->modules.ADC_module.nano_end = memory->modules.ADC_module.nano_clock * memory->data_memory[ADACQ];
+      }
+      break;
+    case ADC_CONVERT:
+      tmp = memory->Fosc_moment * memory->Fosc_period_nano;
+      if(tmp > memory->modules.ADC_module.nano_end) {
+        memory->modules.ADC_module.state = ADC_WAITING;
+        memory->data_memory[ADRES] = 0xFF;
+        memory->data_memory[ADRES+1] = 0xFF;
+        adcon0_tmp.GO = 0;
+        memory->data_memory[ADCON0] = adcon0_tmp.data;
+      }
+      break;
   }
 }

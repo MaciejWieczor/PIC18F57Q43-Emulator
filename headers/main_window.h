@@ -16,28 +16,36 @@ private slots:
     void openFile();
     void machine_State_Step();
     void RunUntilAddr();
+    void RunUntilLine();
     void update_LabelTableInstr();
     void update_LabelTableCpu();
+    void update_LabelTablePorts();
     void update_LabelTableInt();
     void update_LabelTableInt_Pir();
     void update_LabelTableTmr0();
+    void update_LabelTableTmr1();
+    void update_LabelTableAdc();
+    void update_LabelTableUart();
     void update_LabelTableReturnStack();
+    void update_LabelTableFastReturnStack();
     void update_Table();
     void update_Labels();
     void disasm_Highlight();
     void c_line_Highlight();
     void Add_Plot();
+    void Set_Addr();
     void update_Plots();
     void update_PlotsInv();
+    void change_Bank_Selected();
 
 private:
     Ui::MainWindow ui;
-    int time_moment = 0;
     Code priv_code;
     Memory priv_memory;
     Bus priv_bus;
     int a = 0;
-    QString filename = "programs/program2.asm";
+    int bank_selected = 3;
+    QString filename = "programs/program4.asm";
     int gui_cur_line = 0;
     vector<QwtPlot *> plots;
     vector<QTextEdit *> plot_addrs;

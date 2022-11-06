@@ -21,12 +21,34 @@ MainWindow::MainWindow(QMainWindow *parent)
     QObject::connect(ui.actionLoad_File, SIGNAL(triggered()), this, SLOT(openFile()));
     /* Step disassembly */
     QObject::connect(ui.pushButton_disasm, SIGNAL(clicked()), this, SLOT(machine_State_Step()));
-    /* Step C */
+    /* Run until addr */
     QObject::connect(ui.pushButton_breakpoint, SIGNAL(clicked()), this, SLOT(RunUntilAddr()));
+    /* Run until line */
+    QObject::connect(ui.pushButton_breakpoint_line, SIGNAL(clicked()), this, SLOT(RunUntilLine()));
     /* Start simulation - help function to load the default program*/
     QObject::connect(ui.pushButton_start, SIGNAL(clicked()), this, SLOT(start_emulator()));
     /* Connect add plot button */
     QObject::connect(ui.pushButton_add_plot, SIGNAL(clicked()), this, SLOT(Add_Plot()));
+    /* Connect change value at address button */
+    QObject::connect(ui.pushButton_setaddr, SIGNAL(clicked()), this, SLOT(Set_Addr()));
+    /* Connect change bank selected */
+    QObject::connect(ui.pb_set_bank, SIGNAL(clicked()), this, SLOT(change_Bank_Selected()));
+}
+
+void MainWindow::Set_Addr() {
+  bool ok;
+  priv_memory.data_memory[ui.textEdit_addr->toPlainText().toInt(&ok, 16)] = ui.textEdit_value->toPlainText().toInt(&ok, 10);
+  update_LabelTableInstr();
+  update_LabelTableCpu();
+  update_LabelTableInt();
+  update_LabelTableInt_Pir();
+  update_LabelTableTmr0();
+  update_LabelTableTmr1();
+  update_LabelTableAdc();
+  update_LabelTablePorts();
+  update_LabelTableReturnStack();
+  update_LabelTableFastReturnStack();
+  update_Table();
 }
 
 static void set_Axis(QwtPlot * plot) {
@@ -109,6 +131,9 @@ void MainWindow::start_emulator() {
 
   QString prog_str = "";
   for(C_Line &line : priv_code.c_lines) {
+    char buf [10];
+    sprintf(buf, "%d :", line.index);
+    prog_str.append(buf);
     prog_str.append(line.line.c_str());
     prog_str.append("\n");
     line.gui_len = prog_str.length();
@@ -120,6 +145,8 @@ void MainWindow::start_emulator() {
   for(Line &line : priv_code.lines) {
     char buf [10];
     sprintf(buf, "%X\t", line.address);
+    prog_str.append(buf);
+    sprintf(buf, "%X\t", line.coded_disasm);
     prog_str.append(buf);
     for(string word : line.words) {
     prog_str.append(word.c_str());
@@ -206,6 +233,23 @@ static string print_encoded(Program_Word tmp_p, Memory * memory, Line * line) {
   return tmp;
 }
 
+void MainWindow::update_LabelTableFastReturnStack () {
+  char buffer [20];
+  if(priv_memory.fast_register_stack.size() > 0) {
+      /* STATUS, WREG, BSR*/
+    for(int i = 0 ; i < 3 ; i++) {
+      sprintf(buffer, "0x%X", priv_memory.fast_register_stack[i]); 
+      ui.tableWidget_frs->setItem(i, 0,  new QTableWidgetItem(buffer));
+    }
+  }
+  else {
+    for(int i = 0 ; i < 3 ; i++) {
+      sprintf(buffer, "-"); 
+      ui.tableWidget_frs->setItem(i, 0,  new QTableWidgetItem(buffer));
+    }
+  }
+}
+
 void MainWindow::update_LabelTableReturnStack () {
   char buffer [20];
 
@@ -213,6 +257,161 @@ void MainWindow::update_LabelTableReturnStack () {
     sprintf(buffer, "0x%X", priv_memory.return_stack[i]); 
     ui.return_stack->setItem(i, 0,  new QTableWidgetItem(buffer));
   }
+}
+
+void MainWindow::update_LabelTableAdc () {
+  char buffer [20];
+  /* ADCON0 */
+  sprintf(buffer, "%d", priv_memory.data_memory[ADCON0]); 
+  ui.tableWidget_adc0->setItem(0, 0,  new QTableWidgetItem(buffer));
+  /* T1CON BITS */
+  ADCON0_R adcon0_tmp;
+  adcon0_tmp.data = priv_memory.data_memory[ADCON0];
+  /* ON */
+  sprintf(buffer, "%d", adcon0_tmp.ON); 
+  ui.tableWidget_adc0->setItem(1, 0,  new QTableWidgetItem(buffer));
+  /* CONT */
+  sprintf(buffer, "%d", adcon0_tmp.CONT); 
+  ui.tableWidget_adc0->setItem(2, 0,  new QTableWidgetItem(buffer));
+  /* CS */
+  sprintf(buffer, "%d", adcon0_tmp.CS); 
+  ui.tableWidget_adc0->setItem(3, 0,  new QTableWidgetItem(buffer));
+  /* FM */
+  sprintf(buffer, "%d", adcon0_tmp.FM); 
+  ui.tableWidget_adc0->setItem(4, 0,  new QTableWidgetItem(buffer));
+  /* GO */
+  sprintf(buffer, "%d", adcon0_tmp.GO); 
+  ui.tableWidget_adc0->setItem(5, 0,  new QTableWidgetItem(buffer));
+
+  /* ADCON1 */
+  sprintf(buffer, "%d", priv_memory.data_memory[ADCON1]); 
+  ui.tableWidget_adc0->setItem(6, 0,  new QTableWidgetItem(buffer));
+  /* ADCON1 BITS */
+  ADCON1_R adcon1_tmp;
+  adcon1_tmp.data = priv_memory.data_memory[ADCON1];
+  /* PPOL */
+  sprintf(buffer, "%d", adcon1_tmp.PPOL); 
+  ui.tableWidget_adc0->setItem(7, 0,  new QTableWidgetItem(buffer));
+  /* IPEN */
+  sprintf(buffer, "%d", adcon1_tmp.IPEN); 
+  ui.tableWidget_adc0->setItem(8, 0,  new QTableWidgetItem(buffer));
+  /* GPOL */
+  sprintf(buffer, "%d", adcon1_tmp.GPOL); 
+  ui.tableWidget_adc0->setItem(9, 0,  new QTableWidgetItem(buffer));
+  /* DSEN */
+  sprintf(buffer, "%d", adcon1_tmp.DSEN); 
+  ui.tableWidget_adc0->setItem(10, 0,  new QTableWidgetItem(buffer));
+  /* ADCON2  */
+  sprintf(buffer, "%d", priv_memory.data_memory[ADCON2]); 
+  ui.tableWidget_adc0->setItem(11, 0,  new QTableWidgetItem(buffer));
+  /* ADCON2 BITS */
+  ADCON2_R adcon2_tmp;
+  adcon2_tmp.data = priv_memory.data_memory[ADCON2];
+  sprintf(buffer, "%d", adcon2_tmp.PSIS); 
+  ui.tableWidget_adc0->setItem(12, 0,  new QTableWidgetItem(buffer));
+  sprintf(buffer, "%d", adcon2_tmp.CRS); 
+  ui.tableWidget_adc0->setItem(13, 0,  new QTableWidgetItem(buffer));
+  sprintf(buffer, "%d", adcon2_tmp.ACLR); 
+  ui.tableWidget_adc0->setItem(14, 0,  new QTableWidgetItem(buffer));
+  sprintf(buffer, "%d", adcon2_tmp.MD); 
+  ui.tableWidget_adc0->setItem(15, 0,  new QTableWidgetItem(buffer));
+
+  /* ADCLK */
+  sprintf(buffer, "%d", priv_memory.data_memory[ADCLK]); 
+  ui.tableWidget_adc1->setItem(0, 0,  new QTableWidgetItem(buffer));
+  /* ADPCH */
+  sprintf(buffer, "%d", priv_memory.data_memory[ADPCH]); 
+  ui.tableWidget_adc1->setItem(1, 0,  new QTableWidgetItem(buffer));
+  /* ADPRE */ 
+  sprintf(buffer, "%d", priv_memory.data_memory[ADPRE] + 256 * priv_memory.data_memory[ADPRE + 1]); 
+  ui.tableWidget_adc1->setItem(2, 0,  new QTableWidgetItem(buffer));
+  /* ADACQ */
+  sprintf(buffer, "%d", priv_memory.data_memory[ADACQ] + 256 * priv_memory.data_memory[ADACQ + 1]); 
+  ui.tableWidget_adc1->setItem(3, 0,  new QTableWidgetItem(buffer));
+  /* ADRES */ 
+  sprintf(buffer, "%d", priv_memory.data_memory[ADRES] + 256 * priv_memory.data_memory[ADRES + 1]); 
+  ui.tableWidget_adc1->setItem(4, 0,  new QTableWidgetItem(buffer));
+  /* ADPREV */ 
+  sprintf(buffer, "%d", priv_memory.data_memory[ADPREV] + 256 * priv_memory.data_memory[ADPREV + 1]); 
+  ui.tableWidget_adc1->setItem(5, 0,  new QTableWidgetItem(buffer));
+  /* ADACT */
+  sprintf(buffer, "%d", priv_memory.data_memory[ADACT]); 
+  ui.tableWidget_adc1->setItem(6, 0,  new QTableWidgetItem(buffer));
+
+  /* ADCON3  */
+  sprintf(buffer, "%d", priv_memory.data_memory[ADCON3]); 
+  ui.tableWidget_adc1->setItem(7, 0,  new QTableWidgetItem(buffer));
+  /* ADCON3 BITS */
+  ADCON3_R adcon3_tmp;
+  adcon3_tmp.data = priv_memory.data_memory[ADCON3];
+  sprintf(buffer, "%d", adcon3_tmp.CALC); 
+  ui.tableWidget_adc1->setItem(8, 0,  new QTableWidgetItem(buffer));
+  sprintf(buffer, "%d", adcon3_tmp.SOI); 
+  ui.tableWidget_adc1->setItem(9, 0,  new QTableWidgetItem(buffer));
+  sprintf(buffer, "%d", adcon3_tmp.TMD); 
+  ui.tableWidget_adc1->setItem(10, 0,  new QTableWidgetItem(buffer));
+}
+
+void MainWindow::update_LabelTableTmr1 () {
+  char buffer [20];
+  /* T1CON */
+  sprintf(buffer, "%d", priv_memory.data_memory[T1CON]); 
+  ui.tableWidget_tmr1->setItem(0, 0,  new QTableWidgetItem(buffer));
+  /* T1CON BITS */
+  T1CON_R t1con_tmp;
+  t1con_tmp.data = priv_memory.data_memory[T1CON];
+  /* ON */
+  sprintf(buffer, "%d", t1con_tmp.ON); 
+  ui.tableWidget_tmr1->setItem(1, 0,  new QTableWidgetItem(buffer));
+  /* RD16 */
+  sprintf(buffer, "%d", t1con_tmp.RD16); 
+  ui.tableWidget_tmr1->setItem(2, 0,  new QTableWidgetItem(buffer));
+  /* SYNC */
+  sprintf(buffer, "%d", t1con_tmp.SYNC); 
+  ui.tableWidget_tmr1->setItem(3, 0,  new QTableWidgetItem(buffer));
+  /* CKPS */
+  sprintf(buffer, "%d", t1con_tmp.CKPS); 
+  ui.tableWidget_tmr1->setItem(4, 0,  new QTableWidgetItem(buffer));
+  /* T1GCON */
+  sprintf(buffer, "%d", priv_memory.data_memory[T1GCON]); 
+  ui.tableWidget_tmr1->setItem(5, 0,  new QTableWidgetItem(buffer));
+  /* T1GCON BITS */
+  T1GCON_R t1gcon_tmp;
+  t1gcon_tmp.data = priv_memory.data_memory[T1GCON];
+  /* GVAL */
+  sprintf(buffer, "%d", t1gcon_tmp.GVAL); 
+  ui.tableWidget_tmr1->setItem(6, 0,  new QTableWidgetItem(buffer));
+  /* GGO */
+  sprintf(buffer, "%d", t1gcon_tmp.GGO); 
+  ui.tableWidget_tmr1->setItem(7, 0,  new QTableWidgetItem(buffer));
+  /* GSPM */
+  sprintf(buffer, "%d", t1gcon_tmp.GSPM); 
+  ui.tableWidget_tmr1->setItem(8, 0,  new QTableWidgetItem(buffer));
+  /* GTM */
+  sprintf(buffer, "%d", t1gcon_tmp.GTM); 
+  ui.tableWidget_tmr1->setItem(9, 0,  new QTableWidgetItem(buffer));
+  /* GPOL */
+  sprintf(buffer, "%d", t1gcon_tmp.GPOL); 
+  ui.tableWidget_tmr1->setItem(10, 0,  new QTableWidgetItem(buffer));
+  /* GE */
+  sprintf(buffer, "%d", t1gcon_tmp.GE); 
+  ui.tableWidget_tmr1->setItem(11, 0,  new QTableWidgetItem(buffer));
+  /* T1CLK */
+  T1CLK_R t1clk_tmp;
+  t1clk_tmp.data = priv_memory.data_memory[T1CLK];
+  sprintf(buffer, "%d", t1clk_tmp.CS); 
+  ui.tableWidget_tmr1->setItem(12, 0,  new QTableWidgetItem(buffer));
+  /* T1GATE */
+  T1GATE_R t1gate_tmp;
+  t1gate_tmp.data = priv_memory.data_memory[T1GATE];
+  sprintf(buffer, "%d", t1gate_tmp.GSS); 
+  ui.tableWidget_tmr1->setItem(13, 0,  new QTableWidgetItem(buffer));
+  /* TMR1 (TMR1L + 256*TMR1H) */
+  sprintf(buffer, "%d", priv_memory.data_memory[TMR1L] + priv_memory.data_memory[TMR1L+1] * 256); 
+  ui.tableWidget_tmr1->setItem(14, 0,  new QTableWidgetItem(buffer));
+  /* ISR ADDR */
+  sprintf(buffer, "0x%X", priv_memory.modules.TMR1_module.ivt_address); 
+  ui.tableWidget_tmr1->setItem(15, 0,  new QTableWidgetItem(buffer));
 }
 
 void MainWindow::update_LabelTableTmr0 () {
@@ -312,6 +511,119 @@ void MainWindow::update_LabelTableInt () {
   ui.tableWidget_int->setItem(9, 0,  new QTableWidgetItem(buffer));
 }
 
+void MainWindow::update_LabelTableUart () {
+  char buffer [20];
+  /* U1CON0 */
+  sprintf(buffer, "%d", priv_memory.data_memory[U1CON0]); 
+  ui.tableWidget_uart_0->setItem(0, 0,  new QTableWidgetItem(buffer));
+  /* U1CON0 BITS */
+  U1CON0_R u1con0_tmp;
+  u1con0_tmp.data = priv_memory.data_memory[U1CON0];
+  /* BRGS */
+  sprintf(buffer, "%d", u1con0_tmp.BRGS); 
+  ui.tableWidget_uart_0->setItem(1, 0,  new QTableWidgetItem(buffer));
+  /* ABDEN */
+  sprintf(buffer, "%d", u1con0_tmp.ABDEN); 
+  ui.tableWidget_uart_0->setItem(2, 0,  new QTableWidgetItem(buffer));
+  /* TXEN */
+  sprintf(buffer, "%d", u1con0_tmp.TXEN); 
+  ui.tableWidget_uart_0->setItem(3, 0,  new QTableWidgetItem(buffer));
+  /* RXEN */
+  sprintf(buffer, "%d", u1con0_tmp.RXEN); 
+  ui.tableWidget_uart_0->setItem(4, 0,  new QTableWidgetItem(buffer));
+  /* MODE */
+  sprintf(buffer, "%d", u1con0_tmp.MODE); 
+  ui.tableWidget_uart_0->setItem(5, 0,  new QTableWidgetItem(buffer));
+  /* U1CON1 */
+  sprintf(buffer, "%d", priv_memory.data_memory[U1CON1]); 
+  ui.tableWidget_uart_0->setItem(6, 0,  new QTableWidgetItem(buffer));
+  /* U1CON1 BITS */
+  U1CON1_R u1con1_tmp;
+  u1con1_tmp.data = priv_memory.data_memory[U1CON1];
+  /* ON */
+  sprintf(buffer, "%d", u1con1_tmp.ON); 
+  ui.tableWidget_uart_0->setItem(7, 0,  new QTableWidgetItem(buffer));
+  /* WUE */
+  sprintf(buffer, "%d", u1con1_tmp.WUE); 
+  ui.tableWidget_uart_0->setItem(8, 0,  new QTableWidgetItem(buffer));
+  /* RXBIMD */
+  sprintf(buffer, "%d", u1con1_tmp.RXBIMD); 
+  ui.tableWidget_uart_0->setItem(9, 0,  new QTableWidgetItem(buffer));
+  /* BRKOVR */
+  sprintf(buffer, "%d", u1con1_tmp.BRKOVR); 
+  ui.tableWidget_uart_0->setItem(10, 0,  new QTableWidgetItem(buffer));
+  /* SENDB */
+  sprintf(buffer, "%d", u1con1_tmp.SENDB); 
+  ui.tableWidget_uart_0->setItem(11, 0,  new QTableWidgetItem(buffer));
+  /* U1BRG */
+  sprintf(buffer, "%d", priv_memory.data_memory[U1BRG + 1] * 0x100 + priv_memory.data_memory[U1BRG]); 
+  ui.tableWidget_uart_0->setItem(12, 0,  new QTableWidgetItem(buffer));
+  /* U1RXB */
+  sprintf(buffer, "%d", priv_memory.data_memory[U1RXB]); 
+  ui.tableWidget_uart_0->setItem(13, 0,  new QTableWidgetItem(buffer));
+  /* U1TXB */
+  sprintf(buffer, "%d", priv_memory.data_memory[U1TXB]); 
+  ui.tableWidget_uart_0->setItem(14, 0,  new QTableWidgetItem(buffer));
+
+  /* UART_1 TABLE */
+  /* U1CON2 */
+  sprintf(buffer, "%d", priv_memory.data_memory[U1CON2]); 
+  ui.tableWidget_uart_1->setItem(0, 0,  new QTableWidgetItem(buffer));
+  /* U1CON0 BITS */
+  U1CON2_R u1con2_tmp;
+  u1con2_tmp.data = priv_memory.data_memory[U1CON2];
+  /* RUNOVF */
+  sprintf(buffer, "%d", u1con2_tmp.RUNOVF); 
+  ui.tableWidget_uart_1->setItem(1, 0,  new QTableWidgetItem(buffer));
+  /* RXPOL */
+  sprintf(buffer, "%d", u1con2_tmp.RXPOL); 
+  ui.tableWidget_uart_1->setItem(2, 0,  new QTableWidgetItem(buffer));
+  /* STP */
+  sprintf(buffer, "%d", u1con2_tmp.STP); 
+  ui.tableWidget_uart_1->setItem(3, 0,  new QTableWidgetItem(buffer));
+  /* C0EN */
+  sprintf(buffer, "%d", u1con2_tmp.C0EN); 
+  ui.tableWidget_uart_1->setItem(4, 0,  new QTableWidgetItem(buffer));
+  /* TXPOL */
+  sprintf(buffer, "%d", u1con2_tmp.TXPOL); 
+  ui.tableWidget_uart_1->setItem(5, 0,  new QTableWidgetItem(buffer));
+  /* FLO */
+  sprintf(buffer, "%d", u1con2_tmp.FLO); 
+  ui.tableWidget_uart_1->setItem(6, 0,  new QTableWidgetItem(buffer));
+
+  /* FIFO */
+  sprintf(buffer, "%d", priv_memory.data_memory[U1FIFO]); 
+  ui.tableWidget_uart_1->setItem(7, 0,  new QTableWidgetItem(buffer));
+  /* FIFO BITS */
+  U1FIFO_R u1fifo_tmp;
+  u1fifo_tmp.data = priv_memory.data_memory[U1FIFO];
+  /* TXWRE */
+  sprintf(buffer, "%d", u1fifo_tmp.TXWRE); 
+  ui.tableWidget_uart_1->setItem(8, 0,  new QTableWidgetItem(buffer));
+  /* STMPD */
+  sprintf(buffer, "%d", u1fifo_tmp.STMPD); 
+  ui.tableWidget_uart_1->setItem(9, 0,  new QTableWidgetItem(buffer));
+  /* TXBE */
+  sprintf(buffer, "%d", u1fifo_tmp.TXBE); 
+  ui.tableWidget_uart_1->setItem(10, 0,  new QTableWidgetItem(buffer));
+  /* TXBF */
+  sprintf(buffer, "%d", u1fifo_tmp.TXBF); 
+  ui.tableWidget_uart_1->setItem(11, 0,  new QTableWidgetItem(buffer));
+  /* RXIDL */
+  sprintf(buffer, "%d", u1fifo_tmp.RXIDL); 
+  ui.tableWidget_uart_1->setItem(12, 0,  new QTableWidgetItem(buffer));
+  /* XON */
+  sprintf(buffer, "%d", u1fifo_tmp.XON); 
+  ui.tableWidget_uart_1->setItem(13, 0,  new QTableWidgetItem(buffer));
+  /* RXBE */
+  sprintf(buffer, "%d", u1fifo_tmp.RXBE); 
+  ui.tableWidget_uart_1->setItem(14, 0,  new QTableWidgetItem(buffer));
+  /* RXBF */
+  sprintf(buffer, "%d", u1fifo_tmp.RXBF); 
+  ui.tableWidget_uart_1->setItem(15, 0,  new QTableWidgetItem(buffer));
+
+}
+
 void MainWindow::update_LabelTableCpu () {
   char buffer [20];
   /* WREG */
@@ -344,6 +656,47 @@ void MainWindow::update_LabelTableCpu () {
   /* STKPTR */
   sprintf(buffer, "%d", priv_memory.data_memory[STKPTR]); 
   ui.tableWidget_cpu->setItem(8, 0,  new QTableWidgetItem(buffer));
+
+  /* FSR0 */ 
+  sprintf(buffer, "0x%.4X", priv_memory.data_memory[FSR0] + 256 * priv_memory.data_memory[FSR0 + 1]); 
+  ui.tableWidget_ind_stack->setItem(0, 0,  new QTableWidgetItem(buffer));
+  /* FSR1 */ 
+  sprintf(buffer, "0x%.4X", priv_memory.data_memory[FSR1] + 256 * priv_memory.data_memory[FSR1 + 1]); 
+  ui.tableWidget_ind_stack->setItem(1, 0,  new QTableWidgetItem(buffer));
+  /* FSR2 */ 
+  sprintf(buffer, "0x%.4X", priv_memory.data_memory[FSR2] + 256 * priv_memory.data_memory[FSR2 + 1]); 
+  ui.tableWidget_ind_stack->setItem(2, 0,  new QTableWidgetItem(buffer));
+  /* INDF0 */
+  sprintf(buffer, "%d", priv_memory.data_memory[INDF0]); 
+  ui.tableWidget_ind_stack->setItem(3, 0,  new QTableWidgetItem(buffer));
+  /* INDF1 */
+  sprintf(buffer, "%d", priv_memory.data_memory[INDF1]); 
+  ui.tableWidget_ind_stack->setItem(4, 0,  new QTableWidgetItem(buffer));
+  /* INDF2 */
+  sprintf(buffer, "%d", priv_memory.data_memory[INDF2]); 
+  ui.tableWidget_ind_stack->setItem(5, 0,  new QTableWidgetItem(buffer));
+  /* TOSU */
+  sprintf(buffer, "%d", priv_memory.data_memory[TOS + 2]); 
+  ui.tableWidget_ind_stack->setItem(6, 0,  new QTableWidgetItem(buffer));
+  sprintf(buffer, "%d", priv_memory.data_memory[TOS + 1]); 
+  ui.tableWidget_ind_stack->setItem(7, 0,  new QTableWidgetItem(buffer));
+  sprintf(buffer, "%d", priv_memory.data_memory[TOS + 0]); 
+  ui.tableWidget_ind_stack->setItem(8, 0,  new QTableWidgetItem(buffer));
+}
+
+void MainWindow::update_LabelTablePorts () {
+  char buffer [20];
+
+  for(int i = 0 ; i < 6 ; i++) {
+    sprintf(buffer, "0x%.2X", priv_memory.data_memory[PORTA + i]); 
+    ui.tableWidget_ports0->setItem(i, 0,  new QTableWidgetItem(buffer));
+    sprintf(buffer, "0x%.2X", priv_memory.data_memory[TRISA + i]); 
+    ui.tableWidget_ports0->setItem(6 + i, 0,  new QTableWidgetItem(buffer));
+    sprintf(buffer, "0x%.2X", priv_memory.data_memory[LATA + i]); 
+    ui.tableWidget_ports1->setItem(i, 0,  new QTableWidgetItem(buffer));
+    sprintf(buffer, "0x%.2X", priv_memory.data_memory[ANSELA + i * 8]); 
+    ui.tableWidget_ports1->setItem(6 + i, 0,  new QTableWidgetItem(buffer));
+  }
 }
 
 void MainWindow::update_LabelTableInstr () {
@@ -382,7 +735,22 @@ void MainWindow::update_Table () {
         sprintf(str, "%X ", priv_memory.data_memory[i*0x10 + j + 0x0460]);
         ui.tableWidget->setItem(i, j,  new QTableWidgetItem(str));
     }
+    sprintf(str, "%X", i);
+    ui.bank_select_table->setHorizontalHeaderItem(i, new QTableWidgetItem(str));
+    sprintf(str, "0x%X", 0x100 * bank_selected + i*0x10);
+    ui.bank_select_table->setVerticalHeaderItem(i, new QTableWidgetItem(str));
+
+    for(int j = 0; j < 16 ; j++) {
+        sprintf(str, "%X ", priv_memory.data_memory[i*0x10 + j + 0x100 * bank_selected]);
+        ui.bank_select_table->setItem(i, j,  new QTableWidgetItem(str));
+    }
   }
+}
+
+void MainWindow::change_Bank_Selected () {
+  bool ok;
+  bank_selected = ui.te_set_bank->toPlainText().toUInt(&ok, 10);
+  update_Table();
 }
 
 void MainWindow::c_line_Highlight () {
@@ -443,13 +811,13 @@ void MainWindow::update_PlotsInv() {
       u8 test = priv_memory.data_memory[plot_addrs[text_ind]->toPlainText().toUInt(&ok, 16)] & (1 << i);
       if(test) {
         if(points[index].back().y() == 0)
-          points[index].push_back(QPointF(time_moment-1, 1));
-        points[index].push_back(QPointF(time_moment, 1));
+          points[index].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano-1, 1));
+        points[index].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano, 1));
       }
       else { 
         if(points[index].back().y() == 1)
-          points[index].push_back(QPointF(time_moment - 1, 0));
-        points[index].push_back(QPointF(time_moment, 0));
+          points[index].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano - 1, 0));
+        points[index].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano, 0));
       }
     }
     text_ind++;
@@ -466,13 +834,13 @@ void MainWindow::update_Plots() {
       u8 test = priv_memory.data_memory[plot_addrs[text_ind]->toPlainText().toUInt(&ok, 16)] & (1 << i);
       if(test) {
         if(points[index].back().y() == 0)
-          points[index].push_back(QPointF(time_moment-1, 1));
-        points[index].push_back(QPointF(time_moment, 1));
+          points[index].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano-1, 1));
+        points[index].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano, 1));
       }
       else { 
         if(points[index].back().y() == 1)
-          points[index].push_back(QPointF(time_moment - 1, 0));
-        points[index].push_back(QPointF(time_moment, 0));
+          points[index].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano - 1, 0));
+        points[index].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano, 0));
       }
     }
     text_ind++;
@@ -484,7 +852,7 @@ void MainWindow::update_Plots() {
 
     if(i == plots.size() - 1) {
       plot->enableAxis(QwtPlot::xBottom, true);
-      plot->setAxisScale( QwtPlot::xBottom, 0.0, time_moment);
+      plot->setAxisScale( QwtPlot::xBottom, 0.0, priv_memory.Fosc_period_nano * priv_memory.Fosc_moment);
       plot->setAxisScale( QwtPlot::yLeft, 0, 1, 1);
     }
     QwtPlotCurve *curve = new QwtPlotCurve();
@@ -510,13 +878,57 @@ void MainWindow::update_Labels() {
   update_LabelTableInt();
   update_LabelTableInt_Pir();
   update_LabelTableTmr0();
+  update_LabelTableTmr1();
+  update_LabelTableAdc();
+  update_LabelTableUart();
+  update_LabelTablePorts();
   update_LabelTableReturnStack();
+  update_LabelTableFastReturnStack();
   update_Plots();
 
   update_Table();
 
   disasm_Highlight();
   c_line_Highlight();
+}
+
+void MainWindow::RunUntilLine() {
+  /* Possible states are instruction load and 
+    * instruction execute */
+  // PRINTS FOR DEBUG
+  bool ok;
+  int line_index = ui.textEdit_line_break_addr->toPlainText().toInt(&ok, 10);
+
+  printf("LAST C LINE : %d, INPUT LINE INDEX : %d\n",priv_code.lines[priv_bus.instruction_Bus.index].last_c_index, line_index); 
+  while(priv_code.lines[priv_bus.instruction_Bus.index].last_c_index > line_index) {
+    gui_cur_line = priv_bus.instruction_Bus.index;
+    qDebug() << "CURR LINE : " << gui_cur_line << "\n";
+
+    pre_Copy_Pointer_Data(&priv_code, &priv_memory, &priv_bus);
+
+      module_interrupt(&priv_memory, &priv_bus, &priv_code, priv_code.clock_Cycle);
+    for(int i = 0 ; i < 4 ; i++) {
+      fetch_Instruction(&priv_code, &priv_memory, &priv_bus, priv_code.clock_Cycle);
+      execute_Instruction(&priv_code, &priv_memory, &priv_bus, priv_code.clock_Cycle);
+      module_tmr0(&priv_memory, &priv_bus, priv_code.clock_Cycle);
+      module_tmr1(&priv_memory, &priv_bus, priv_code.clock_Cycle);
+      module_ports(&priv_memory, &priv_bus, priv_code.clock_Cycle);
+      module_adc(&priv_memory, &priv_bus, priv_code.clock_Cycle);
+      priv_code.clock_Cycle++;
+      priv_memory.Fosc_moment++;
+      if(priv_code.clock_Cycle == 4) {
+          /* printf("INTERRUPT NUMBER = %d\n", priv_memory.modules.IVT_module.context); */
+          priv_code.clock_Cycle = 0;
+          qDebug() << "---------------------------------------------------------\n";
+          /* print_coded_instr(&priv_code, &priv_memory, &priv_bus); */
+      }
+    }
+
+    post_Copy_Pointer_Data(&priv_code, &priv_memory, &priv_bus);
+    priv_memory.time_moment++;
+    update_PlotsInv();
+  }
+  update_Labels();
 }
 
 void MainWindow::RunUntilAddr() {
@@ -536,7 +948,11 @@ void MainWindow::RunUntilAddr() {
       fetch_Instruction(&priv_code, &priv_memory, &priv_bus, priv_code.clock_Cycle);
       execute_Instruction(&priv_code, &priv_memory, &priv_bus, priv_code.clock_Cycle);
       module_tmr0(&priv_memory, &priv_bus, priv_code.clock_Cycle);
+      module_tmr1(&priv_memory, &priv_bus, priv_code.clock_Cycle);
+      module_ports(&priv_memory, &priv_bus, priv_code.clock_Cycle);
+      module_adc(&priv_memory, &priv_bus, priv_code.clock_Cycle);
       priv_code.clock_Cycle++;
+      priv_memory.Fosc_moment++;
       if(priv_code.clock_Cycle == 4) {
           /* printf("INTERRUPT NUMBER = %d\n", priv_memory.modules.IVT_module.context); */
           priv_code.clock_Cycle = 0;
@@ -546,7 +962,7 @@ void MainWindow::RunUntilAddr() {
     }
 
     post_Copy_Pointer_Data(&priv_code, &priv_memory, &priv_bus);
-    time_moment++;
+    priv_memory.time_moment++;
     update_PlotsInv();
   }
   update_Labels();
@@ -566,7 +982,11 @@ void MainWindow::machine_State_Step() {
     fetch_Instruction(&priv_code, &priv_memory, &priv_bus, priv_code.clock_Cycle);
     execute_Instruction(&priv_code, &priv_memory, &priv_bus, priv_code.clock_Cycle);
     module_tmr0(&priv_memory, &priv_bus, priv_code.clock_Cycle);
+    module_tmr1(&priv_memory, &priv_bus, priv_code.clock_Cycle);
+    module_ports(&priv_memory, &priv_bus, priv_code.clock_Cycle);
+    module_adc(&priv_memory, &priv_bus, priv_code.clock_Cycle);
     priv_code.clock_Cycle++;
+    priv_memory.Fosc_moment++;
     if(priv_code.clock_Cycle == 4) {
         printf("INTERRUPT NUMBER = %d\n", priv_memory.modules.IVT_module.context);
         priv_code.clock_Cycle = 0;
@@ -577,5 +997,5 @@ void MainWindow::machine_State_Step() {
 
   post_Copy_Pointer_Data(&priv_code, &priv_memory, &priv_bus);
   update_Labels();
-  time_moment++;
+  priv_memory.time_moment++;
 }

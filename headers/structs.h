@@ -39,7 +39,6 @@ using namespace std;
 #define POSTINC0   0x4EE
 
 /* UART */
-
 #define U1CON0    0x2AB
 #define U1CON1    0x2AC
 #define U1CON2    0x2AD
@@ -47,6 +46,16 @@ using namespace std;
 #define U1RXB     0x2A1
 #define U1TXB     0x2A3
 #define U1FIFO    0x2B0
+
+/* PPS */ 
+
+#define RA0PPS    0x201
+#define UART1_PPS 0x20
+// C,F
+#define UART2_PPS 0x23
+// B,D
+#define UART3_PPS 0x26
+// A,F
 
 /* PORTS */
 
@@ -108,6 +117,7 @@ using namespace std;
 #define PIR1    0x4AF
 #define PIR2    0x4B0
 #define PIR3    0x4B1
+#define PIR4    0x4B2
 #define INTCON0 0x4D6
 #define INTCON1 0x4D7
 #define PIE0    0x49E
@@ -592,7 +602,7 @@ typedef struct TMR5_Module {
 } TMR5_module;
 
 typedef struct Analog_Pin {
-  short val : 12;
+  short val;
 } Analog_Pin;
 
 typedef struct Ports_Module {
@@ -609,8 +619,28 @@ enum ADC_STATE {
 typedef struct ADC_Module {
   long long nano_clock;
   long long nano_end;
+  unsigned short last_measured_value;
   ADC_STATE state;
 } ADC_Module;
+
+enum UART_STATE {
+  UART_OFF,
+  UART_POLL,
+  UART_POLL_SEND,
+  UART_SEND
+};
+
+typedef struct UART_Module {
+  UART_STATE state;
+  int frequency_split;
+  u8 TSR;
+  int counter;
+  int bit_counter;
+  u8 transaction_start;
+  u8 port;
+  u8 pin;
+  u8 port_changed;
+} UART_Module;
 
 /* MODULES */
 
@@ -622,6 +652,7 @@ typedef struct Modules {
   TMR5_Module TMR5_module;
   Ports_Module Ports_module;
   ADC_Module ADC_module;
+  UART_Module UART_module;
 } Modules;
 
 
@@ -876,3 +907,5 @@ void module_uart(Memory * memory, Bus * bus, int clock);
 void module_pps(Memory * memory, Bus * bus, int clock);
 
 void module_ports(Memory * memory, Bus * bus, int clock);
+
+void module_uart(Memory * memory, Bus * bus, int clock);

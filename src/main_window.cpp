@@ -892,6 +892,14 @@ void MainWindow::update_Labels() {
   c_line_Highlight();
 }
 
+static void run_modules(Memory * memory, Bus * bus, int clock) {
+  module_tmr0(memory, bus, clock);
+  module_tmr1(memory, bus, clock);
+  module_ports(memory, bus, clock);
+  module_adc(memory, bus, clock);
+  module_uart(memory, bus, clock);
+}
+
 void MainWindow::RunUntilLine() {
   /* Possible states are instruction load and 
     * instruction execute */
@@ -910,17 +918,14 @@ void MainWindow::RunUntilLine() {
     for(int i = 0 ; i < 4 ; i++) {
       fetch_Instruction(&priv_code, &priv_memory, &priv_bus, priv_code.clock_Cycle);
       execute_Instruction(&priv_code, &priv_memory, &priv_bus, priv_code.clock_Cycle);
-      module_tmr0(&priv_memory, &priv_bus, priv_code.clock_Cycle);
-      module_tmr1(&priv_memory, &priv_bus, priv_code.clock_Cycle);
-      module_ports(&priv_memory, &priv_bus, priv_code.clock_Cycle);
-      module_adc(&priv_memory, &priv_bus, priv_code.clock_Cycle);
+      run_modules(&priv_memory, &priv_bus, priv_code.clock_Cycle);
       priv_code.clock_Cycle++;
       priv_memory.Fosc_moment++;
       if(priv_code.clock_Cycle == 4) {
-          /* printf("INTERRUPT NUMBER = %d\n", priv_memory.modules.IVT_module.context); */
+          printf("INTERRUPT NUMBER = %d\n", priv_memory.modules.IVT_module.context);
           priv_code.clock_Cycle = 0;
           qDebug() << "---------------------------------------------------------\n";
-          /* print_coded_instr(&priv_code, &priv_memory, &priv_bus); */
+          print_coded_instr(&priv_code, &priv_memory, &priv_bus);
       }
     }
 
@@ -947,17 +952,14 @@ void MainWindow::RunUntilAddr() {
     for(int i = 0 ; i < 4 ; i++) {
       fetch_Instruction(&priv_code, &priv_memory, &priv_bus, priv_code.clock_Cycle);
       execute_Instruction(&priv_code, &priv_memory, &priv_bus, priv_code.clock_Cycle);
-      module_tmr0(&priv_memory, &priv_bus, priv_code.clock_Cycle);
-      module_tmr1(&priv_memory, &priv_bus, priv_code.clock_Cycle);
-      module_ports(&priv_memory, &priv_bus, priv_code.clock_Cycle);
-      module_adc(&priv_memory, &priv_bus, priv_code.clock_Cycle);
+      run_modules(&priv_memory, &priv_bus, priv_code.clock_Cycle);
       priv_code.clock_Cycle++;
       priv_memory.Fosc_moment++;
       if(priv_code.clock_Cycle == 4) {
-          /* printf("INTERRUPT NUMBER = %d\n", priv_memory.modules.IVT_module.context); */
+          printf("INTERRUPT NUMBER = %d\n", priv_memory.modules.IVT_module.context);
           priv_code.clock_Cycle = 0;
           qDebug() << "---------------------------------------------------------\n";
-          /* print_coded_instr(&priv_code, &priv_memory, &priv_bus); */
+          print_coded_instr(&priv_code, &priv_memory, &priv_bus);
       }
     }
 
@@ -981,10 +983,7 @@ void MainWindow::machine_State_Step() {
   for(int i = 0 ; i < 4 ; i++) {
     fetch_Instruction(&priv_code, &priv_memory, &priv_bus, priv_code.clock_Cycle);
     execute_Instruction(&priv_code, &priv_memory, &priv_bus, priv_code.clock_Cycle);
-    module_tmr0(&priv_memory, &priv_bus, priv_code.clock_Cycle);
-    module_tmr1(&priv_memory, &priv_bus, priv_code.clock_Cycle);
-    module_ports(&priv_memory, &priv_bus, priv_code.clock_Cycle);
-    module_adc(&priv_memory, &priv_bus, priv_code.clock_Cycle);
+    run_modules(&priv_memory, &priv_bus, i);
     priv_code.clock_Cycle++;
     priv_memory.Fosc_moment++;
     if(priv_code.clock_Cycle == 4) {

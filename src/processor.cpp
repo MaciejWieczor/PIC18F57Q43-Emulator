@@ -149,17 +149,25 @@ static void modify_status_reg(Memory * memory, u8 a, u8 wreg, u8 operation_type)
       temp = a ^ wreg;
 			break;
     default:
+      /* Case when we just want to see if zero or negative 
+       * Just paste value being move into wreg parameter*/
+      temp = wreg;
       break;
   }
 
   if(operation_type == M_ADDITION || operation_type == M_SUBTRACTION) {
     if(temp & 0x100) status.C = 1;
+    else status.C = 0;
     if(((a & 0x0F) + (wreg & 0x0F)) & 0x10) status.DC = 1;
+    else status.DC = 0;
     if((wreg & 0x80) != (temp & 0x80)) status.OV = 1;
+    else status.OV = 0;
   }
   /* This handles if temp == 0 and also if temp first byte is zero */
   if((temp & 0xFF) == 0) status.Z = 1;
+    else status.Z = 0;
   if(temp < 0 ) status.N = 1;
+    else status.N = 0;
 
   memory->data_memory[STATUS] = status.reg;
 }
@@ -373,26 +381,31 @@ static void execute_byte_file(Memory * memory, Bus * bus) {
     /* move f to wreg or back to f */
  		case INSTR_MOVF:
       bus->data_Bus.data = temp;
+      modify_status_reg(memory, temp, bus->data_Bus.data & 0x00FF, 100);
 			break;
  		case INSTR_RLCF:
       bus->data_Bus.data = temp << 1;
       bus->data_Bus.data += status.C;
       status.C = (temp & 0x80) >> 7;
+      modify_status_reg(memory, temp, bus->data_Bus.data & 0x00FF, 100);
       memory->data_memory[STATUS] = status.reg;
 			break;
  		case INSTR_RLNCF:
       bus->data_Bus.data = temp << 1;
       bus->data_Bus.data += (temp & 0x80) >> 7;
+      modify_status_reg(memory, temp, bus->data_Bus.data & 0x00FF, 100);
 			break;
  		case INSTR_RRCF:
       bus->data_Bus.data = temp >> 1;
       bus->data_Bus.data += status.C << 7;
       status.C = temp & 0x01;
+      modify_status_reg(memory, temp, bus->data_Bus.data & 0x00FF, 100);
       memory->data_memory[STATUS] = status.reg;
 			break;
  		case INSTR_RRNCF:
       bus->data_Bus.data = temp >> 1;
       bus->data_Bus.data += (temp & 0x01) << 7;
+      modify_status_reg(memory, temp, bus->data_Bus.data & 0x00FF, 100);
 			break;
  		case INSTR_SUBFWB:
       bus->data_Bus.data = wreg - temp - !status.C;
@@ -505,6 +518,7 @@ static void execute_byte_nw_file(Memory * memory, Bus * bus) {
 		case INSTR_NEGF:
       bus->data_Bus.data = ~temp + 1;
       memory->data_address = address;
+      modify_status_reg(memory, temp, bus->data_Bus.data & 0x00FF, 100);
 			break;
 		case INSTR_SETF:
       bus->data_Bus.data = 0xFF;
@@ -821,6 +835,7 @@ static void write_to_memory(Memory * memory, Bus * bus) {
   indirect_copy(memory, bus);
   indirect_post_ops(memory, bus);
   bus->data_Bus.write = 0;
+  memory->data_address = 0;
 }
 
 int fetch_Instruction(Code * code, Memory * memory, Bus * bus, u8 clock) {
@@ -1028,6 +1043,10 @@ int init_Memory(Code * code, Memory * memory, Bus * bus) {
   memory->Fosc_period_nano = (1e9 * (1/1e6));
   memory->Fosc_moment = 0;
   memory->time_moment = 0;
+  memory->modules.UART_module.port_changed = 0;
+  memory->modules.UART_module.state = UART_OFF;
+  memory->modules.UART_module.counter = 0;
+  memory->modules.UART_module.bit_counter = 0;
 
   return 0;
 }

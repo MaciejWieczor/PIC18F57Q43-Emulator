@@ -439,8 +439,11 @@ void module_ports(Memory * memory, Bus * bus, int clock) {
   for(int i = 0 ; i < 6 ; i++) {
     u8 bits_tmp = memory->data_memory[ANSELA + i*8];
     for(int j = 0 ; j < 8 ; j++) {
+      memory->modules.Ports_module.port_pins[i][j].val = 0x0;
       if(bits_tmp % 2 == 1) {
         // CODE IF A PORT IS IN ANALOG MODE
+        memory->modules.Ports_module.port_pins[i][j].val = 0xFFFF;
+        printf("PORT number %d pin %d is analog\n", i, j);
       }
       bits_tmp /= 2;
     }
@@ -449,11 +452,12 @@ void module_ports(Memory * memory, Bus * bus, int clock) {
 
 /* TBD: ADC Logic */
 void module_adc(Memory * memory, Bus * bus, int clock) {
-  
   printf("ADC : STATE=%d, CURR_TIME=%lld, END_TIME=%lld\n", memory->modules.ADC_module.state, memory->Fosc_moment * memory->Fosc_period_nano, memory->modules.ADC_module.nano_end);
   ADCON0_R adcon0_tmp;
   adcon0_tmp.data = memory->data_memory[ADCON0];
   long long tmp;
+  int port_address;
+  u8 port_pin;
   switch(memory->modules.ADC_module.state) {
     case ADC_WAITING:
       if(adcon0_tmp.GO && adcon0_tmp.ON) {
@@ -495,19 +499,187 @@ void module_adc(Memory * memory, Bus * bus, int clock) {
     case ADC_ACQUIRE:
       tmp = memory->Fosc_moment * memory->Fosc_period_nano;
       if(tmp > memory->modules.ADC_module.nano_end) {
+        /* As this is the acquire phase */
+        port_address = (memory->data_memory[ADPCH])/8;
+        port_pin = memory->data_memory[ADPCH] % 8;
+        printf("ADC SAVE : PORT %d, PIN %d, VAL 0x%X\n", port_address, 
+               port_pin, memory->modules.ADC_module.last_measured_value);
+        /* Read value from port */
+        memory->modules.ADC_module.last_measured_value = 
+              memory->modules.Ports_module.port_pins[port_address][port_pin].val;
+        printf("ADC SAVE : PORT %d, PIN %d, VAL 0x%X\n", port_address, 
+               port_pin, memory->modules.ADC_module.last_measured_value);
         memory->modules.ADC_module.state = ADC_CONVERT;
-        memory->modules.ADC_module.nano_end = memory->modules.ADC_module.nano_clock * memory->data_memory[ADACQ];
+        memory->modules.ADC_module.nano_end += memory->modules.ADC_module.nano_clock * memory->data_memory[ADACQ];
       }
       break;
     case ADC_CONVERT:
       tmp = memory->Fosc_moment * memory->Fosc_period_nano;
       if(tmp > memory->modules.ADC_module.nano_end) {
         memory->modules.ADC_module.state = ADC_WAITING;
-        memory->data_memory[ADRES] = 0xFF;
-        memory->data_memory[ADRES+1] = 0xFF;
+        memory->data_memory[ADRES] = memory->modules.ADC_module.last_measured_value & 0x00FF;
+        memory->data_memory[ADRES+1] = (memory->modules.ADC_module.last_measured_value & 0xFF00) >> 8;
         adcon0_tmp.GO = 0;
         memory->data_memory[ADCON0] = adcon0_tmp.data;
       }
+      break;
+  }
+}
+
+void module_uart(Memory * memory, Bus * bus, int clock) {
+  /* Possible states of the module :
+   * OFF - when the TXEN == 0 nothing is happening
+   *       when TXEN was just set we set the TXIF flag and poll writes to UxTXB 
+   * POLLING - we wait for a write to UxTXB 
+   *           if there is a write and TXIF is 1 we move UxTXB into TSR 
+   *           and clear the TXIF and clear the TXMTIF bit 
+   * POLLING & SENDING - we just put one byte into the TSR so we do the sending 
+   *                     flow but we also cleared again set TXIF flag so we look 
+   *                     for a write in the UxTXB
+   * SENDING - we received one byte into the UxTXB while sending another one so 
+   *           now we just send - and afterwards go back to polling and sending*/
+  U1CON0_R u1con0_tmp;
+  u1con0_tmp.data = memory->data_memory[U1CON0];
+  U1CON1_R u1con1_tmp;
+  u1con1_tmp.data = memory->data_memory[U1CON1];
+  U1FIFO_R u1fifo_tmp;
+  u1fifo_tmp.data = memory->data_memory[U1FIFO];
+  u8 tmp;
+  if(memory->modules.UART_module.port_changed) {
+    if(memory->data_memory[RA0PPS + 
+               8*memory->modules.UART_module.port + 
+                 memory->modules.UART_module.pin] != UART1_PPS) {
+      memory->modules.UART_module.port_changed = 0;
+    }
+  }
+  else {
+    for(int i = 0 ; i < 6 ; i++) {
+      for(int j = 0 ; j < 8 ; j++) {
+        tmp = memory->data_memory[RA0PPS + i*8 + j];
+        if(tmp == UART1_PPS) {
+          memory->modules.UART_module.port = i;
+          memory->modules.UART_module.pin = j;
+          memory->modules.UART_module.port_changed = 1;
+          break;
+        }
+      }
+    }
+  }
+  memory->modules.UART_module.frequency_split = 16 * (1 + memory->data_memory[U1BRG]);
+  printf("UART MODULE DEBUG : STATE %d, END %d, COUNTER %d, BIT %d\n",
+          memory->modules.UART_module.state, 
+          memory->modules.UART_module.frequency_split, 
+          memory->modules.UART_module.counter, 
+          memory->modules.UART_module.bit_counter);
+  
+  switch(memory->modules.UART_module.state) {
+    case UART_OFF:
+      if(u1con0_tmp.TXEN) {
+        memory->modules.UART_module.state = UART_POLL;
+        /* Set second bit - U1TXIF */
+        memory->data_memory[PIR4] |= 0x02;
+      }
+      break;
+    case UART_POLL:
+      /* If there is a write to U1TXB we jump to next state and start transmission */
+      if(memory->data_address == U1TXB) {
+        printf("UART STATE 1 -> 2\n");
+        memory->modules.UART_module.state = UART_POLL_SEND;
+        memory->modules.UART_module.TSR = memory->data_memory[U1TXB];
+        /* This will overload at frequency_split value */
+        memory->modules.UART_module.counter = 0;
+        memory->modules.UART_module.bit_counter = 0;
+        memory->modules.UART_module.transaction_start = 1;
+        memory->data_memory[PIR4] &= ~0x02;
+        u1fifo_tmp.TXBE = 0;
+        u1fifo_tmp.TXBF = 1;
+        memory->data_memory[U1FIFO] = u1fifo_tmp.data;
+      }
+      break;
+    case UART_POLL_SEND:
+      /* TSR is busy and TXB is polling */
+      /* TRANSMISSION: */
+      if(memory->modules.UART_module.transaction_start) {
+        memory->modules.UART_module.TSR = memory->data_memory[U1TXB];
+        memory->modules.UART_module.transaction_start = 0;
+        memory->data_memory[PIR4] |= 0x02;
+        u1fifo_tmp.TXBE = 1;
+        u1fifo_tmp.TXBF = 0;
+        memory->data_memory[U1FIFO] = u1fifo_tmp.data;
+        /* Set the bit to 1 - START BIT */
+        memory->data_memory[PORTA + memory->modules.UART_module.port] |= 
+          (0x01 << memory->modules.UART_module.pin);
+      }
+      memory->modules.UART_module.counter++;
+      if(memory->data_address == U1TXB) {
+        printf("UART STATE 2 -> 3 || CLOCK = %d\n", clock);
+        memory->modules.UART_module.state = UART_SEND;
+        memory->data_memory[PIR4] &= ~0x02;
+        u1fifo_tmp.TXBE = 0;
+        u1fifo_tmp.TXBF = 1;
+        memory->data_memory[U1FIFO] = u1fifo_tmp.data;
+      }
+      /* CHANGE PORT STATE */
+      if(memory->modules.UART_module.counter == memory->modules.UART_module.frequency_split) {
+        memory->modules.UART_module.bit_counter++;
+        /* IF BIT_COUNTER == 10 - TRANSMISSION OVER */
+        if(memory->modules.UART_module.bit_counter > 9) {
+          memory->modules.UART_module.bit_counter = 0;
+          memory->data_memory[PIR4] |= 0x02;
+          memory->modules.UART_module.state = UART_POLL;
+          u1fifo_tmp.TXBE = 1;
+          u1fifo_tmp.TXBF = 0;
+          memory->data_memory[U1FIFO] = u1fifo_tmp.data;
+        }
+        /* Set the bit to last bit of TSR, then shift TSR right */
+        if(memory->modules.UART_module.TSR % 2 == 1) {
+          memory->data_memory[PORTA + memory->modules.UART_module.port] |= 
+            (0x01 << memory->modules.UART_module.pin);
+        }
+        else {
+          memory->data_memory[PORTA + memory->modules.UART_module.port] &= 
+            ~(0x01 << memory->modules.UART_module.pin);
+        }
+        memory->modules.UART_module.TSR = memory->modules.UART_module.TSR >> 1;
+        memory->modules.UART_module.counter = 0;
+      }
+      break;
+    case UART_SEND:
+      /* TSR is busy and TXB is not polling */
+      memory->modules.UART_module.counter++;
+      /* TRANSMISSION: */
+      /* CHANGE PORT STATE */
+      if(memory->modules.UART_module.counter == memory->modules.UART_module.frequency_split) {
+        memory->modules.UART_module.bit_counter++;
+          /* TRANSMISSION OVER */
+          if(memory->modules.UART_module.bit_counter > 9) {
+            memory->modules.UART_module.bit_counter = 0;
+            memory->data_memory[PIR4] |= 0x02;
+            memory->modules.UART_module.state = UART_POLL_SEND;
+            memory->modules.UART_module.counter = 0;
+            /* We paste byte from TXB into TSR */
+            memory->modules.UART_module.TSR = memory->data_memory[U1TXB];
+            u1fifo_tmp.TXBE = 1;
+            u1fifo_tmp.TXBF = 0;
+            memory->data_memory[U1FIFO] = u1fifo_tmp.data;
+            memory->modules.UART_module.transaction_start = 1;
+            break;
+          }
+
+          /* Set the bit to last bit of TSR, then shift TSR right */
+          if(memory->modules.UART_module.TSR % 2 == 1) {
+            memory->data_memory[PORTA + memory->modules.UART_module.port] |= 
+              (0x01 << memory->modules.UART_module.pin);
+          }
+          else {
+            memory->data_memory[PORTA + memory->modules.UART_module.port] &= 
+              ~(0x01 << memory->modules.UART_module.pin);
+          }
+          memory->modules.UART_module.TSR = memory->modules.UART_module.TSR >> 1;
+          memory->modules.UART_module.counter = 0;
+        }
+      break;
+    default:
       break;
   }
 }

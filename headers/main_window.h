@@ -45,7 +45,7 @@ private:
     Bus priv_bus;
     int a = 0;
     int bank_selected = 3;
-    QString filename = "programs/program4.asm";
+    QString filename = "programs/program.asm";
     int gui_cur_line = 0;
     vector<QwtPlot *> plots;
     vector<QTextEdit *> plot_addrs;

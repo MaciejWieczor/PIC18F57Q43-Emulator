@@ -16,6 +16,7 @@ MainWindow::MainWindow(QMainWindow *parent)
 {
     ui.setupUi(this);
     //    ui->pushButton->setText("AAA Button1");
+  //
 
     /* Load file action */
     QObject::connect(ui.actionLoad_File, SIGNAL(triggered()), this, SLOT(openFile()));
@@ -33,6 +34,8 @@ MainWindow::MainWindow(QMainWindow *parent)
     QObject::connect(ui.pushButton_setaddr, SIGNAL(clicked()), this, SLOT(Set_Addr()));
     /* Connect change bank selected */
     QObject::connect(ui.pb_set_bank, SIGNAL(clicked()), this, SLOT(change_Bank_Selected()));
+    /* Connect add bit plot button */
+    QObject::connect(ui.add_bit_plot, SIGNAL(clicked()), this, SLOT(Add_Bit_Plot()));
 }
 
 void MainWindow::Set_Addr() {
@@ -74,6 +77,74 @@ static void set_Axis(QwtPlot * plot) {
   /*   */
   /*   curve->attach( plot ); */
   plot->replot();
+}
+
+void MainWindow::Add_Bit_Plot() {
+  if(plot_count == 0) {
+    QHBoxLayout *plot_333;
+    QwtPlot *qwtPlot_tmp;
+    QVBoxLayout *verticalLayout_111;
+    QVBoxLayout *verticalLayout_000;
+    plot_333 = new QHBoxLayout();
+    plot_333->setObjectName(QString::fromUtf8("plot_3"));
+    verticalLayout_000 = new QVBoxLayout();
+    verticalLayout_000->setObjectName(QString::fromUtf8("verticalLayout_0"));
+    plot_333->addLayout(verticalLayout_000);
+    qwtPlot_tmp = new QwtPlot(ui.verticalWidget_2);
+    qwtPlot_tmp->setObjectName(QString::fromUtf8("qwtPlot"));
+    bit_plot_axis = qwtPlot_tmp;
+    verticalLayout_000->addWidget(qwtPlot_tmp);
+    qwtPlot_tmp->enableAxis(QwtPlot::xBottom, false);
+    QSizePolicy sizePolicy_a(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    qwtPlot_tmp->setSizePolicy(sizePolicy_a);
+    set_Axis(qwtPlot_tmp);
+    verticalLayout_111 = new QVBoxLayout();
+    verticalLayout_111->setObjectName(QString::fromUtf8("verticalLayout_9"));
+    plot_333->addLayout(verticalLayout_111);
+    ui.verticalWidget_bit_time->addLayout(plot_333);
+  }
+  plot_count++;
+  QHBoxLayout *plot_3;
+  QwtPlot *qwtPlot;
+  QVBoxLayout *verticalLayout_9;
+  QVBoxLayout *verticalLayout_0;
+  QTextEdit *textEdit_2;
+  QTextEdit *textEdit_3;
+  plot_3 = new QHBoxLayout();
+  plot_3->setObjectName(QString::fromUtf8("plot_3"));
+  verticalLayout_0 = new QVBoxLayout();
+  verticalLayout_0->setObjectName(QString::fromUtf8("verticalLayout_0"));
+  plot_3->addLayout(verticalLayout_0);
+  qwtPlot = new QwtPlot(ui.verticalWidget_bit_plots_2);
+  qwtPlot->setObjectName(QString::fromUtf8("qwtPlot"));
+  bit_plots.push_back(qwtPlot);
+  verticalLayout_0->addWidget(qwtPlot);
+  qwtPlot->enableAxis(QwtPlot::xBottom, false);
+  QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+  qwtPlot->setSizePolicy(sizePolicy);
+  set_Axis(qwtPlot);
+  vector<QPointF> tmp_vec;
+  bit_points.push_back(tmp_vec);
+  bit_points[plot_count - 1].push_back(QPointF(0, 0));
+  verticalLayout_9 = new QVBoxLayout();
+  verticalLayout_9->setObjectName(QString::fromUtf8("verticalLayout_9"));
+  textEdit_2 = new QTextEdit(ui.verticalWidget_bit_plots_2);
+  textEdit_2->setObjectName(QString::fromUtf8("textEdit_2"));
+  textEdit_3 = new QTextEdit(ui.verticalWidget_bit_plots_2);
+  textEdit_3->setObjectName(QString::fromUtf8("textEdit_3"));
+  QSizePolicy sizePolicy7(QSizePolicy::Minimum, QSizePolicy::Expanding);
+  sizePolicy7.setHorizontalStretch(0);
+  sizePolicy7.setVerticalStretch(0);
+  sizePolicy7.setHeightForWidth(textEdit_2->sizePolicy().hasHeightForWidth());
+  textEdit_2->setSizePolicy(sizePolicy7);
+  sizePolicy7.setHeightForWidth(textEdit_3->sizePolicy().hasHeightForWidth());
+  textEdit_3->setSizePolicy(sizePolicy7);
+  verticalLayout_9->addWidget(textEdit_2);
+  verticalLayout_9->addWidget(textEdit_3);
+  plot_3->addLayout(verticalLayout_9);
+  ui.verticalWidget_bit_plots->addLayout(plot_3);
+  bit_plot_reg.push_back(textEdit_2);
+  bit_plot_bit.push_back(textEdit_3);
 }
 
 void MainWindow::Add_Plot() {
@@ -871,6 +942,77 @@ void MainWindow::update_Plots() {
   }
 }
 
+void MainWindow::update_Bit_PlotsInv() {
+  int text_ind = 0;
+  int i = 0;
+
+  for(QTextEdit * edit : bit_plot_reg) {
+      QwtPlot * plot = bit_plots[text_ind];
+      bool ok;
+      bool ok2;
+      u8 test = priv_memory.data_memory[bit_plot_reg[text_ind]->toPlainText().toUInt(&ok, 16)] & (1 << bit_plot_bit[text_ind]->toPlainText().toUInt(&ok2, 16));
+      if(test) {
+        if(bit_points[text_ind].back().y() == 0)
+          bit_points[text_ind].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano-1, 1));
+        bit_points[text_ind].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano, 1));
+      }
+      else { 
+        if(bit_points[text_ind].back().y() == 1)
+          bit_points[text_ind].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano - 1, 0));
+        bit_points[text_ind].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano, 0));
+      }
+    text_ind++;
+  }
+}
+
+void MainWindow::update_Bit_Plots() {
+  int text_ind = 0;
+  int i = 0;
+  QwtPlot * plot = bit_plots[text_ind];
+  bool ok;
+  bool ok2;
+  u8 test;
+
+  for(QTextEdit * edit : bit_plot_reg) {
+      plot = bit_plots[text_ind];
+      test = priv_memory.data_memory[bit_plot_reg[text_ind]->toPlainText().toUInt(&ok, 16)] & (1 << bit_plot_bit[text_ind]->toPlainText().toUInt(&ok2, 16));
+      if(test) {
+        if(bit_points[text_ind].back().y() == 0)
+          bit_points[text_ind].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano-1, 1));
+        bit_points[text_ind].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano, 1));
+      }
+      else { 
+        if(bit_points[text_ind].back().y() == 1)
+          bit_points[text_ind].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano - 1, 0));
+        bit_points[text_ind].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano, 0));
+      }
+      printf("TUTAJ SIE WYWALA PROGRAM! TEST : %i\n", test);
+    text_ind++;
+  }
+
+  bit_plot_axis->enableAxis(QwtPlot::xBottom, true);
+  bit_plot_axis->setAxisScale( QwtPlot::xBottom, 0.0, priv_memory.Fosc_period_nano * priv_memory.Fosc_moment);
+  bit_plot_axis->setAxisScale( QwtPlot::yLeft, 0, 1, 1);
+  bit_plot_axis->replot();
+
+  for(QwtPlot * plot : bit_plots) {
+
+    QwtPlotCurve *curve = new QwtPlotCurve();
+    curve->setTitle( "Pixel Count" );
+    curve->setPen( Qt::blue, 2 ),
+    curve->setRenderHint( QwtPlotItem::RenderAntialiased, true );
+  
+    QPolygonF polygon;
+    for(QPointF point : bit_points[i]) {
+      polygon << point;
+    }
+    curve->setSamples( polygon );
+    curve->attach( plot );
+    plot->replot();
+    i++;
+  }
+}
+
 void MainWindow::update_Labels() {
   /* Update label 1 */
   update_LabelTableInstr();
@@ -885,6 +1027,7 @@ void MainWindow::update_Labels() {
   update_LabelTableReturnStack();
   update_LabelTableFastReturnStack();
   update_Plots();
+  update_Bit_Plots();
 
   update_Table();
 
@@ -932,6 +1075,7 @@ void MainWindow::RunUntilLine() {
     post_Copy_Pointer_Data(&priv_code, &priv_memory, &priv_bus);
     priv_memory.time_moment++;
     update_PlotsInv();
+    update_Bit_PlotsInv();
   }
   update_Labels();
 }
@@ -966,6 +1110,7 @@ void MainWindow::RunUntilAddr() {
     post_Copy_Pointer_Data(&priv_code, &priv_memory, &priv_bus);
     priv_memory.time_moment++;
     update_PlotsInv();
+    update_Bit_PlotsInv();
   }
   update_Labels();
 }

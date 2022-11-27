@@ -374,7 +374,6 @@ void parse_Code(Code * code, Memory * memory) {
 
 /* function to categorize opcodes */
 void decode_Lines(Code * code, Memory * memory, Bus * bus) {
-
   /* Thanks to this we can categorize instructions 
    * and later at execution call apropriate functions 
    * for each type - addwf as byte_file for example */
@@ -443,7 +442,6 @@ void decode_Lines(Code * code, Memory * memory, Bus * bus) {
 
   /* Some post initialization */
   bus->instruction_Bus = memory->program_memory[0];
-
 }
 
 /* This returns the first C_Line's txt_index that contains a substring str */

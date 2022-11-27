@@ -33,9 +33,12 @@ private slots:
     void disasm_Highlight();
     void c_line_Highlight();
     void Add_Plot();
+    void Add_Bit_Plot();
     void Set_Addr();
     void update_Plots();
+    void update_Bit_Plots();
     void update_PlotsInv();
+    void update_Bit_PlotsInv();
     void change_Bank_Selected();
 
 private:
@@ -50,4 +53,11 @@ private:
     vector<QwtPlot *> plots;
     vector<QTextEdit *> plot_addrs;
     vector<vector<QPointF>> points;
+
+    int plot_count = 0;
+    QwtPlot * bit_plot_axis;
+    vector<QwtPlot *> bit_plots;
+    vector<QTextEdit *> bit_plot_reg;
+    vector<QTextEdit *> bit_plot_bit;
+    vector<vector<QPointF>> bit_points;
 };

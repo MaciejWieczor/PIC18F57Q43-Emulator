@@ -1,9 +1,9 @@
 Disassembly Listing for C_compile_test
 Generated From:
 /home/maciej/MPLABXProjects/C_compile_test.X/dist/default/production/C_compile_test.X.production.elf
-2022-11-12 13:39:43
+2022-11-27 17:37:17
 
----  /tmp/xcXaBaeBe.s  ----------------------------------------------------------------------------------
+---  /tmp/xcXELnGAL.s  ----------------------------------------------------------------------------------
 038A  EE01     LFSR 0, 0x501
 038E  0E15     MOVLW 0x15
 0390  6AEE     CLRF 0xFEE, ACCESS
@@ -290,8 +290,8 @@ Generated From:
 03DE  6F21     MOVWF 0x21, BANKED
 109:               TMR1H = 0xFF; /* Overflow after 10 impulses */
 03E0  691D     SETF 0x1D, BANKED
-110:               TMR1L = 0xFF - 0x0A;
-03E2  0EF5     MOVLW 0xF5
+110:               TMR1L = 0xFF - 0x05;
+03E2  0EFA     MOVLW 0xFA
 03E4  6F1C     MOVWF 0x1C, BANKED
 111:           }
 03E6  0012     RETURN 0
@@ -445,8 +445,8 @@ Generated From:
 155:               
 156:               TMR1H = 0xFF; /* Overflow after 10 impulses */
 02A8  691D     SETF 0x1D, BANKED
-157:               TMR1L = 0xFF - 0x0A;
-02AA  0EF5     MOVLW 0xF5
+157:               TMR1L = 0xFF - 0x05;
+02AA  0EFA     MOVLW 0xFA
 02AC  6F1C     MOVWF 0x1C, BANKED
 158:                   for(int i= 0 ; i < 10 ; i++){
 02AE  0E00     MOVLW 0x0
@@ -583,4 +583,3 @@ Generated From:
 200:               }
 201:           }
 202:           
-

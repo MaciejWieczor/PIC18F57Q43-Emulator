@@ -107,7 +107,7 @@ static void TMR1_Initialize(void)
     T1CON = 0x01;       /* ON bit set to enable timer */
     T1CLK = 0x0A;       /* Clk source is T0 output */
     TMR1H = 0xFF; /* Overflow after 10 impulses */
-    TMR1L = 0xFF - 0x0A;
+    TMR1L = 0xFF - 0x05;
 }
 
 static void ADC_Initialize(void)
@@ -154,7 +154,7 @@ static void TMR1_ISR(void)
     T0CON0 = 0x80;        /* Start TMR0 again */
     
     TMR1H = 0xFF; /* Overflow after 10 impulses */
-    TMR1L = 0xFF - 0x0A;
+    TMR1L = 0xFF - 0x05;
         for(int i= 0 ; i < 10 ; i++){
             adc_buffer[i] = 0;
     }

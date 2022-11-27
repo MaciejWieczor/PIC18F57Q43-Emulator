@@ -156,6 +156,7 @@ static void modify_status_reg(Memory * memory, u8 a, u8 wreg, u8 operation_type)
   }
 
   if(operation_type == M_ADDITION || operation_type == M_SUBTRACTION) {
+    printf("SUBTRACTION RESULT 0x%8X\n", temp);
     if(temp & 0x100) status.C = 1;
     else status.C = 0;
     if(((a & 0x0F) + (wreg & 0x0F)) & 0x10) status.DC = 1;
@@ -163,6 +164,14 @@ static void modify_status_reg(Memory * memory, u8 a, u8 wreg, u8 operation_type)
     if((wreg & 0x80) != (temp & 0x80)) status.OV = 1;
     else status.OV = 0;
   }
+
+  if(operation_type == M_SUBTRACTION) {
+    if(a < wreg)
+      status.C = 0;
+    else 
+      status.C = 1;
+  }
+
   /* This handles if temp == 0 and also if temp first byte is zero */
   if((temp & 0xFF) == 0) status.Z = 1;
     else status.Z = 0;

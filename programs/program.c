@@ -155,9 +155,10 @@ static void TMR1_ISR(void)
     
     TMR1H = 0xFF; /* Overflow after 10 impulses */
     TMR1L = 0xFF - 0x05;
-        for(int i= 0 ; i < 10 ; i++){
+    for(int i= 0 ; i < 10 ; i++){
             adc_buffer[i] = 0;
     }
+    buffer_index = 0;
 }
 
 void __interrupt(irq(IRQ_TMR1)) INTERRUPT_InterruptManager_TMR1 (void)
@@ -199,3 +200,4 @@ void main(void)
         ;
     }
 }
+

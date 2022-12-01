@@ -906,6 +906,4 @@ void module_uart(Memory * memory, Bus * bus, int clock);
 
 void module_pps(Memory * memory, Bus * bus, int clock);
 
-void module_ports(Memory * memory, Bus * bus, int clock);
-
 void module_uart(Memory * memory, Bus * bus, int clock);

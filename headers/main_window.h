@@ -16,6 +16,7 @@ private slots:
     void openFile();
     void machine_State_Step();
     void RunUntilAddr();
+    void RunUntilTime();
     void RunUntilLine();
     void update_LabelTableInstr();
     void update_LabelTableCpu();
@@ -40,6 +41,11 @@ private slots:
     void update_PlotsInv();
     void update_Bit_PlotsInv();
     void change_Bank_Selected();
+    void module_ports();
+    void clear_plots();
+    void reset();
+
+
 
 private:
     Ui::MainWindow ui;
@@ -53,6 +59,7 @@ private:
     vector<QwtPlot *> plots;
     vector<QTextEdit *> plot_addrs;
     vector<vector<QPointF>> points;
+    int file_loaded = 0;
 
     int plot_count = 0;
     QwtPlot * bit_plot_axis;
@@ -60,4 +67,6 @@ private:
     vector<QTextEdit *> bit_plot_reg;
     vector<QTextEdit *> bit_plot_bit;
     vector<vector<QPointF>> bit_points;
+
+    long long int reset_plot_value = 0;
 };

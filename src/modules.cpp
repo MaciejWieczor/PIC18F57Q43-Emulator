@@ -372,6 +372,7 @@ void module_tmr0(Memory * memory, Bus * bus, int clock) {
   tmr0_con0_tmp.data = memory->data_memory[T0CON0];
   tmr0_con1_tmp.data = memory->data_memory[T0CON1];
 
+  printf("TMR0 - EN : %d, PRECOUNTER : %d, POSTCOUNTER : %d, ACC : %d\n", tmr0_con0_tmp.EN, memory->modules.TMR0_module.pre_acc, memory->modules.TMR0_module.post_acc, memory->modules.TMR0_module.acc);
   /* Check if turned on*/
   if(tmr0_con0_tmp.EN) {
 
@@ -429,23 +430,6 @@ void module_tmr0(Memory * memory, Bus * bus, int clock) {
           memory->data_memory[PIR3] = pir3_tmp.data;
         }
       }
-    }
-  }
-}
-
-/* TBD: add something to be read from the pin */
-void module_ports(Memory * memory, Bus * bus, int clock) {
-  int signal = SINE_WAVE;
-  for(int i = 0 ; i < 6 ; i++) {
-    u8 bits_tmp = memory->data_memory[ANSELA + i*8];
-    for(int j = 0 ; j < 8 ; j++) {
-      memory->modules.Ports_module.port_pins[i][j].val = 0x0;
-      if(bits_tmp % 2 == 1) {
-        // CODE IF A PORT IS IN ANALOG MODE
-        memory->modules.Ports_module.port_pins[i][j].val = 0xFFFF;
-        printf("PORT number %d pin %d is analog\n", i, j);
-      }
-      bits_tmp /= 2;
     }
   }
 }
@@ -571,6 +555,8 @@ void module_uart(Memory * memory, Bus * bus, int clock) {
           memory->modules.UART_module.frequency_split, 
           memory->modules.UART_module.counter, 
           memory->modules.UART_module.bit_counter);
+  printf("U1TXB : %d, DATA BUS : %d \n", memory->data_memory[U1TXB], bus->data_Bus.data);
+  printf("TSR : %d", memory->modules.UART_module.TSR); 
   
   switch(memory->modules.UART_module.state) {
     case UART_OFF:
@@ -601,6 +587,7 @@ void module_uart(Memory * memory, Bus * bus, int clock) {
       /* TRANSMISSION: */
       if(memory->modules.UART_module.transaction_start) {
         memory->modules.UART_module.TSR = memory->data_memory[U1TXB];
+        memory->data_memory[U1TXB] = 0;
         memory->modules.UART_module.transaction_start = 0;
         memory->data_memory[PIR4] |= 0x02;
         u1fifo_tmp.TXBE = 1;
@@ -640,7 +627,8 @@ void module_uart(Memory * memory, Bus * bus, int clock) {
           memory->data_memory[PORTA + memory->modules.UART_module.port] &= 
             ~(0x01 << memory->modules.UART_module.pin);
         }
-        memory->modules.UART_module.TSR = memory->modules.UART_module.TSR >> 1;
+        printf("TSR : %d, BIT : %d\n", memory->modules.UART_module.TSR, memory->data_memory[PORTA + memory->modules.UART_module.port]);
+        memory->modules.UART_module.TSR /= 2;
         memory->modules.UART_module.counter = 0;
       }
       break;
@@ -658,7 +646,8 @@ void module_uart(Memory * memory, Bus * bus, int clock) {
             memory->modules.UART_module.state = UART_POLL_SEND;
             memory->modules.UART_module.counter = 0;
             /* We paste byte from TXB into TSR */
-            memory->modules.UART_module.TSR = memory->data_memory[U1TXB];
+            /* memory->modules.UART_module.TSR = memory->data_memory[U1TXB]; */
+            /* memory->data_memory[U1TXB] = 0; */
             u1fifo_tmp.TXBE = 1;
             u1fifo_tmp.TXBF = 0;
             memory->data_memory[U1FIFO] = u1fifo_tmp.data;
@@ -675,7 +664,8 @@ void module_uart(Memory * memory, Bus * bus, int clock) {
             memory->data_memory[PORTA + memory->modules.UART_module.port] &= 
               ~(0x01 << memory->modules.UART_module.pin);
           }
-          memory->modules.UART_module.TSR = memory->modules.UART_module.TSR >> 1;
+          printf("TSR : %d, BIT : %d\n", memory->modules.UART_module.TSR, memory->data_memory[PORTA + memory->modules.UART_module.port]);
+          memory->modules.UART_module.TSR /= 2;
           memory->modules.UART_module.counter = 0;
         }
       break;

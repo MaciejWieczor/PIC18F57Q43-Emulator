@@ -36,22 +36,76 @@ MainWindow::MainWindow(QMainWindow *parent)
     QObject::connect(ui.pb_set_bank, SIGNAL(clicked()), this, SLOT(change_Bank_Selected()));
     /* Connect add bit plot button */
     QObject::connect(ui.add_bit_plot, SIGNAL(clicked()), this, SLOT(Add_Bit_Plot()));
+    /* Run until time in ms */
+    QObject::connect(ui.pushButton_time, SIGNAL(clicked()), this, SLOT(RunUntilTime()));
+    /* Clear plots */ 
+    QObject::connect(ui.clear_all_plots, SIGNAL(clicked()), this, SLOT(clear_plots()));
+    /* Clear plots */ 
+    QObject::connect(ui.pushButton, SIGNAL(clicked()), this, SLOT(reset()));
 }
 
 void MainWindow::Set_Addr() {
+
+  if(file_loaded) {
+    bool ok;
+    priv_memory.data_memory[ui.textEdit_addr->toPlainText().toInt(&ok, 16)] = ui.textEdit_value->toPlainText().toInt(&ok, 10);
+    update_LabelTableInstr();
+    update_LabelTableCpu();
+    update_LabelTableInt();
+    update_LabelTableInt_Pir();
+    update_LabelTableTmr0();
+    update_LabelTableTmr1();
+    update_LabelTableAdc();
+    update_LabelTablePorts();
+    update_LabelTableReturnStack();
+    update_LabelTableFastReturnStack();
+    update_Table();
+  }
+}
+
+
+/* TBD: add something to be read from the pin */
+void MainWindow::module_ports() {
+  int period;
   bool ok;
-  priv_memory.data_memory[ui.textEdit_addr->toPlainText().toInt(&ok, 16)] = ui.textEdit_value->toPlainText().toInt(&ok, 10);
-  update_LabelTableInstr();
-  update_LabelTableCpu();
-  update_LabelTableInt();
-  update_LabelTableInt_Pir();
-  update_LabelTableTmr0();
-  update_LabelTableTmr1();
-  update_LabelTableAdc();
-  update_LabelTablePorts();
-  update_LabelTableReturnStack();
-  update_LabelTableFastReturnStack();
-  update_Table();
+  long double sine_val;
+  unsigned short output;
+  if(ui.checkBox_signal->isChecked()) {
+    /* First read the period */
+
+
+    period = ui.textEdit_period->toPlainText().toUInt(&ok, 10);
+    sine_val = sin(2 * 3.14 * (priv_memory.Fosc_moment * priv_memory.Fosc_period_nano) / (period * 1e6));
+    sine_val += 1;
+    output = (unsigned short)(sine_val * 2048);
+    
+    printf("SINE VALUE : 0x%X\n", output);
+    /* SINE */
+  }
+  for(int i = 0 ; i < 6 ; i++) {
+    u8 bits_tmp = priv_memory.data_memory[ANSELA + i*8];
+    for(int j = 0 ; j < 8 ; j++) {
+      priv_memory.modules.Ports_module.port_pins[i][j].val = 0x0;
+      if(bits_tmp % 2 == 1) {
+        // CODE IF A PORT IS IN ANALOG MODE
+        /* memory->modules.Ports_module.port_pins[i][j].val = 0xFFFF; */
+        /* printf("PORT number %d pin %d is analog\n", i, j); */
+        // If checkbox is set we enable the wave
+        if(ui.checkBox_signal->isChecked()) {
+          if(ui.radioButton_sine->isChecked()) {
+            priv_memory.modules.Ports_module.port_pins[i][j].val = output;
+          }
+          /* SQUARE */
+          else {
+          }
+        }
+        // Else we write zeroes nable the wave
+        else
+          priv_memory.modules.Ports_module.port_pins[i][j].val = 0x0000;
+      }
+      bits_tmp /= 2;
+    }
+  }
 }
 
 static void set_Axis(QwtPlot * plot) {
@@ -190,6 +244,7 @@ void MainWindow::Add_Plot() {
 void MainWindow::start_emulator() {
   qDebug() << "\nLOADING DEFAULT FILE : " << filename << "\n";
   priv_code = split_Program_Code(filename.toStdString());
+  file_loaded = 1;
 
   init_Memory(&priv_code, &priv_memory, &priv_bus);
   qDebug() << priv_code.clock_Cycle << "\n";
@@ -203,8 +258,6 @@ void MainWindow::start_emulator() {
   QString prog_str = "";
   for(C_Line &line : priv_code.c_lines) {
     char buf [10];
-    sprintf(buf, "%d :", line.index);
-    prog_str.append(buf);
     prog_str.append(line.line.c_str());
     prog_str.append("\n");
     line.gui_len = prog_str.length();
@@ -236,6 +289,41 @@ void MainWindow::start_emulator() {
   cursor.setPosition(priv_code.lines[0].gui_len, QTextCursor::KeepAnchor);
   cursor.setCharFormat(fmt);
   gui_cur_line = 0;
+  priv_memory.modules.TMR0_module.acc = 0;
+  priv_memory.modules.TMR0_module.post = 0;
+  priv_memory.modules.TMR0_module.post_acc = 0;
+  priv_memory.modules.TMR0_module.pre = 0;
+  priv_memory.modules.TMR0_module.pre_acc = 0;
+  priv_memory.modules.TMR0_module.enabled= 0;
+
+  priv_memory.modules.TMR1_module.acc = 0;
+  priv_memory.modules.TMR1_module.pre_acc = 0;
+  priv_memory.modules.TMR1_module.pre= 0;
+  priv_memory.modules.TMR1_module.last_cs_val= 0;
+  priv_memory.modules.TMR1_module.enabled= 0;
+
+  priv_memory.modules.ADC_module.last_measured_value = 0;
+  priv_memory.modules.ADC_module.nano_clock = 0;
+  priv_memory.modules.ADC_module.state = ADC_WAITING;
+
+  for(int i = 0 ; i < 6 ; i++){
+    for(int j = 0 ; j < 8 ; j++){
+      priv_memory.modules.Ports_module.port_pins[i][j].val = 0;
+    }
+  }
+  priv_memory.modules.IVT_module.context = 0;
+  priv_memory.modules.IVT_module.last_context = 0;
+
+  priv_memory.modules.UART_module.bit_counter = 0;
+  priv_memory.modules.UART_module.counter = 0;
+  priv_memory.modules.UART_module.state = UART_OFF;
+  priv_memory.modules.UART_module.port = 0;
+  priv_memory.modules.UART_module.port_changed = 0;
+  priv_memory.modules.UART_module.transaction_start = 0;
+  priv_memory.modules.UART_module.TSR = 0;
+  priv_memory.modules.UART_module.port_changed = 0;
+  
+  priv_memory.Fosc_moment = 0;
 }
 
 void MainWindow::myclicked() {
@@ -819,9 +907,11 @@ void MainWindow::update_Table () {
 }
 
 void MainWindow::change_Bank_Selected () {
-  bool ok;
-  bank_selected = ui.te_set_bank->toPlainText().toUInt(&ok, 10);
-  update_Table();
+  if(file_loaded) {
+    bool ok;
+    bank_selected = ui.te_set_bank->toPlainText().toUInt(&ok, 10);
+    update_Table();
+  }
 }
 
 void MainWindow::c_line_Highlight () {
@@ -882,12 +972,12 @@ void MainWindow::update_PlotsInv() {
       u8 test = priv_memory.data_memory[plot_addrs[text_ind]->toPlainText().toUInt(&ok, 16)] & (1 << i);
       if(test) {
         if(points[index].back().y() == 0)
-          points[index].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano-1, 1));
+          points[index].push_back(QPointF((priv_memory.Fosc_moment-4) * priv_memory.Fosc_period_nano, 1));
         points[index].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano, 1));
       }
       else { 
         if(points[index].back().y() == 1)
-          points[index].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano - 1, 0));
+          points[index].push_back(QPointF((priv_memory.Fosc_moment-4) * priv_memory.Fosc_period_nano, 0));
         points[index].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano, 0));
       }
     }
@@ -905,12 +995,12 @@ void MainWindow::update_Plots() {
       u8 test = priv_memory.data_memory[plot_addrs[text_ind]->toPlainText().toUInt(&ok, 16)] & (1 << i);
       if(test) {
         if(points[index].back().y() == 0)
-          points[index].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano-1, 1));
+          points[index].push_back(QPointF((priv_memory.Fosc_moment-4) * priv_memory.Fosc_period_nano, 1));
         points[index].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano, 1));
       }
       else { 
         if(points[index].back().y() == 1)
-          points[index].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano - 1, 0));
+          points[index].push_back(QPointF((priv_memory.Fosc_moment-4) * priv_memory.Fosc_period_nano - 1, 0));
         points[index].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano, 0));
       }
     }
@@ -923,7 +1013,7 @@ void MainWindow::update_Plots() {
 
     if(i == plots.size() - 1) {
       plot->enableAxis(QwtPlot::xBottom, true);
-      plot->setAxisScale( QwtPlot::xBottom, 0.0, priv_memory.Fosc_period_nano * priv_memory.Fosc_moment);
+      plot->setAxisScale( QwtPlot::xBottom, reset_plot_value, priv_memory.Fosc_period_nano * priv_memory.Fosc_moment);
       plot->setAxisScale( QwtPlot::yLeft, 0, 1, 1);
     }
     QwtPlotCurve *curve = new QwtPlotCurve();
@@ -953,12 +1043,12 @@ void MainWindow::update_Bit_PlotsInv() {
       u8 test = priv_memory.data_memory[bit_plot_reg[text_ind]->toPlainText().toUInt(&ok, 16)] & (1 << bit_plot_bit[text_ind]->toPlainText().toUInt(&ok2, 16));
       if(test) {
         if(bit_points[text_ind].back().y() == 0)
-          bit_points[text_ind].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano-1, 1));
+          bit_points[text_ind].push_back(QPointF((priv_memory.Fosc_moment-4) * priv_memory.Fosc_period_nano, 1));
         bit_points[text_ind].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano, 1));
       }
       else { 
         if(bit_points[text_ind].back().y() == 1)
-          bit_points[text_ind].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano - 1, 0));
+          bit_points[text_ind].push_back(QPointF((priv_memory.Fosc_moment-4) * priv_memory.Fosc_period_nano, 0));
         bit_points[text_ind].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano, 0));
       }
     text_ind++;
@@ -968,48 +1058,54 @@ void MainWindow::update_Bit_PlotsInv() {
 void MainWindow::update_Bit_Plots() {
   int text_ind = 0;
   int i = 0;
-  QwtPlot * plot = bit_plots[text_ind];
   bool ok;
   bool ok2;
   u8 test;
 
-  for(QTextEdit * edit : bit_plot_reg) {
-      plot = bit_plots[text_ind];
-      test = priv_memory.data_memory[bit_plot_reg[text_ind]->toPlainText().toUInt(&ok, 16)] & (1 << bit_plot_bit[text_ind]->toPlainText().toUInt(&ok2, 16));
-      if(test) {
-        if(bit_points[text_ind].back().y() == 0)
-          bit_points[text_ind].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano-1, 1));
-        bit_points[text_ind].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano, 1));
-      }
-      else { 
-        if(bit_points[text_ind].back().y() == 1)
-          bit_points[text_ind].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano - 1, 0));
-        bit_points[text_ind].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano, 0));
-      }
-      printf("TUTAJ SIE WYWALA PROGRAM! TEST : %i\n", test);
-    text_ind++;
-  }
+  if(bit_plot_reg.size() > 0) {
+    QwtPlot * plot = bit_plots[text_ind];
+    for(QTextEdit * edit : bit_plot_reg) {
+        plot = bit_plots[text_ind];
+        test = priv_memory.data_memory[bit_plot_reg[text_ind]->toPlainText().toUInt(&ok, 16)] & (1 << bit_plot_bit[text_ind]->toPlainText().toUInt(&ok2, 16));
+        if(test) {
+          if(bit_points[text_ind].back().y() == 0)
+            bit_points[text_ind].push_back(QPointF((priv_memory.Fosc_moment-4) * priv_memory.Fosc_period_nano, 1));
+          bit_points[text_ind].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano, 1));
+        }
+        else { 
+          if(bit_points[text_ind].back().y() == 1)
+            bit_points[text_ind].push_back(QPointF((priv_memory.Fosc_moment-4) * priv_memory.Fosc_period_nano, 0));
+          bit_points[text_ind].push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano, 0));
+        }
+      text_ind++;
+    }
 
+  printf("SIZE OF VECTOR BIT PLOT REG : %ld\n", bit_plot_reg.size());
+  printf("SIZE OF VECTOR BIT PLOT BIT : %ld\n", bit_plot_bit.size());
+  printf("SIZE OF VECTOR BIT PLOTS : %ld\n", bit_plots.size());
+  printf("TU SIE PROGRAM WYWALA\n");
   bit_plot_axis->enableAxis(QwtPlot::xBottom, true);
-  bit_plot_axis->setAxisScale( QwtPlot::xBottom, 0.0, priv_memory.Fosc_period_nano * priv_memory.Fosc_moment);
+  bit_plot_axis->setAxisScale( QwtPlot::xBottom, reset_plot_value, priv_memory.Fosc_period_nano * priv_memory.Fosc_moment);
   bit_plot_axis->setAxisScale( QwtPlot::yLeft, 0, 1, 1);
   bit_plot_axis->replot();
+  printf("TU SIE PROGRAM WYWALA\n");
 
-  for(QwtPlot * plot : bit_plots) {
+    for(QwtPlot * plot : bit_plots) {
 
-    QwtPlotCurve *curve = new QwtPlotCurve();
-    curve->setTitle( "Pixel Count" );
-    curve->setPen( Qt::blue, 2 ),
-    curve->setRenderHint( QwtPlotItem::RenderAntialiased, true );
-  
-    QPolygonF polygon;
-    for(QPointF point : bit_points[i]) {
-      polygon << point;
+      QwtPlotCurve *curve = new QwtPlotCurve();
+      curve->setTitle( "Pixel Count" );
+      curve->setPen( Qt::blue, 2 ),
+      curve->setRenderHint( QwtPlotItem::RenderAntialiased, true );
+    
+      QPolygonF polygon;
+      for(QPointF point : bit_points[i]) {
+        polygon << point;
+      }
+      curve->setSamples( polygon );
+      curve->attach( plot );
+      plot->replot();
+      i++;
     }
-    curve->setSamples( polygon );
-    curve->attach( plot );
-    plot->replot();
-    i++;
   }
 }
 
@@ -1038,55 +1134,215 @@ void MainWindow::update_Labels() {
 static void run_modules(Memory * memory, Bus * bus, int clock) {
   module_tmr0(memory, bus, clock);
   module_tmr1(memory, bus, clock);
-  module_ports(memory, bus, clock);
   module_adc(memory, bus, clock);
   module_uart(memory, bus, clock);
 }
+
+bool test_vector(vector<int> x, int key) {
+    if (std::count(x.begin(), x.end(), key)) {
+      return true;
+    }
+    else {
+      return false;
+    }
+};
 
 void MainWindow::RunUntilLine() {
   /* Possible states are instruction load and 
     * instruction execute */
   // PRINTS FOR DEBUG
-  bool ok;
-  int line_index = ui.textEdit_line_break_addr->toPlainText().toInt(&ok, 10);
+  if(file_loaded) {
+    bool ok;
+    int line_index = ui.textEdit_line_break_addr->toPlainText().toInt(&ok, 10);
 
-  printf("LAST C LINE : %d, INPUT LINE INDEX : %d\n",priv_code.lines[priv_bus.instruction_Bus.index].last_c_index, line_index); 
-  while(priv_code.lines[priv_bus.instruction_Bus.index].last_c_index > line_index) {
-    gui_cur_line = priv_bus.instruction_Bus.index;
-    qDebug() << "CURR LINE : " << gui_cur_line << "\n";
-
-    pre_Copy_Pointer_Data(&priv_code, &priv_memory, &priv_bus);
-
-      module_interrupt(&priv_memory, &priv_bus, &priv_code, priv_code.clock_Cycle);
-    for(int i = 0 ; i < 4 ; i++) {
-      fetch_Instruction(&priv_code, &priv_memory, &priv_bus, priv_code.clock_Cycle);
-      execute_Instruction(&priv_code, &priv_memory, &priv_bus, priv_code.clock_Cycle);
-      run_modules(&priv_memory, &priv_bus, priv_code.clock_Cycle);
-      priv_code.clock_Cycle++;
-      priv_memory.Fosc_moment++;
-      if(priv_code.clock_Cycle == 4) {
-          printf("INTERRUPT NUMBER = %d\n", priv_memory.modules.IVT_module.context);
-          priv_code.clock_Cycle = 0;
-          qDebug() << "---------------------------------------------------------\n";
-          print_coded_instr(&priv_code, &priv_memory, &priv_bus);
-      }
+    vector<int> c_line_ind;
+    for(int i = 0 ; i < priv_code.length ; i++) {
+      c_line_ind.push_back(priv_code.lines[i].last_c_index);
     }
 
-    post_Copy_Pointer_Data(&priv_code, &priv_memory, &priv_bus);
-    priv_memory.time_moment++;
-    update_PlotsInv();
-    update_Bit_PlotsInv();
+    if(line_index > *max_element(c_line_ind.begin(), c_line_ind.end())) {
+      line_index = *max_element(c_line_ind.begin(), c_line_ind.end());
+    };
+
+    while(!test_vector(c_line_ind, line_index)){
+      line_index++;
+    }
+
+    printf("LAST C LINE : %d, INPUT LINE INDEX : %d\n",priv_code.lines[priv_bus.instruction_Bus.index].last_c_index, line_index); 
+    //priv_code.lines[gui_cur_line].last_c_index
+    while(priv_code.lines[gui_cur_line].last_c_index != line_index) {
+      gui_cur_line = priv_bus.instruction_Bus.index;
+      qDebug() << "CURR LINE : " << gui_cur_line << "\n";
+
+      pre_Copy_Pointer_Data(&priv_code, &priv_memory, &priv_bus);
+
+        module_interrupt(&priv_memory, &priv_bus, &priv_code, priv_code.clock_Cycle);
+      for(int i = 0 ; i < 4 ; i++) {
+        fetch_Instruction(&priv_code, &priv_memory, &priv_bus, priv_code.clock_Cycle);
+        execute_Instruction(&priv_code, &priv_memory, &priv_bus, priv_code.clock_Cycle);
+        run_modules(&priv_memory, &priv_bus, priv_code.clock_Cycle);
+        module_ports();
+        priv_code.clock_Cycle++;
+        priv_memory.Fosc_moment++;
+        if(priv_code.clock_Cycle == 4) {
+            printf("INTERRUPT NUMBER = %d\n", priv_memory.modules.IVT_module.context);
+            priv_code.clock_Cycle = 0;
+            qDebug() << "---------------------------------------------------------\n";
+            print_coded_instr(&priv_code, &priv_memory, &priv_bus);
+        }
+      }
+
+      post_Copy_Pointer_Data(&priv_code, &priv_memory, &priv_bus);
+      priv_memory.time_moment++;
+      update_PlotsInv();
+      update_Bit_PlotsInv();
+    }
+    update_Labels();
   }
-  update_Labels();
+}
+
+void MainWindow::RunUntilTime() {
+  /* Possible states are instruction load and 
+    * instruction execute */
+  // PRINTS FOR DEBUG
+  // Check for breakpoints
+  if(file_loaded) {
+    bool ok;
+    vector<int> breakpoints;
+    vector<int> c_breakpoints;
+    int tmp_line_index;
+
+    vector<int> c_line_ind;
+    for(int i = 0 ; i < priv_code.length ; i++) {
+      c_line_ind.push_back(priv_code.lines[i].last_c_index);
+    }
+
+    if(!ui.textEdit_breakpoint_c0->document()->isEmpty()) {
+      tmp_line_index = ui.textEdit_breakpoint_c0->toPlainText().toInt(&ok, 10);
+
+      if(tmp_line_index > *max_element(c_line_ind.begin(), c_line_ind.end())) {
+        tmp_line_index = *max_element(c_line_ind.begin(), c_line_ind.end());
+      };
+
+      while(!test_vector(c_line_ind, tmp_line_index)){
+        tmp_line_index++;
+      }
+      c_breakpoints.push_back(tmp_line_index);
+    }
+    if(!ui.textEdit_breakpoint_c1->document()->isEmpty()) {
+      tmp_line_index = ui.textEdit_breakpoint_c1->toPlainText().toInt(&ok, 10);
+
+      if(tmp_line_index > *max_element(c_line_ind.begin(), c_line_ind.end())) {
+        tmp_line_index = *max_element(c_line_ind.begin(), c_line_ind.end());
+      };
+
+      while(!test_vector(c_line_ind, tmp_line_index)){
+        tmp_line_index++;
+      }
+      c_breakpoints.push_back(tmp_line_index);
+    }
+    if(!ui.textEdit_breakpoint_c2->document()->isEmpty()) {
+      tmp_line_index = ui.textEdit_breakpoint_c2->toPlainText().toInt(&ok, 10);
+
+      if(tmp_line_index > *max_element(c_line_ind.begin(), c_line_ind.end())) {
+        tmp_line_index = *max_element(c_line_ind.begin(), c_line_ind.end());
+      };
+
+      while(!test_vector(c_line_ind, tmp_line_index)){
+        tmp_line_index++;
+      }
+      c_breakpoints.push_back(tmp_line_index);
+    }
+
+
+    if(!ui.textEdit_breakpoint_0->document()->isEmpty()) {
+      breakpoints.push_back(ui.textEdit_breakpoint_0->toPlainText().toInt(&ok, 16));
+    }
+    if(!ui.textEdit_breakpoint_1->document()->isEmpty()) {
+      breakpoints.push_back(ui.textEdit_breakpoint_1->toPlainText().toInt(&ok, 16));
+    }
+    if(!ui.textEdit_breakpoint_2->document()->isEmpty()) {
+      breakpoints.push_back(ui.textEdit_breakpoint_2->toPlainText().toInt(&ok, 16));
+    }
+
+    int time = ui.textEdit_ms->toPlainText().toInt(&ok, 10);
+    while(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano < time * 1e6 && 
+          !test_vector(breakpoints, priv_bus.instruction_Bus.address) &&
+          !test_vector(c_breakpoints, priv_code.lines[gui_cur_line].last_c_index)) {
+      gui_cur_line = priv_bus.instruction_Bus.index;
+      qDebug() << "CURR LINE : " << gui_cur_line << "\n";
+
+      pre_Copy_Pointer_Data(&priv_code, &priv_memory, &priv_bus);
+
+        module_interrupt(&priv_memory, &priv_bus, &priv_code, priv_code.clock_Cycle);
+      for(int i = 0 ; i < 4 ; i++) {
+        fetch_Instruction(&priv_code, &priv_memory, &priv_bus, priv_code.clock_Cycle);
+        execute_Instruction(&priv_code, &priv_memory, &priv_bus, priv_code.clock_Cycle);
+        run_modules(&priv_memory, &priv_bus, priv_code.clock_Cycle);
+        module_ports();
+        priv_code.clock_Cycle++;
+        priv_memory.Fosc_moment++;
+        if(priv_code.clock_Cycle == 4) {
+            printf("INTERRUPT NUMBER = %d\n", priv_memory.modules.IVT_module.context);
+            priv_code.clock_Cycle = 0;
+            qDebug() << "---------------------------------------------------------\n";
+            print_coded_instr(&priv_code, &priv_memory, &priv_bus);
+        }
+      }
+
+      post_Copy_Pointer_Data(&priv_code, &priv_memory, &priv_bus);
+      priv_memory.time_moment++;
+      update_PlotsInv();
+      update_Bit_PlotsInv();
+    }
+    update_Labels();
+    printf("BREAKPOINTS COUNT : %ld\n", c_breakpoints.size());
+  }
 }
 
 void MainWindow::RunUntilAddr() {
   /* Possible states are instruction load and 
     * instruction execute */
   // PRINTS FOR DEBUG
-  bool ok;
-  int addr = ui.textEdit_addr_break_addr->toPlainText().toInt(&ok, 16);
-  while(priv_bus.instruction_Bus.address != addr) {
+  if(file_loaded) {
+    bool ok;
+    int addr = ui.textEdit_addr_break_addr->toPlainText().toInt(&ok, 16);
+    while(priv_bus.instruction_Bus.address != addr) {
+      gui_cur_line = priv_bus.instruction_Bus.index;
+      qDebug() << "CURR LINE : " << gui_cur_line << "\n";
+
+      pre_Copy_Pointer_Data(&priv_code, &priv_memory, &priv_bus);
+
+        module_interrupt(&priv_memory, &priv_bus, &priv_code, priv_code.clock_Cycle);
+      for(int i = 0 ; i < 4 ; i++) {
+        fetch_Instruction(&priv_code, &priv_memory, &priv_bus, priv_code.clock_Cycle);
+        execute_Instruction(&priv_code, &priv_memory, &priv_bus, priv_code.clock_Cycle);
+        run_modules(&priv_memory, &priv_bus, priv_code.clock_Cycle);
+        module_ports();
+        priv_code.clock_Cycle++;
+        priv_memory.Fosc_moment++;
+        if(priv_code.clock_Cycle == 4) {
+            printf("INTERRUPT NUMBER = %d\n", priv_memory.modules.IVT_module.context);
+            priv_code.clock_Cycle = 0;
+            qDebug() << "---------------------------------------------------------\n";
+            print_coded_instr(&priv_code, &priv_memory, &priv_bus);
+        }
+      }
+
+      post_Copy_Pointer_Data(&priv_code, &priv_memory, &priv_bus);
+      priv_memory.time_moment++;
+      update_PlotsInv();
+      update_Bit_PlotsInv();
+    }
+    update_Labels();
+  }
+}
+
+void MainWindow::machine_State_Step() {
+  /* Possible states are instruction load and 
+    * instruction execute */
+  // PRINTS FOR DEBUG
+  if(file_loaded) {
     gui_cur_line = priv_bus.instruction_Bus.index;
     qDebug() << "CURR LINE : " << gui_cur_line << "\n";
 
@@ -1097,6 +1353,7 @@ void MainWindow::RunUntilAddr() {
       fetch_Instruction(&priv_code, &priv_memory, &priv_bus, priv_code.clock_Cycle);
       execute_Instruction(&priv_code, &priv_memory, &priv_bus, priv_code.clock_Cycle);
       run_modules(&priv_memory, &priv_bus, priv_code.clock_Cycle);
+      module_ports();
       priv_code.clock_Cycle++;
       priv_memory.Fosc_moment++;
       if(priv_code.clock_Cycle == 4) {
@@ -1108,38 +1365,60 @@ void MainWindow::RunUntilAddr() {
     }
 
     post_Copy_Pointer_Data(&priv_code, &priv_memory, &priv_bus);
+    update_Labels();
     priv_memory.time_moment++;
-    update_PlotsInv();
-    update_Bit_PlotsInv();
   }
-  update_Labels();
 }
 
-void MainWindow::machine_State_Step() {
-  /* Possible states are instruction load and 
-    * instruction execute */
-  // PRINTS FOR DEBUG
-  gui_cur_line = priv_bus.instruction_Bus.index;
-  qDebug() << "CURR LINE : " << gui_cur_line << "\n";
 
-  pre_Copy_Pointer_Data(&priv_code, &priv_memory, &priv_bus);
+void MainWindow::clear_plots() {
 
-    module_interrupt(&priv_memory, &priv_bus, &priv_code, priv_code.clock_Cycle);
-  for(int i = 0 ; i < 4 ; i++) {
-    fetch_Instruction(&priv_code, &priv_memory, &priv_bus, priv_code.clock_Cycle);
-    execute_Instruction(&priv_code, &priv_memory, &priv_bus, priv_code.clock_Cycle);
-    run_modules(&priv_memory, &priv_bus, i);
-    priv_code.clock_Cycle++;
-    priv_memory.Fosc_moment++;
-    if(priv_code.clock_Cycle == 4) {
-        printf("INTERRUPT NUMBER = %d\n", priv_memory.modules.IVT_module.context);
-        priv_code.clock_Cycle = 0;
-        qDebug() << "---------------------------------------------------------\n";
-        print_coded_instr(&priv_code, &priv_memory, &priv_bus);
+  if(file_loaded) {
+
+    if(points.size() > 0)
+    for(int i = 0 ; i < points.size() - 1 ; i++) {
+      /* points[i] = {QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano, 0)}; */
+      points[i] = {};
+      plots[i]->detachItems();
+      if(points.size() > 7) {
+        plots[8]->detachItems();
+      }
     }
-  }
 
-  post_Copy_Pointer_Data(&priv_code, &priv_memory, &priv_bus);
-  update_Labels();
-  priv_memory.time_moment++;
+    if(bit_points.size() > 0)
+    for(int i = 0 ; i < bit_points.size() ; i++) {
+      /* bit_points[i] = {QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano, 0)}; */
+      bit_points[i] = {};
+      bit_plots[i]->detachItems();
+    }
+    if(plot_count > 0)
+      plot_count = 1;
+    reset_plot_value = priv_memory.Fosc_moment * priv_memory.Fosc_period_nano;
+
+    
+    /* bit_plot_axis->detachItems(); */
+    /* delete ui.verticalWidget_bit_plots->widget(); */
+    /* delete ui.verticalWidget_bit_time->widget(); */
+    /* ui.verticalWidget_bit_time->update(); */
+    /* ui.verticalWidget_bit_plots->update(); */
+    /* ui.verticalWidget_plots->update(); */
+    /* delete ui.verticalLayout_7->widget(); */
+    /* ui.verticalLayout_7->update(); */
+    /* ui.verticalWidget_bit_plots_2->update(); */
+    update_Labels();
+  }
+}
+
+
+void MainWindow::reset() {
+
+  if(file_loaded) {
+    reset_plot_value = priv_memory.Fosc_moment * priv_memory.Fosc_period_nano;
+    clear_plots();
+    reset_plot_value = priv_memory.Fosc_moment * priv_memory.Fosc_period_nano;
+    start_emulator();
+    reset_plot_value = priv_memory.Fosc_moment * priv_memory.Fosc_period_nano;
+    clear_plots();
+    update_Labels();
+  }
 }

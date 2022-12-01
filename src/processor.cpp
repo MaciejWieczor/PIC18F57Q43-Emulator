@@ -347,6 +347,7 @@ static void execute_byte_file(Memory * memory, Bus * bus) {
   else
     memory->data_address = WREG;
 
+  indirect_pre_ops(memory, bus, address);
   /* Here we put data from the address specified in .f in a local variable 
    * Later we just need to put the result on the data bus and everything else will 
    * fall into place*/
@@ -356,7 +357,6 @@ static void execute_byte_file(Memory * memory, Bus * bus) {
   status.reg = memory->data_memory[STATUS];
   bus->data_Bus.write = 1;
 
-  indirect_pre_ops(memory, bus, address);
 
   switch(p_word.byte.opcode) {
  		case INSTR_ADDWF:
@@ -471,6 +471,7 @@ static void execute_byte_nw_file(Memory * memory, Bus * bus) {
   else 
     address = data_address(memory->data_memory[BSR], p_word.byte_nw.f);
 
+  indirect_pre_ops(memory, bus, address);
   u8 temp = memory->data_memory[address];
   u8 wreg = memory->data_memory[WREG];
   union STATUS_R status;
@@ -478,7 +479,6 @@ static void execute_byte_nw_file(Memory * memory, Bus * bus) {
   bus->data_Bus.two_byte_write = 0;
   bus->data_Bus.write = 1;
 
-  indirect_pre_ops(memory, bus, address);
 
   switch(p_word.byte_nw.opcode) {
 
@@ -1019,10 +1019,21 @@ int init_Memory(Code * code, Memory * memory, Bus * bus) {
   code->current_Line = memory->program_counter.DATA / 2;
   code->clock_Cycle = 0;
 
+  if(memory->data_memory.size() > 0) {
+    /* Init data memory banks */
+    for(int i = 0 ; i < 64 ; i++) {
+      for(int j = 0 ; j < 256 ; j++) {
+        memory->data_memory[i*256 + j] = 0;
+      }
+    }
+  }
+
   /* Init data memory banks */
-  for(int i = 0 ; i < 64 ; i++) {
-    for(int j = 0 ; j < 256 ; j++) {
-      memory->data_memory.push_back(0);
+  else {
+    for(int i = 0 ; i < 64 ; i++) {
+      for(int j = 0 ; j < 256 ; j++) {
+        memory->data_memory.push_back(0);
+      }
     }
   }
   memory->data_memory[BSR] = 0;

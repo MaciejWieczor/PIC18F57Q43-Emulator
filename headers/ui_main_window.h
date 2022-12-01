@@ -89,13 +89,15 @@ public:
     QTableWidget *tableWidget_3;
     QHBoxLayout *horizontalLayout_2;
     QVBoxLayout *verticalLayout;
-    QPushButton *pushButton_add_plot;
     QPushButton *pushButton_breakpoint_line;
     QTextEdit *textEdit_line_break_addr;
     QPushButton *pushButton_breakpoint;
     QTextEdit *textEdit_addr_break_addr;
-    QPushButton *pushButton_start;
+    QPushButton *pushButton_time;
+    QTextEdit *textEdit_ms;
     QPushButton *pushButton_disasm;
+    QPushButton *pushButton;
+    QPushButton *pushButton_start;
     QTabWidget *Memory_Tabs;
     QWidget *AccessBank;
     QHBoxLayout *horizontalLayout_10;
@@ -122,6 +124,7 @@ public:
     QVBoxLayout *verticalWidget_bit_plots;
     QWidget *verticalWidget_2;
     QVBoxLayout *verticalWidget_bit_time;
+    QWidget *tab_2;
     QWidget *tab;
     QHBoxLayout *horizontalLayout_29;
     QHBoxLayout *horizontalLayout_28;
@@ -131,7 +134,19 @@ public:
     QTextEdit *textEdit_addr;
     QLabel *label_4;
     QTextEdit *textEdit_value;
+    QVBoxLayout *verticalLayout_9;
+    QLabel *label_6;
+    QTextEdit *textEdit_breakpoint_0;
+    QTextEdit *textEdit_breakpoint_1;
+    QTextEdit *textEdit_breakpoint_2;
+    QVBoxLayout *verticalLayout_13;
+    QLabel *label_7;
+    QTextEdit *textEdit_breakpoint_c0;
+    QTextEdit *textEdit_breakpoint_c1;
+    QTextEdit *textEdit_breakpoint_c2;
     QVBoxLayout *verticalLayout_15;
+    QPushButton *pushButton_add_plot;
+    QPushButton *clear_all_plots;
     QPushButton *add_bit_plot;
     QPushButton *analog_read_plot;
     QHBoxLayout *horizontalLayout_21;
@@ -140,14 +155,13 @@ public:
     QLabel *label_2;
     QTextEdit *text_pin;
     QPushButton *adc_out_plot;
-    QPushButton *clear_all_plots;
     QVBoxLayout *verticalLayout_18;
-    QCheckBox *checkBox;
-    QRadioButton *radioButton;
-    QRadioButton *radioButton_2;
+    QCheckBox *checkBox_signal;
+    QRadioButton *radioButton_sine;
+    QRadioButton *radioButton_square;
     QHBoxLayout *horizontalLayout_7;
     QLabel *label_5;
-    QTextEdit *textEdit;
+    QTextEdit *textEdit_period;
     QMenuBar *menubar;
     QMenu *menuFile;
 
@@ -993,20 +1007,15 @@ public:
         verticalLayout = new QVBoxLayout();
         verticalLayout->setObjectName(QString::fromUtf8("verticalLayout"));
         verticalLayout->setSizeConstraint(QLayout::SetMaximumSize);
-        pushButton_add_plot = new QPushButton(centralwidget);
-        pushButton_add_plot->setObjectName(QString::fromUtf8("pushButton_add_plot"));
+        pushButton_breakpoint_line = new QPushButton(centralwidget);
+        pushButton_breakpoint_line->setObjectName(QString::fromUtf8("pushButton_breakpoint_line"));
         QSizePolicy sizePolicy3(QSizePolicy::Minimum, QSizePolicy::Ignored);
         sizePolicy3.setHorizontalStretch(0);
         sizePolicy3.setVerticalStretch(0);
-        sizePolicy3.setHeightForWidth(pushButton_add_plot->sizePolicy().hasHeightForWidth());
-        pushButton_add_plot->setSizePolicy(sizePolicy3);
-
-        verticalLayout->addWidget(pushButton_add_plot);
-
-        pushButton_breakpoint_line = new QPushButton(centralwidget);
-        pushButton_breakpoint_line->setObjectName(QString::fromUtf8("pushButton_breakpoint_line"));
         sizePolicy3.setHeightForWidth(pushButton_breakpoint_line->sizePolicy().hasHeightForWidth());
         pushButton_breakpoint_line->setSizePolicy(sizePolicy3);
+        pushButton_breakpoint_line->setAutoFillBackground(false);
+        pushButton_breakpoint_line->setStyleSheet(QString::fromUtf8("background-color: rgb(255, 196, 196);"));
 
         verticalLayout->addWidget(pushButton_breakpoint_line);
 
@@ -1024,6 +1033,7 @@ public:
         pushButton_breakpoint->setObjectName(QString::fromUtf8("pushButton_breakpoint"));
         sizePolicy4.setHeightForWidth(pushButton_breakpoint->sizePolicy().hasHeightForWidth());
         pushButton_breakpoint->setSizePolicy(sizePolicy4);
+        pushButton_breakpoint->setStyleSheet(QString::fromUtf8("background-color: rgb(255, 196, 196);"));
 
         verticalLayout->addWidget(pushButton_breakpoint);
 
@@ -1034,22 +1044,47 @@ public:
 
         verticalLayout->addWidget(textEdit_addr_break_addr);
 
-        pushButton_start = new QPushButton(centralwidget);
-        pushButton_start->setObjectName(QString::fromUtf8("pushButton_start"));
-        QSizePolicy sizePolicy5(QSizePolicy::Preferred, QSizePolicy::Preferred);
-        sizePolicy5.setHorizontalStretch(0);
-        sizePolicy5.setVerticalStretch(0);
-        sizePolicy5.setHeightForWidth(pushButton_start->sizePolicy().hasHeightForWidth());
-        pushButton_start->setSizePolicy(sizePolicy5);
+        pushButton_time = new QPushButton(centralwidget);
+        pushButton_time->setObjectName(QString::fromUtf8("pushButton_time"));
+        sizePolicy4.setHeightForWidth(pushButton_time->sizePolicy().hasHeightForWidth());
+        pushButton_time->setSizePolicy(sizePolicy4);
+        pushButton_time->setStyleSheet(QString::fromUtf8("background-color: rgb(194, 255, 185);"));
 
-        verticalLayout->addWidget(pushButton_start);
+        verticalLayout->addWidget(pushButton_time);
+
+        textEdit_ms = new QTextEdit(centralwidget);
+        textEdit_ms->setObjectName(QString::fromUtf8("textEdit_ms"));
+        sizePolicy4.setHeightForWidth(textEdit_ms->sizePolicy().hasHeightForWidth());
+        textEdit_ms->setSizePolicy(sizePolicy4);
+
+        verticalLayout->addWidget(textEdit_ms);
 
         pushButton_disasm = new QPushButton(centralwidget);
         pushButton_disasm->setObjectName(QString::fromUtf8("pushButton_disasm"));
+        QSizePolicy sizePolicy5(QSizePolicy::Preferred, QSizePolicy::Preferred);
+        sizePolicy5.setHorizontalStretch(0);
+        sizePolicy5.setVerticalStretch(0);
         sizePolicy5.setHeightForWidth(pushButton_disasm->sizePolicy().hasHeightForWidth());
         pushButton_disasm->setSizePolicy(sizePolicy5);
+        pushButton_disasm->setStyleSheet(QString::fromUtf8("background-color: rgb(194, 255, 185);"));
 
         verticalLayout->addWidget(pushButton_disasm);
+
+        pushButton = new QPushButton(centralwidget);
+        pushButton->setObjectName(QString::fromUtf8("pushButton"));
+        sizePolicy4.setHeightForWidth(pushButton->sizePolicy().hasHeightForWidth());
+        pushButton->setSizePolicy(sizePolicy4);
+        pushButton->setStyleSheet(QString::fromUtf8("background-color: rgb(217, 233, 255);"));
+
+        verticalLayout->addWidget(pushButton);
+
+        pushButton_start = new QPushButton(centralwidget);
+        pushButton_start->setObjectName(QString::fromUtf8("pushButton_start"));
+        sizePolicy5.setHeightForWidth(pushButton_start->sizePolicy().hasHeightForWidth());
+        pushButton_start->setSizePolicy(sizePolicy5);
+        pushButton_start->setStyleSheet(QString::fromUtf8("background-color: rgb(217, 233, 255);"));
+
+        verticalLayout->addWidget(pushButton_start);
 
 
         horizontalLayout_2->addLayout(verticalLayout);
@@ -1150,11 +1185,12 @@ public:
 
         pb_set_bank = new QPushButton(tab_8);
         pb_set_bank->setObjectName(QString::fromUtf8("pb_set_bank"));
-        QSizePolicy sizePolicy6(QSizePolicy::Preferred, QSizePolicy::Expanding);
+        QSizePolicy sizePolicy6(QSizePolicy::Preferred, QSizePolicy::Ignored);
         sizePolicy6.setHorizontalStretch(0);
         sizePolicy6.setVerticalStretch(0);
         sizePolicy6.setHeightForWidth(pb_set_bank->sizePolicy().hasHeightForWidth());
         pb_set_bank->setSizePolicy(sizePolicy6);
+        pb_set_bank->setStyleSheet(QString::fromUtf8("background-color: rgb(194, 255, 185);"));
 
         verticalLayout_2->addWidget(pb_set_bank);
 
@@ -1221,6 +1257,9 @@ public:
         verticalLayout_19->addWidget(verticalWidget_2);
 
         Memory_Tabs->addTab(logic_analyzer_bit, QString());
+        tab_2 = new QWidget();
+        tab_2->setObjectName(QString::fromUtf8("tab_2"));
+        Memory_Tabs->addTab(tab_2, QString());
         tab = new QWidget();
         tab->setObjectName(QString::fromUtf8("tab"));
         horizontalLayout_29 = new QHBoxLayout(tab);
@@ -1233,6 +1272,7 @@ public:
         pushButton_setaddr->setObjectName(QString::fromUtf8("pushButton_setaddr"));
         sizePolicy4.setHeightForWidth(pushButton_setaddr->sizePolicy().hasHeightForWidth());
         pushButton_setaddr->setSizePolicy(sizePolicy4);
+        pushButton_setaddr->setStyleSheet(QString::fromUtf8("background-color: rgb(194, 255, 185);"));
 
         verticalLayout_14->addWidget(pushButton_setaddr);
 
@@ -1253,11 +1293,8 @@ public:
 
         label_4 = new QLabel(tab);
         label_4->setObjectName(QString::fromUtf8("label_4"));
-        QSizePolicy sizePolicy7(QSizePolicy::Preferred, QSizePolicy::Ignored);
-        sizePolicy7.setHorizontalStretch(0);
-        sizePolicy7.setVerticalStretch(0);
-        sizePolicy7.setHeightForWidth(label_4->sizePolicy().hasHeightForWidth());
-        label_4->setSizePolicy(sizePolicy7);
+        sizePolicy6.setHeightForWidth(label_4->sizePolicy().hasHeightForWidth());
+        label_4->setSizePolicy(sizePolicy6);
         label_4->setAlignment(Qt::AlignCenter);
 
         verticalLayout_14->addWidget(label_4);
@@ -1272,12 +1309,93 @@ public:
 
         horizontalLayout_28->addLayout(verticalLayout_14);
 
+        verticalLayout_9 = new QVBoxLayout();
+        verticalLayout_9->setObjectName(QString::fromUtf8("verticalLayout_9"));
+        label_6 = new QLabel(tab);
+        label_6->setObjectName(QString::fromUtf8("label_6"));
+        label_6->setAlignment(Qt::AlignCenter);
+
+        verticalLayout_9->addWidget(label_6);
+
+        textEdit_breakpoint_0 = new QTextEdit(tab);
+        textEdit_breakpoint_0->setObjectName(QString::fromUtf8("textEdit_breakpoint_0"));
+        sizePolicy4.setHeightForWidth(textEdit_breakpoint_0->sizePolicy().hasHeightForWidth());
+        textEdit_breakpoint_0->setSizePolicy(sizePolicy4);
+
+        verticalLayout_9->addWidget(textEdit_breakpoint_0);
+
+        textEdit_breakpoint_1 = new QTextEdit(tab);
+        textEdit_breakpoint_1->setObjectName(QString::fromUtf8("textEdit_breakpoint_1"));
+        sizePolicy4.setHeightForWidth(textEdit_breakpoint_1->sizePolicy().hasHeightForWidth());
+        textEdit_breakpoint_1->setSizePolicy(sizePolicy4);
+
+        verticalLayout_9->addWidget(textEdit_breakpoint_1);
+
+        textEdit_breakpoint_2 = new QTextEdit(tab);
+        textEdit_breakpoint_2->setObjectName(QString::fromUtf8("textEdit_breakpoint_2"));
+        sizePolicy4.setHeightForWidth(textEdit_breakpoint_2->sizePolicy().hasHeightForWidth());
+        textEdit_breakpoint_2->setSizePolicy(sizePolicy4);
+
+        verticalLayout_9->addWidget(textEdit_breakpoint_2);
+
+
+        horizontalLayout_28->addLayout(verticalLayout_9);
+
+        verticalLayout_13 = new QVBoxLayout();
+        verticalLayout_13->setObjectName(QString::fromUtf8("verticalLayout_13"));
+        label_7 = new QLabel(tab);
+        label_7->setObjectName(QString::fromUtf8("label_7"));
+        label_7->setAlignment(Qt::AlignCenter);
+
+        verticalLayout_13->addWidget(label_7);
+
+        textEdit_breakpoint_c0 = new QTextEdit(tab);
+        textEdit_breakpoint_c0->setObjectName(QString::fromUtf8("textEdit_breakpoint_c0"));
+        sizePolicy4.setHeightForWidth(textEdit_breakpoint_c0->sizePolicy().hasHeightForWidth());
+        textEdit_breakpoint_c0->setSizePolicy(sizePolicy4);
+
+        verticalLayout_13->addWidget(textEdit_breakpoint_c0);
+
+        textEdit_breakpoint_c1 = new QTextEdit(tab);
+        textEdit_breakpoint_c1->setObjectName(QString::fromUtf8("textEdit_breakpoint_c1"));
+        sizePolicy4.setHeightForWidth(textEdit_breakpoint_c1->sizePolicy().hasHeightForWidth());
+        textEdit_breakpoint_c1->setSizePolicy(sizePolicy4);
+
+        verticalLayout_13->addWidget(textEdit_breakpoint_c1);
+
+        textEdit_breakpoint_c2 = new QTextEdit(tab);
+        textEdit_breakpoint_c2->setObjectName(QString::fromUtf8("textEdit_breakpoint_c2"));
+        sizePolicy4.setHeightForWidth(textEdit_breakpoint_c2->sizePolicy().hasHeightForWidth());
+        textEdit_breakpoint_c2->setSizePolicy(sizePolicy4);
+
+        verticalLayout_13->addWidget(textEdit_breakpoint_c2);
+
+
+        horizontalLayout_28->addLayout(verticalLayout_13);
+
         verticalLayout_15 = new QVBoxLayout();
         verticalLayout_15->setObjectName(QString::fromUtf8("verticalLayout_15"));
+        pushButton_add_plot = new QPushButton(tab);
+        pushButton_add_plot->setObjectName(QString::fromUtf8("pushButton_add_plot"));
+        sizePolicy3.setHeightForWidth(pushButton_add_plot->sizePolicy().hasHeightForWidth());
+        pushButton_add_plot->setSizePolicy(sizePolicy3);
+        pushButton_add_plot->setStyleSheet(QString::fromUtf8("background-color: rgb(255, 244, 217);"));
+
+        verticalLayout_15->addWidget(pushButton_add_plot);
+
+        clear_all_plots = new QPushButton(tab);
+        clear_all_plots->setObjectName(QString::fromUtf8("clear_all_plots"));
+        sizePolicy3.setHeightForWidth(clear_all_plots->sizePolicy().hasHeightForWidth());
+        clear_all_plots->setSizePolicy(sizePolicy3);
+        clear_all_plots->setStyleSheet(QString::fromUtf8("background-color: rgb(194, 255, 185);"));
+
+        verticalLayout_15->addWidget(clear_all_plots);
+
         add_bit_plot = new QPushButton(tab);
         add_bit_plot->setObjectName(QString::fromUtf8("add_bit_plot"));
         sizePolicy4.setHeightForWidth(add_bit_plot->sizePolicy().hasHeightForWidth());
         add_bit_plot->setSizePolicy(sizePolicy4);
+        add_bit_plot->setStyleSheet(QString::fromUtf8("background-color: rgb(194, 255, 185);"));
 
         verticalLayout_15->addWidget(add_bit_plot);
 
@@ -1285,6 +1403,7 @@ public:
         analog_read_plot->setObjectName(QString::fromUtf8("analog_read_plot"));
         sizePolicy3.setHeightForWidth(analog_read_plot->sizePolicy().hasHeightForWidth());
         analog_read_plot->setSizePolicy(sizePolicy3);
+        analog_read_plot->setStyleSheet(QString::fromUtf8("background-color: rgb(217, 233, 255);"));
 
         verticalLayout_15->addWidget(analog_read_plot);
 
@@ -1323,41 +1442,38 @@ public:
         adc_out_plot->setObjectName(QString::fromUtf8("adc_out_plot"));
         sizePolicy3.setHeightForWidth(adc_out_plot->sizePolicy().hasHeightForWidth());
         adc_out_plot->setSizePolicy(sizePolicy3);
+        adc_out_plot->setStyleSheet(QString::fromUtf8("background-color: rgb(217, 233, 255);"));
 
         verticalLayout_15->addWidget(adc_out_plot);
-
-        clear_all_plots = new QPushButton(tab);
-        clear_all_plots->setObjectName(QString::fromUtf8("clear_all_plots"));
-        sizePolicy3.setHeightForWidth(clear_all_plots->sizePolicy().hasHeightForWidth());
-        clear_all_plots->setSizePolicy(sizePolicy3);
-
-        verticalLayout_15->addWidget(clear_all_plots);
 
 
         horizontalLayout_28->addLayout(verticalLayout_15);
 
         verticalLayout_18 = new QVBoxLayout();
         verticalLayout_18->setObjectName(QString::fromUtf8("verticalLayout_18"));
-        checkBox = new QCheckBox(tab);
-        checkBox->setObjectName(QString::fromUtf8("checkBox"));
-        sizePolicy4.setHeightForWidth(checkBox->sizePolicy().hasHeightForWidth());
-        checkBox->setSizePolicy(sizePolicy4);
+        checkBox_signal = new QCheckBox(tab);
+        checkBox_signal->setObjectName(QString::fromUtf8("checkBox_signal"));
+        sizePolicy4.setHeightForWidth(checkBox_signal->sizePolicy().hasHeightForWidth());
+        checkBox_signal->setSizePolicy(sizePolicy4);
+        checkBox_signal->setChecked(true);
 
-        verticalLayout_18->addWidget(checkBox);
+        verticalLayout_18->addWidget(checkBox_signal);
 
-        radioButton = new QRadioButton(tab);
-        radioButton->setObjectName(QString::fromUtf8("radioButton"));
-        sizePolicy4.setHeightForWidth(radioButton->sizePolicy().hasHeightForWidth());
-        radioButton->setSizePolicy(sizePolicy4);
+        radioButton_sine = new QRadioButton(tab);
+        radioButton_sine->setObjectName(QString::fromUtf8("radioButton_sine"));
+        sizePolicy4.setHeightForWidth(radioButton_sine->sizePolicy().hasHeightForWidth());
+        radioButton_sine->setSizePolicy(sizePolicy4);
+        radioButton_sine->setChecked(true);
 
-        verticalLayout_18->addWidget(radioButton);
+        verticalLayout_18->addWidget(radioButton_sine);
 
-        radioButton_2 = new QRadioButton(tab);
-        radioButton_2->setObjectName(QString::fromUtf8("radioButton_2"));
-        sizePolicy4.setHeightForWidth(radioButton_2->sizePolicy().hasHeightForWidth());
-        radioButton_2->setSizePolicy(sizePolicy4);
+        radioButton_square = new QRadioButton(tab);
+        radioButton_square->setObjectName(QString::fromUtf8("radioButton_square"));
+        sizePolicy4.setHeightForWidth(radioButton_square->sizePolicy().hasHeightForWidth());
+        radioButton_square->setSizePolicy(sizePolicy4);
+        radioButton_square->setChecked(false);
 
-        verticalLayout_18->addWidget(radioButton_2);
+        verticalLayout_18->addWidget(radioButton_square);
 
         horizontalLayout_7 = new QHBoxLayout();
         horizontalLayout_7->setObjectName(QString::fromUtf8("horizontalLayout_7"));
@@ -1367,12 +1483,12 @@ public:
 
         horizontalLayout_7->addWidget(label_5);
 
-        textEdit = new QTextEdit(tab);
-        textEdit->setObjectName(QString::fromUtf8("textEdit"));
-        sizePolicy4.setHeightForWidth(textEdit->sizePolicy().hasHeightForWidth());
-        textEdit->setSizePolicy(sizePolicy4);
+        textEdit_period = new QTextEdit(tab);
+        textEdit_period->setObjectName(QString::fromUtf8("textEdit_period"));
+        sizePolicy4.setHeightForWidth(textEdit_period->sizePolicy().hasHeightForWidth());
+        textEdit_period->setSizePolicy(sizePolicy4);
 
-        horizontalLayout_7->addWidget(textEdit);
+        horizontalLayout_7->addWidget(textEdit_period);
 
 
         verticalLayout_18->addLayout(horizontalLayout_7);
@@ -1407,7 +1523,7 @@ public:
         retranslateUi(MainWindow);
 
         tabs_regs->setCurrentIndex(6);
-        Memory_Tabs->setCurrentIndex(3);
+        Memory_Tabs->setCurrentIndex(5);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -1875,11 +1991,12 @@ public:
         tableWidget_3->setSortingEnabled(__sortingEnabled2);
 
         tabs_regs->setTabText(tabs_regs->indexOf(tab_addr), QCoreApplication::translate("MainWindow", "REG ADDRESS", nullptr));
-        pushButton_add_plot->setText(QCoreApplication::translate("MainWindow", "Add plot", nullptr));
         pushButton_breakpoint_line->setText(QCoreApplication::translate("MainWindow", "Run until line (C):", nullptr));
         pushButton_breakpoint->setText(QCoreApplication::translate("MainWindow", "Run until address:", nullptr));
-        pushButton_start->setText(QCoreApplication::translate("MainWindow", "START SIMULATION", nullptr));
+        pushButton_time->setText(QCoreApplication::translate("MainWindow", "Run until time [ms]:", nullptr));
         pushButton_disasm->setText(QCoreApplication::translate("MainWindow", "STEP [DISASM]", nullptr));
+        pushButton->setText(QCoreApplication::translate("MainWindow", "RESET", nullptr));
+        pushButton_start->setText(QCoreApplication::translate("MainWindow", "START SIMULATION", nullptr));
         QTableWidgetItem *___qtablewidgetitem218 = tableWidget_frs->horizontalHeaderItem(0);
         ___qtablewidgetitem218->setText(QCoreApplication::translate("MainWindow", "Fast Register Stack", nullptr));
         QTableWidgetItem *___qtablewidgetitem219 = tableWidget_frs->verticalHeaderItem(0);
@@ -1895,20 +2012,29 @@ public:
         Memory_Tabs->setTabText(Memory_Tabs->indexOf(tab_8), QCoreApplication::translate("MainWindow", "Register Page", nullptr));
         Memory_Tabs->setTabText(Memory_Tabs->indexOf(logic_analyzer), QCoreApplication::translate("MainWindow", "Logic analyzer", nullptr));
         Memory_Tabs->setTabText(Memory_Tabs->indexOf(logic_analyzer_bit), QCoreApplication::translate("MainWindow", "Logic analyzer (bit mode)", nullptr));
+        Memory_Tabs->setTabText(Memory_Tabs->indexOf(tab_2), QCoreApplication::translate("MainWindow", "Logic analyzer (analog)", nullptr));
         pushButton_setaddr->setText(QCoreApplication::translate("MainWindow", "Set register [address] to value [value]", nullptr));
         label_3->setText(QCoreApplication::translate("MainWindow", "Address [0 - 3FFF]", nullptr));
         label_4->setText(QCoreApplication::translate("MainWindow", "Value [0 - 255]", nullptr));
+        label_6->setText(QCoreApplication::translate("MainWindow", "Breakpoints [asm address]:", nullptr));
+        label_7->setText(QCoreApplication::translate("MainWindow", "Breakpoints [C line]:", nullptr));
+        pushButton_add_plot->setText(QCoreApplication::translate("MainWindow", "Add plot", nullptr));
+        clear_all_plots->setText(QCoreApplication::translate("MainWindow", "Clear All Plots", nullptr));
         add_bit_plot->setText(QCoreApplication::translate("MainWindow", "Add Bit Plot", nullptr));
         analog_read_plot->setText(QCoreApplication::translate("MainWindow", "Analog Read Plot Add", nullptr));
         label->setText(QCoreApplication::translate("MainWindow", "Port", nullptr));
         label_2->setText(QCoreApplication::translate("MainWindow", "Pin", nullptr));
         adc_out_plot->setText(QCoreApplication::translate("MainWindow", "ADC Outcome Plot Add", nullptr));
-        clear_all_plots->setText(QCoreApplication::translate("MainWindow", "Clear All Plots", nullptr));
-        checkBox->setText(QCoreApplication::translate("MainWindow", "Enable signal", nullptr));
-        radioButton->setText(QCoreApplication::translate("MainWindow", "Sine wave", nullptr));
-        radioButton_2->setText(QCoreApplication::translate("MainWindow", "Square wave", nullptr));
+        checkBox_signal->setText(QCoreApplication::translate("MainWindow", "Enable signal", nullptr));
+        radioButton_sine->setText(QCoreApplication::translate("MainWindow", "Sine wave", nullptr));
+        radioButton_square->setText(QCoreApplication::translate("MainWindow", "Square wave", nullptr));
         label_5->setText(QCoreApplication::translate("MainWindow", "Period [ms]", nullptr));
-        Memory_Tabs->setTabText(Memory_Tabs->indexOf(tab), QCoreApplication::translate("MainWindow", "Signals", nullptr));
+        textEdit_period->setHtml(QCoreApplication::translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"</style></head><body style=\" font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">10</p></body></html>", nullptr));
+        Memory_Tabs->setTabText(Memory_Tabs->indexOf(tab), QCoreApplication::translate("MainWindow", "Debugging", nullptr));
         menuFile->setTitle(QCoreApplication::translate("MainWindow", "File", nullptr));
     } // retranslateUi
 

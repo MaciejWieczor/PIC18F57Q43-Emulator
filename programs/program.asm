@@ -1,23 +1,23 @@
 Disassembly Listing for C_compile_test
 Generated From:
 /home/maciej/MPLABXProjects/C_compile_test.X/dist/default/production/C_compile_test.X.production.elf
-2022-11-27 17:37:17
+2022-11-28 14:43:51
 
----  /tmp/xcXELnGAL.s  ----------------------------------------------------------------------------------
-038A  EE01     LFSR 0, 0x501
-038E  0E15     MOVLW 0x15
-0390  6AEE     CLRF 0xFEE, ACCESS
-0392  06E8     DECF 0xFE8, F, ACCESS
-0394  E1FD     BNZ 0x390
-0396  0104     MOVLB 0x4
-0398  0E08     MOVLW 0x8
-039A  6F5D     MOVWF 0x5D, BANKED
-039C  0E00     MOVLW 0x0
-039E  6F5E     MOVWF 0x5E, BANKED
+---  /tmp/xcXdkInHN.s  ----------------------------------------------------------------------------------
+038E  EE01     LFSR 0, 0x501
+0392  0E15     MOVLW 0x15
+0394  6AEE     CLRF 0xFEE, ACCESS
+0396  06E8     DECF 0xFE8, F, ACCESS
+0398  E1FD     BNZ 0x394
+039A  0104     MOVLB 0x4
+039C  0E08     MOVLW 0x8
+039E  6F5D     MOVWF 0x5D, BANKED
 03A0  0E00     MOVLW 0x0
-03A2  6F5F     MOVWF 0x5F, BANKED
-03A4  0100     MOVLB 0x0
-03A6  EF16     GOTO 0x22C
+03A2  6F5E     MOVWF 0x5E, BANKED
+03A4  0E00     MOVLW 0x0
+03A6  6F5F     MOVWF 0x5F, BANKED
+03A8  0100     MOVLB 0x0
+03AA  EF16     GOTO 0x22C
 ---  /home/maciej/MPLABXProjects/C_compile_test.X/newmain.c  --------------------------------------------
 1:             /* 
 2:                 (c) 2020 Microchip Technology Inc. and its subsidiaries.
@@ -166,196 +166,196 @@ Generated From:
 01BA  F000     NOP
 55:            }
 01BC  0012     RETURN 0
-0368  AEA1     BTFSS 0xFA1, 7, ACCESS
-036A  EFB9     GOTO 0x372
-036C  F001     NOP
+036C  AEA1     BTFSS 0xFA1, 7, ACCESS
 036E  EFBB     GOTO 0x376
 0370  F001     NOP
-0372  EFC4     GOTO 0x388
+0372  EFBD     GOTO 0x37A
 0374  F001     NOP
-0376  AEB1     BTFSS 0xFB1, 7, ACCESS
-0378  EFC0     GOTO 0x380
-037A  F001     NOP
+0376  EFC6     GOTO 0x38C
+0378  F001     NOP
+037A  AEB1     BTFSS 0xFB1, 7, ACCESS
 037C  EFC2     GOTO 0x384
 037E  F001     NOP
 0380  EFC4     GOTO 0x388
 0382  F001     NOP
+0384  EFC6     GOTO 0x38C
+0386  F001     NOP
 56:            
 57:            static void CLK_Initialize(void)
-03F8  0E60     MOVLW 0x60
-03FA  0100     MOVLB 0x0
-03FC  6FAD     MOVWF OSCCON1, BANKED
+03FC  0E60     MOVLW 0x60
+03FE  0100     MOVLB 0x0
+0400  6FAD     MOVWF OSCCON1, BANKED
 58:            {
 59:                OSCCON1 = 0x60;    /* set HFINTOSC as new oscillator source */
 60:                OSCFRQ = 0x00;     /* set HFFRQ to 1 MHz */
-03FE  0E00     MOVLW 0x0
-0400  6FB1     MOVWF OSCFRQ, BANKED
+0402  0E00     MOVLW 0x0
+0404  6FB1     MOVWF OSCFRQ, BANKED
 61:            }
-0402  0012     RETURN 0
+0406  0012     RETURN 0
 62:            
 63:            static void PORT_Initialize(void)
-02F2  90C8     BCF 0xFC8, 0, ACCESS
+02F6  90C8     BCF 0xFC8, 0, ACCESS
 64:            {
 65:                TRISCbits.TRISC0 = 0;    /* configure RC0 as output (uart tx)*/
 66:                TRISAbits.TRISA0 = 1;    /* configure RA0 as input (adc read)*/
-02F4  80C6     BSF 0xFC6, 0, ACCESS
+02F8  80C6     BSF 0xFC6, 0, ACCESS
 67:                ANSELAbits.ANSELA0 = 1;  /* Set RA0 to analog for adc read*/
-02F6  0104     MOVLB 0x4
-02F8  8100     BSF 0x0, 0, BANKED
+02FA  0104     MOVLB 0x4
+02FC  8100     BSF 0x0, 0, BANKED
 68:                
 69:                /* Unlock PPS to set the pin for UART */
 70:                INTCON0bits.GIE = 0; //Suspend interrupts
-02FA  9ED6     BCF 0xFD6, 7, ACCESS
+02FE  9ED6     BCF 0xFD6, 7, ACCESS
 71:                PPSLOCK = 0x55; //Required sequence
-02FC  0E55     MOVLW 0x55
-02FE  0102     MOVLB 0x2
-0300  6F00     MOVWF 0x0, BANKED
-72:                PPSLOCK = 0xAA; //Required sequence
-0302  0EAA     MOVLW 0xAA
+0300  0E55     MOVLW 0x55
+0302  0102     MOVLB 0x2
 0304  6F00     MOVWF 0x0, BANKED
+72:                PPSLOCK = 0xAA; //Required sequence
+0306  0EAA     MOVLW 0xAA
+0308  6F00     MOVWF 0x0, BANKED
 73:                PPSLOCKbits.PPSLOCKED = 0; //Clear PPSLOCKED bit
-0306  9100     BCF 0x0, 0, BANKED
+030A  9100     BCF 0x0, 0, BANKED
 74:                INTCON0bits.GIE = 1; //Restore interrupts
-0308  8ED6     BSF 0xFD6, 7, ACCESS
+030C  8ED6     BSF 0xFD6, 7, ACCESS
 75:                
 76:                /* We set PORTC[0] pin as the transmitter pin */
 77:                RC0PPS = 0x20;
-030A  0E20     MOVLW 0x20
-030C  6F11     MOVWF 0x11, BANKED
+030E  0E20     MOVLW 0x20
+0310  6F11     MOVWF 0x11, BANKED
 78:                
 79:                /* Lock PPS after setting the pin */
 80:                INTCON0bits.GIE = 0; //Suspend interrupts
-030E  9ED6     BCF 0xFD6, 7, ACCESS
+0312  9ED6     BCF 0xFD6, 7, ACCESS
 81:                PPSLOCK = 0x55; //Required sequence
-0310  0E55     MOVLW 0x55
-0312  6F00     MOVWF 0x0, BANKED
-82:                PPSLOCK = 0xAA; //Required sequence
-0314  0EAA     MOVLW 0xAA
+0314  0E55     MOVLW 0x55
 0316  6F00     MOVWF 0x0, BANKED
+82:                PPSLOCK = 0xAA; //Required sequence
+0318  0EAA     MOVLW 0xAA
+031A  6F00     MOVWF 0x0, BANKED
 83:                PPSLOCKbits.PPSLOCKED = 1; //Set PPSLOCKED bit
-0318  8100     BSF 0x0, 0, BANKED
+031C  8100     BSF 0x0, 0, BANKED
 84:                INTCON0bits.GIE = 1; //Restore interrupts
-031A  8ED6     BSF 0xFD6, 7, ACCESS
+031E  8ED6     BSF 0xFD6, 7, ACCESS
 85:            }
-031C  0012     RETURN 0
+0320  0012     RETURN 0
 86:            
 87:            static void UART_Initialize(void)
-03C2  0E20     MOVLW 0x20
-03C4  0102     MOVLB 0x2
-03C6  6FAB     MOVWF 0xAB, BANKED
+03C6  0E20     MOVLW 0x20
+03C8  0102     MOVLB 0x2
+03CA  6FAB     MOVWF 0xAB, BANKED
 88:            {
 89:                U1CON0 = 0x20; /* Set Baud rate to normal, disable autodetect, enable transmitter, 8bit async mode */
 90:                U1BRG = 0x0D;  /* Set baud to 4800 */
-03C8  0E00     MOVLW 0x0
-03CA  6FAF     MOVWF OSCCON3, BANKED
-03CC  0E0D     MOVLW 0xD
-03CE  6FAE     MOVWF OSCCON2, BANKED
+03CC  0E00     MOVLW 0x0
+03CE  6FAF     MOVWF OSCCON3, BANKED
+03D0  0E0D     MOVLW 0xD
+03D2  6FAE     MOVWF OSCCON2, BANKED
 91:                U1CON1 = 0x80; /* Turn UART ON */
-03D0  0E80     MOVLW 0x80
-03D2  6FAC     MOVWF ACTCON, BANKED
+03D4  0E80     MOVLW 0x80
+03D6  6FAC     MOVWF ACTCON, BANKED
 92:            }
-03D4  0012     RETURN 0
+03D8  0012     RETURN 0
 93:            
 94:            static void TMR0_Initialize(void)
-03AA  0E40     MOVLW 0x40
-03AC  0103     MOVLB 0x3
-03AE  6F1B     MOVWF 0x1B, BANKED
+03AE  0E40     MOVLW 0x40
+03B0  0103     MOVLB 0x3
+03B2  6F1B     MOVWF 0x1B, BANKED
 95:            {
 96:                T0CON1 = 0x40;        /* Select Fosc/4, set the prescaler to 1:1, Enable TMR0 sync */
 97:                /* The period is 1ms - with Fosc/4 = 250kHz thsi means 250 ticks in 8 bit mode*/
 98:                TMR0H = 0xFA;         /* Load the compare value to TMR0H */ 
-03B0  0EFA     MOVLW 0xFA
-03B2  6F19     MOVWF 0x19, BANKED
+03B4  0EFA     MOVLW 0xFA
+03B6  6F19     MOVWF 0x19, BANKED
 99:                TMR0L = 0x00;         /* Load the reset value to TMR0L */ 
-03B4  0E00     MOVLW 0x0
-03B6  6F18     MOVWF 0x18, BANKED
+03B8  0E00     MOVLW 0x0
+03BA  6F18     MOVWF 0x18, BANKED
 100:               PIR3bits.TMR0IF = 0;  /* clear the interrupt flag */
-03B8  9EB1     BCF 0xFB1, 7, ACCESS
+03BC  9EB1     BCF 0xFB1, 7, ACCESS
 101:               PIE3bits.TMR0IE = 1;  /* enable TMR0 interrupt */
-03BA  8EA1     BSF 0xFA1, 7, ACCESS
+03BE  8EA1     BSF 0xFA1, 7, ACCESS
 102:               T0CON0 = 0x80;        /* Configure TMR0 in 8-bit mode and enable TMR0 */
-03BC  0E80     MOVLW 0x80
-03BE  6F1A     MOVWF 0x1A, BANKED
+03C0  0E80     MOVLW 0x80
+03C2  6F1A     MOVWF 0x1A, BANKED
 103:           }
-03C0  0012     RETURN 0
+03C4  0012     RETURN 0
 104:           
 105:           static void TMR1_Initialize(void)
-03D6  0E01     MOVLW 0x1
-03D8  0103     MOVLB 0x3
-03DA  6F1E     MOVWF 0x1E, BANKED
+03DA  0E01     MOVLW 0x1
+03DC  0103     MOVLB 0x3
+03DE  6F1E     MOVWF 0x1E, BANKED
 106:           {
 107:               T1CON = 0x01;       /* ON bit set to enable timer */
 108:               T1CLK = 0x0A;       /* Clk source is T0 output */
-03DC  0E0A     MOVLW 0xA
-03DE  6F21     MOVWF 0x21, BANKED
+03E0  0E0A     MOVLW 0xA
+03E2  6F21     MOVWF 0x21, BANKED
 109:               TMR1H = 0xFF; /* Overflow after 10 impulses */
-03E0  691D     SETF 0x1D, BANKED
+03E4  691D     SETF 0x1D, BANKED
 110:               TMR1L = 0xFF - 0x05;
-03E2  0EFA     MOVLW 0xFA
-03E4  6F1C     MOVWF 0x1C, BANKED
+03E6  0EFA     MOVLW 0xFA
+03E8  6F1C     MOVWF 0x1C, BANKED
 111:           }
-03E6  0012     RETURN 0
+03EA  0012     RETURN 0
 112:           
 113:           static void ADC_Initialize(void)
-031E  0103     MOVLB 0x3
-0320  51F3     MOVF DMAnSCNTH, W, BANKED
-0322  0BF3     ANDLW 0xF3
-0324  0904     IORLW 0x4
-0326  6FF3     MOVWF DMAnSCNTH, BANKED
+0322  0103     MOVLB 0x3
+0324  51F3     MOVF DMAnSCNTH, W, BANKED
+0326  0BF3     ANDLW 0xF3
+0328  0904     IORLW 0x4
+032A  6FF3     MOVWF DMAnSCNTH, BANKED
 114:           {
 115:                //Setup ADC
 116:               ADCON0bits.FM = 1; //right justify
 117:               ADCON0bits.CS = 1; //ADCRC Clock
-0328  89F3     BSF DMAnSCNTH, 4, BANKED
+032C  89F3     BSF DMAnSCNTH, 4, BANKED
 118:               ADACQ = 0x0A;
-032A  0E00     MOVLW 0x0
-032C  6FEF     MOVWF DMAnDSZH, BANKED
-032E  0E0A     MOVLW 0xA
-0330  6FEE     MOVWF DMAnDSZ, BANKED
+032E  0E00     MOVLW 0x0
+0330  6FEF     MOVWF DMAnDSZH, BANKED
+0332  0E0A     MOVLW 0xA
+0334  6FEE     MOVWF DMAnDSZ, BANKED
 119:               ADPRE = 0x0A;
-0332  0E00     MOVLW 0x0
-0334  6FF2     MOVWF DMAnSCNT, BANKED
-0336  0E0A     MOVLW 0xA
-0338  6FF1     MOVWF DMAnDSAH, BANKED
+0336  0E00     MOVLW 0x0
+0338  6FF2     MOVWF DMAnSCNT, BANKED
+033A  0E0A     MOVLW 0xA
+033C  6FF1     MOVWF DMAnDSAH, BANKED
 120:               ADPCH = 0x00; //RA0 is Analog channel
-033A  0E00     MOVLW 0x0
-033C  6FEC     MOVWF DMAnDPTR, BANKED
+033E  0E00     MOVLW 0x0
+0340  6FEC     MOVWF DMAnDPTR, BANKED
 121:               ADCON0bits.ON = 1; //Turn ADC On
-033E  8FF3     BSF DMAnSCNTH, 7, BANKED
+0342  8FF3     BSF DMAnSCNTH, 7, BANKED
 122:           }
-0340  0012     RETURN 0
-0344  A8A1     BTFSS 0xFA1, 4, ACCESS
-0346  EFA7     GOTO 0x34E
-0348  F001     NOP
+0344  0012     RETURN 0
+0348  A8A1     BTFSS 0xFA1, 4, ACCESS
 034A  EFA9     GOTO 0x352
 034C  F001     NOP
-034E  EFB2     GOTO 0x364
+034E  EFAB     GOTO 0x356
 0350  F001     NOP
-0352  A8B1     BTFSS 0xFB1, 4, ACCESS
-0354  EFAE     GOTO 0x35C
-0356  F001     NOP
+0352  EFB4     GOTO 0x368
+0354  F001     NOP
+0356  A8B1     BTFSS 0xFB1, 4, ACCESS
 0358  EFB0     GOTO 0x360
 035A  F001     NOP
 035C  EFB2     GOTO 0x364
 035E  F001     NOP
+0360  EFB4     GOTO 0x368
+0362  F001     NOP
 123:           
 124:           static void INTERRUPT_Initialize (void)
-03E8  8AD6     BSF 0xFD6, 5, ACCESS
+03EC  8AD6     BSF 0xFD6, 5, ACCESS
 125:           {
 126:               INTCON0bits.IPEN = 1;    /* Set high/low priority levels for timer interrupts */
 127:               IPR3bits.TMR0IP = 0;     /* TMR0 has lower priority */
-03EA  0103     MOVLB 0x3
-03EC  9F65     BCF PMD5, 7, BANKED
+03EE  0103     MOVLB 0x3
+03F0  9F65     BCF PMD5, 7, BANKED
 128:               IPR3bits.TMR1IP = 1;     /* TMR1 has higher priority */
-03EE  8965     BSF PMD5, 4, BANKED
+03F2  8965     BSF PMD5, 4, BANKED
 129:               INTCON0bits.GIE = 1;     /* Enable the Global Interrupts */
-03F0  8ED6     BSF 0xFD6, 7, ACCESS
+03F4  8ED6     BSF 0xFD6, 7, ACCESS
 130:               PIE3bits.TMR0IE = 1;     /* Enable the Peripheral Interrupts */
-03F2  8EA1     BSF 0xFA1, 7, ACCESS
+03F6  8EA1     BSF 0xFA1, 7, ACCESS
 131:               PIE3bits.TMR1IE = 1;     /* Enable TMR1 PI */
-03F4  88A1     BSF 0xFA1, 4, ACCESS
+03F8  88A1     BSF 0xFA1, 4, ACCESS
 132:           }
-03F6  0012     RETURN 0
+03FA  0012     RETURN 0
 133:           
 134:           static void TMR0_ISR(void)
 01BE  9EB1     BCF 0xFB1, 7, ACCESS
@@ -448,7 +448,7 @@ Generated From:
 157:               TMR1L = 0xFF - 0x05;
 02AA  0EFA     MOVLW 0xFA
 02AC  6F1C     MOVWF 0x1C, BANKED
-158:                   for(int i= 0 ; i < 10 ; i++){
+158:               for(int i= 0 ; i < 10 ; i++){
 02AE  0E00     MOVLW 0x0
 02B0  6E1B     MOVWF 0x1B, ACCESS
 02B2  0E00     MOVLW 0x0
@@ -484,41 +484,44 @@ Generated From:
 02EA  F001     NOP
 02EC  EF5B     GOTO 0x2B6
 02EE  F001     NOP
-161:           }
-02F0  0012     RETURN 0
-162:           
-163:           void __interrupt(irq(IRQ_TMR1)) INTERRUPT_InterruptManager_TMR1 (void)
-164:           {
-165:               /* Check if TMR0 interrupt is enabled and if the interrupt flag is set */
-166:               if(PIE3bits.TMR1IE == 1 && PIR3bits.TMR1IF == 1)
-167:               {
-168:                   TMR1_ISR();
-0360  EC4B     CALL 0x296, 0
-0362  F001     NOP
-169:               }
-170:           }
-0364  0011     RETFIE 1
-171:           
-172:           void __interrupt(irq(IRQ_TMR0)) INTERRUPT_InterruptManager_TMR0 (void)
-173:           {
-174:               /* Check if TMR0 interrupt is enabled and if the interrupt flag is set */
-175:               if(PIE3bits.TMR0IE == 1 && PIR3bits.TMR0IF == 1)
-176:               {
-177:                   TMR0_ISR();
-0384  ECDF     CALL 0x1BE, 0
-0386  F000     NOP
-178:               }
-179:           }
-0388  0011     RETFIE 1
-180:           
-181:           void main(void) 
+161:               buffer_index = 0;
+02F0  0E00     MOVLW 0x0
+02F2  6E15     MOVWF 0x15, ACCESS
+162:           }
+02F4  0012     RETURN 0
+163:           
+164:           void __interrupt(irq(IRQ_TMR1)) INTERRUPT_InterruptManager_TMR1 (void)
+165:           {
+166:               /* Check if TMR0 interrupt is enabled and if the interrupt flag is set */
+167:               if(PIE3bits.TMR1IE == 1 && PIR3bits.TMR1IF == 1)
+168:               {
+169:                   TMR1_ISR();
+0364  EC4B     CALL 0x296, 0
+0366  F001     NOP
+170:               }
+171:           }
+0368  0011     RETFIE 1
+172:           
+173:           void __interrupt(irq(IRQ_TMR0)) INTERRUPT_InterruptManager_TMR0 (void)
+174:           {
+175:               /* Check if TMR0 interrupt is enabled and if the interrupt flag is set */
+176:               if(PIE3bits.TMR0IE == 1 && PIR3bits.TMR0IF == 1)
+177:               {
+178:                   TMR0_ISR();
+0388  ECDF     CALL 0x1BE, 0
+038A  F000     NOP
+179:               }
+180:           }
+038C  0011     RETFIE 1
+181:           
+182:           void main(void) 
 022C  0E00     MOVLW 0x0
 022E  6E1D     MOVWF 0x1D, ACCESS
 0230  0E00     MOVLW 0x0
 0232  6E1C     MOVWF 0x1C, ACCESS
-182:           {   
-183:               for(int i= 0 ; i < 10 ; i++){
-184:                   adc_buffer[i] = 0;
+183:           {   
+184:               for(int i= 0 ; i < 10 ; i++){
+185:                   adc_buffer[i] = 0;
 0234  90D8     BCF 0xFD8, 0, ACCESS
 0236  341C     RLCF 0x1C, W, ACCESS
 0238  6ED9     MOVWF 0xFD9, ACCESS
@@ -532,7 +535,7 @@ Generated From:
 0248  6EDE     MOVWF 0xFDE, ACCESS
 024A  0E00     MOVLW 0x0
 024C  6EDD     MOVWF 0xFDD, ACCESS
-185:               }
+186:               }
 024E  4A1C     INFSNZ 0x1C, F, ACCESS
 0250  2A1D     INCF 0x1D, F, ACCESS
 0252  BE1D     BTFSC 0x1D, 7, ACCESS
@@ -549,37 +552,37 @@ Generated From:
 0268  F001     NOP
 026A  EF1A     GOTO 0x234
 026C  F001     NOP
-186:               
-187:               UART_Initialize();
-026E  ECE1     CALL 0x3C2, 0
+187:               
+188:               UART_Initialize();
+026E  ECE3     CALL 0x3C6, 0
 0270  F001     NOP
-188:               CLK_Initialize();
-0272  ECFC     CALL 0x3F8, 0
+189:               CLK_Initialize();
+0272  ECFE     CALL 0x3FC, 0
 0274  F001     NOP
-189:               PORT_Initialize();
-0276  EC79     CALL 0x2F2, 0
+190:               PORT_Initialize();
+0276  EC7B     CALL 0x2F6, 0
 0278  F001     NOP
-190:               TMR0_Initialize();
-027A  ECD5     CALL 0x3AA, 0
+191:               TMR0_Initialize();
+027A  ECD7     CALL 0x3AE, 0
 027C  F001     NOP
-191:               TMR1_Initialize();
-027E  ECEB     CALL 0x3D6, 0
+192:               TMR1_Initialize();
+027E  ECED     CALL 0x3DA, 0
 0280  F001     NOP
-192:               ADC_Initialize();
-0282  EC8F     CALL 0x31E, 0
+193:               ADC_Initialize();
+0282  EC91     CALL 0x322, 0
 0284  F001     NOP
-193:               INTERRUPT_Initialize();
-0286  ECF4     CALL 0x3E8, 0
+194:               INTERRUPT_Initialize();
+0286  ECF6     CALL 0x3EC, 0
 0288  F001     NOP
-194:               
-195:               buffer_index = 0;
+195:               
+196:               buffer_index = 0;
 028A  0E00     MOVLW 0x0
 028C  6E15     MOVWF 0x15, ACCESS
-196:               
-197:               while(1)
+197:               
+198:               while(1)
 028E  EF47     GOTO 0x28E
-198:               {
-199:                   ;
-200:               }
-201:           }
-202:           
+199:               {
+200:                   ;
+201:               }
+202:           }
+203:           

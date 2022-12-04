@@ -30,6 +30,8 @@ MainWindow::MainWindow(QMainWindow *parent)
     QObject::connect(ui.pushButton_start, SIGNAL(clicked()), this, SLOT(start_emulator()));
     /* Connect add plot button */
     QObject::connect(ui.pushButton_add_plot, SIGNAL(clicked()), this, SLOT(Add_Plot()));
+    QObject::connect(ui.analog_read_plot, SIGNAL(clicked()), this, SLOT(Add_Analog_Plot()));
+    QObject::connect(ui.adc_out_plot, SIGNAL(clicked()), this, SLOT(Add_ADC_Plot()));
     /* Connect change value at address button */
     QObject::connect(ui.pushButton_setaddr, SIGNAL(clicked()), this, SLOT(Set_Addr()));
     /* Connect change bank selected */
@@ -72,14 +74,6 @@ void MainWindow::module_ports() {
   unsigned short output;
   if(ui.checkBox_signal->isChecked()) {
     /* First read the period */
-
-
-    period = ui.textEdit_period->toPlainText().toUInt(&ok, 10);
-    sine_val = sin(2 * 3.14 * (priv_memory.Fosc_moment * priv_memory.Fosc_period_nano) / (period * 1e6));
-    sine_val += 1;
-    output = (unsigned short)(sine_val * 2048);
-    
-    printf("SINE VALUE : 0x%X\n", output);
     /* SINE */
   }
   for(int i = 0 ; i < 6 ; i++) {
@@ -93,10 +87,23 @@ void MainWindow::module_ports() {
         // If checkbox is set we enable the wave
         if(ui.checkBox_signal->isChecked()) {
           if(ui.radioButton_sine->isChecked()) {
+            period = ui.textEdit_period->toPlainText().toUInt(&ok, 10);
+            sine_val = sin(2 * 3.14 * (priv_memory.Fosc_moment * priv_memory.Fosc_period_nano) / (period * 1e6));
+            sine_val += 1;
+            output = (unsigned short)(sine_val * 2048);
+            current_analog_val = output;
             priv_memory.modules.Ports_module.port_pins[i][j].val = output;
+            printf("SINE VALUE : 0x%X\n", output);
           }
           /* SQUARE */
           else {
+            period = ui.textEdit_period->toPlainText().toUInt(&ok, 10);
+            sine_val = sin(2 * 3.14 * (priv_memory.Fosc_moment * priv_memory.Fosc_period_nano) / (period * 1e6));
+            if(sine_val > 0) output = 4095;
+            else output = 1;
+            current_analog_val = output;
+            priv_memory.modules.Ports_module.port_pins[i][j].val = output;
+            printf("SQUARE VALUE : 0x%X\n", output);
           }
         }
         // Else we write zeroes nable the wave
@@ -201,6 +208,71 @@ void MainWindow::Add_Bit_Plot() {
   bit_plot_bit.push_back(textEdit_3);
 }
 
+void MainWindow::Add_Analog_Plot() {
+  if(analog_created == 0) {
+    analog_created = 1;
+    QHBoxLayout *plot_3;
+    QwtPlot *qwtPlot;
+    QVBoxLayout *verticalLayout_9;
+    QVBoxLayout *verticalLayout_0;
+    QTextEdit *textEdit_2;
+    plot_3 = new QHBoxLayout();
+    plot_3->setObjectName(QString::fromUtf8("plot_3"));
+    verticalLayout_0 = new QVBoxLayout();
+    verticalLayout_0->setObjectName(QString::fromUtf8("verticalLayout_0"));
+    plot_3->addLayout(verticalLayout_0);
+    /* TBD: remove last plot as it is only to hold the axis */
+    qwtPlot = new QwtPlot(ui.verticalWidget_analog);
+    qwtPlot->setObjectName(QString::fromUtf8("qwtPlot"));
+    verticalLayout_0->addWidget(qwtPlot);
+    qwtPlot->enableAxis(QwtPlot::xBottom, false);
+    QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    qwtPlot->setSizePolicy(sizePolicy);
+    set_Axis(qwtPlot);
+    qwtPlot->setCanvasBackground( Qt::white );
+    qwtPlot->setAxisScale( QwtPlot::yLeft, 0, 4096, 1024);
+    qwtPlot->setAxisTitle(QwtAxisId(QwtPlot::yLeft), "Analog Port"); // set the title for the second axis
+    verticalLayout_9 = new QVBoxLayout();
+    verticalLayout_9->setObjectName(QString::fromUtf8("verticalLayout_9"));
+    plot_3->addLayout(verticalLayout_9);
+    ui.verticalLayout_analog->addLayout(plot_3);
+    analog_plot = qwtPlot;
+    analog_plot->replot();
+  }
+}
+
+void MainWindow::Add_ADC_Plot() {
+  if(adc_created == 0) {
+    adc_created = 1;
+    QHBoxLayout *plot_3;
+    QwtPlot *qwtPlot;
+    QVBoxLayout *verticalLayout_9;
+    QVBoxLayout *verticalLayout_0;
+    QTextEdit *textEdit_2;
+    plot_3 = new QHBoxLayout();
+    plot_3->setObjectName(QString::fromUtf8("plot_3"));
+    verticalLayout_0 = new QVBoxLayout();
+    verticalLayout_0->setObjectName(QString::fromUtf8("verticalLayout_0"));
+    plot_3->addLayout(verticalLayout_0);
+    /* TBD: remove last plot as it is only to hold the axis */
+    qwtPlot = new QwtPlot(ui.verticalWidget_adc);
+    qwtPlot->setObjectName(QString::fromUtf8("qwtPlot"));
+    verticalLayout_0->addWidget(qwtPlot);
+    qwtPlot->enableAxis(QwtPlot::xBottom, false);
+    QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    qwtPlot->setSizePolicy(sizePolicy);
+    qwtPlot->setCanvasBackground( Qt::white );
+    qwtPlot->setAxisScale( QwtPlot::yLeft, 0, 4096, 1024);
+    qwtPlot->setAxisTitle(QwtAxisId(QwtPlot::yLeft), "ADC Result"); // set the title for the second axis
+    verticalLayout_9 = new QVBoxLayout();
+    verticalLayout_9->setObjectName(QString::fromUtf8("verticalLayout_9"));
+    plot_3->addLayout(verticalLayout_9);
+    ui.verticalLayout_adc->addLayout(plot_3);
+    adc_plot = qwtPlot;
+    adc_plot->replot();
+  }
+}
+
 void MainWindow::Add_Plot() {
   QHBoxLayout *plot_3;
   QwtPlot *qwtPlot;
@@ -222,6 +294,11 @@ void MainWindow::Add_Plot() {
     QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     qwtPlot->setSizePolicy(sizePolicy);
     set_Axis(qwtPlot);
+    char buf [5];
+    sprintf(buf, "%X\t", i);
+    if(i != 8) {
+      qwtPlot->setAxisTitle(QwtAxisId(QwtPlot::yLeft), buf); // set the title for the second axis
+    }
     vector<QPointF> tmp_vec;
     points.push_back(tmp_vec);
     points[i].push_back(QPointF(0, 0));
@@ -985,6 +1062,50 @@ void MainWindow::update_PlotsInv() {
   }
 }
 
+void MainWindow::update_Analog_PlotsInv() {
+  if(analog_created) {
+    analog_points.push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano, current_analog_val));
+  }
+
+  if(adc_created) {
+    adc_points.push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano, priv_memory.data_memory[ADRES+1] * 0x100 + priv_memory.data_memory[ADRES]));
+  }
+}
+
+void MainWindow::update_Analog_Plots() {
+  if(analog_created) {
+    analog_points.push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano, current_analog_val));
+    QwtPlotCurve *curve = new QwtPlotCurve();
+    curve->setTitle( "Pixel Count" );
+    curve->setPen( Qt::blue, 2 ),
+    curve->setRenderHint( QwtPlotItem::RenderAntialiased, true );
+
+    QPolygonF polygon;
+    for(QPointF point : analog_points) {
+      polygon << point;
+    }
+    curve->setSamples( polygon );
+    curve->attach( analog_plot );
+    analog_plot->replot();
+  }
+
+  if(adc_created) {
+    adc_points.push_back(QPointF(priv_memory.Fosc_moment * priv_memory.Fosc_period_nano, priv_memory.data_memory[ADRES+1] * 0x100 + priv_memory.data_memory[ADRES]));
+    QwtPlotCurve *curve_2 = new QwtPlotCurve();
+    curve_2->setTitle( "Pixel Count" );
+    curve_2->setPen( Qt::blue, 2 ),
+    curve_2->setRenderHint( QwtPlotItem::RenderAntialiased, true );
+
+    QPolygonF polygon2;
+    for(QPointF point : adc_points) {
+      polygon2 << point;
+    }
+    curve_2->setSamples( polygon2 );
+    curve_2->attach( adc_plot );
+    adc_plot->replot();
+  }
+}
+
 void MainWindow::update_Plots() {
   int text_ind = 0;
   for(QTextEdit * edit : plot_addrs) {
@@ -1123,6 +1244,7 @@ void MainWindow::update_Labels() {
   update_LabelTableReturnStack();
   update_LabelTableFastReturnStack();
   update_Plots();
+  update_Analog_Plots();
   update_Bit_Plots();
 
   update_Table();
@@ -1195,6 +1317,7 @@ void MainWindow::RunUntilLine() {
       post_Copy_Pointer_Data(&priv_code, &priv_memory, &priv_bus);
       priv_memory.time_moment++;
       update_PlotsInv();
+      update_Analog_PlotsInv();
       update_Bit_PlotsInv();
     }
     update_Labels();
@@ -1293,6 +1416,7 @@ void MainWindow::RunUntilTime() {
       post_Copy_Pointer_Data(&priv_code, &priv_memory, &priv_bus);
       priv_memory.time_moment++;
       update_PlotsInv();
+      update_Analog_PlotsInv();
       update_Bit_PlotsInv();
     }
     update_Labels();
@@ -1332,6 +1456,7 @@ void MainWindow::RunUntilAddr() {
       post_Copy_Pointer_Data(&priv_code, &priv_memory, &priv_bus);
       priv_memory.time_moment++;
       update_PlotsInv();
+      update_Analog_PlotsInv();
       update_Bit_PlotsInv();
     }
     update_Labels();
@@ -1383,6 +1508,16 @@ void MainWindow::clear_plots() {
       if(points.size() > 7) {
         plots[8]->detachItems();
       }
+    }
+
+    if(analog_created) {
+      analog_points = {};
+      analog_plot->detachItems();
+    }
+
+    if(adc_created) {
+      adc_points = {};
+      adc_plot->detachItems();
     }
 
     if(bit_points.size() > 0)

@@ -124,7 +124,12 @@ public:
     QVBoxLayout *verticalWidget_bit_plots;
     QWidget *verticalWidget_2;
     QVBoxLayout *verticalWidget_bit_time;
-    QWidget *tab_2;
+    QWidget *logic_analyzer_analog;
+    QVBoxLayout *verticalLayout_17;
+    QWidget *verticalWidget_analog;
+    QVBoxLayout *verticalLayout_analog;
+    QWidget *verticalWidget_adc;
+    QVBoxLayout *verticalLayout_adc;
     QWidget *tab;
     QHBoxLayout *horizontalLayout_29;
     QHBoxLayout *horizontalLayout_28;
@@ -149,11 +154,6 @@ public:
     QPushButton *clear_all_plots;
     QPushButton *add_bit_plot;
     QPushButton *analog_read_plot;
-    QHBoxLayout *horizontalLayout_21;
-    QLabel *label;
-    QTextEdit *text_port;
-    QLabel *label_2;
-    QTextEdit *text_pin;
     QPushButton *adc_out_plot;
     QVBoxLayout *verticalLayout_18;
     QCheckBox *checkBox_signal;
@@ -1257,9 +1257,25 @@ public:
         verticalLayout_19->addWidget(verticalWidget_2);
 
         Memory_Tabs->addTab(logic_analyzer_bit, QString());
-        tab_2 = new QWidget();
-        tab_2->setObjectName(QString::fromUtf8("tab_2"));
-        Memory_Tabs->addTab(tab_2, QString());
+        logic_analyzer_analog = new QWidget();
+        logic_analyzer_analog->setObjectName(QString::fromUtf8("logic_analyzer_analog"));
+        verticalLayout_17 = new QVBoxLayout(logic_analyzer_analog);
+        verticalLayout_17->setObjectName(QString::fromUtf8("verticalLayout_17"));
+        verticalWidget_analog = new QWidget(logic_analyzer_analog);
+        verticalWidget_analog->setObjectName(QString::fromUtf8("verticalWidget_analog"));
+        verticalLayout_analog = new QVBoxLayout(verticalWidget_analog);
+        verticalLayout_analog->setObjectName(QString::fromUtf8("verticalLayout_analog"));
+
+        verticalLayout_17->addWidget(verticalWidget_analog);
+
+        verticalWidget_adc = new QWidget(logic_analyzer_analog);
+        verticalWidget_adc->setObjectName(QString::fromUtf8("verticalWidget_adc"));
+        verticalLayout_adc = new QVBoxLayout(verticalWidget_adc);
+        verticalLayout_adc->setObjectName(QString::fromUtf8("verticalLayout_adc"));
+
+        verticalLayout_17->addWidget(verticalWidget_adc);
+
+        Memory_Tabs->addTab(logic_analyzer_analog, QString());
         tab = new QWidget();
         tab->setObjectName(QString::fromUtf8("tab"));
         horizontalLayout_29 = new QHBoxLayout(tab);
@@ -1406,37 +1422,6 @@ public:
         analog_read_plot->setStyleSheet(QString::fromUtf8("background-color: rgb(217, 233, 255);"));
 
         verticalLayout_15->addWidget(analog_read_plot);
-
-        horizontalLayout_21 = new QHBoxLayout();
-        horizontalLayout_21->setObjectName(QString::fromUtf8("horizontalLayout_21"));
-        label = new QLabel(tab);
-        label->setObjectName(QString::fromUtf8("label"));
-        label->setAlignment(Qt::AlignCenter);
-
-        horizontalLayout_21->addWidget(label);
-
-        text_port = new QTextEdit(tab);
-        text_port->setObjectName(QString::fromUtf8("text_port"));
-        sizePolicy4.setHeightForWidth(text_port->sizePolicy().hasHeightForWidth());
-        text_port->setSizePolicy(sizePolicy4);
-
-        horizontalLayout_21->addWidget(text_port);
-
-        label_2 = new QLabel(tab);
-        label_2->setObjectName(QString::fromUtf8("label_2"));
-        label_2->setAlignment(Qt::AlignCenter);
-
-        horizontalLayout_21->addWidget(label_2);
-
-        text_pin = new QTextEdit(tab);
-        text_pin->setObjectName(QString::fromUtf8("text_pin"));
-        sizePolicy4.setHeightForWidth(text_pin->sizePolicy().hasHeightForWidth());
-        text_pin->setSizePolicy(sizePolicy4);
-
-        horizontalLayout_21->addWidget(text_pin);
-
-
-        verticalLayout_15->addLayout(horizontalLayout_21);
 
         adc_out_plot = new QPushButton(tab);
         adc_out_plot->setObjectName(QString::fromUtf8("adc_out_plot"));
@@ -2012,7 +1997,7 @@ public:
         Memory_Tabs->setTabText(Memory_Tabs->indexOf(tab_8), QCoreApplication::translate("MainWindow", "Register Page", nullptr));
         Memory_Tabs->setTabText(Memory_Tabs->indexOf(logic_analyzer), QCoreApplication::translate("MainWindow", "Logic analyzer", nullptr));
         Memory_Tabs->setTabText(Memory_Tabs->indexOf(logic_analyzer_bit), QCoreApplication::translate("MainWindow", "Logic analyzer (bit mode)", nullptr));
-        Memory_Tabs->setTabText(Memory_Tabs->indexOf(tab_2), QCoreApplication::translate("MainWindow", "Logic analyzer (analog)", nullptr));
+        Memory_Tabs->setTabText(Memory_Tabs->indexOf(logic_analyzer_analog), QCoreApplication::translate("MainWindow", "Logic analyzer (analog)", nullptr));
         pushButton_setaddr->setText(QCoreApplication::translate("MainWindow", "Set register [address] to value [value]", nullptr));
         label_3->setText(QCoreApplication::translate("MainWindow", "Address [0 - 3FFF]", nullptr));
         label_4->setText(QCoreApplication::translate("MainWindow", "Value [0 - 255]", nullptr));
@@ -2022,8 +2007,6 @@ public:
         clear_all_plots->setText(QCoreApplication::translate("MainWindow", "Clear All Plots", nullptr));
         add_bit_plot->setText(QCoreApplication::translate("MainWindow", "Add Bit Plot", nullptr));
         analog_read_plot->setText(QCoreApplication::translate("MainWindow", "Analog Read Plot Add", nullptr));
-        label->setText(QCoreApplication::translate("MainWindow", "Port", nullptr));
-        label_2->setText(QCoreApplication::translate("MainWindow", "Pin", nullptr));
         adc_out_plot->setText(QCoreApplication::translate("MainWindow", "ADC Outcome Plot Add", nullptr));
         checkBox_signal->setText(QCoreApplication::translate("MainWindow", "Enable signal", nullptr));
         radioButton_sine->setText(QCoreApplication::translate("MainWindow", "Sine wave", nullptr));

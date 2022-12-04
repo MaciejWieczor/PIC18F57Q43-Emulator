@@ -2134,10 +2134,22 @@
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="tab_2">
+          <widget class="QWidget" name="logic_analyzer_analog">
            <attribute name="title">
             <string>Logic analyzer (analog)</string>
            </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_17">
+            <item>
+             <widget class="QWidget" name="verticalWidget_analog" native="true">
+              <layout class="QVBoxLayout" name="verticalLayout_analog"/>
+             </widget>
+            </item>
+            <item>
+             <widget class="QWidget" name="verticalWidget_adc" native="true">
+              <layout class="QVBoxLayout" name="verticalLayout_adc"/>
+             </widget>
+            </item>
+           </layout>
           </widget>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -2371,50 +2383,6 @@
                    <string>Analog Read Plot Add</string>
                   </property>
                  </widget>
-                </item>
-                <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_21">
-                  <item>
-                   <widget class="QLabel" name="label">
-                    <property name="text">
-                     <string>Port</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QTextEdit" name="text_port">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="label_2">
-                    <property name="text">
-                     <string>Pin</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QTextEdit" name="text_pin">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
                 </item>
                 <item>
                  <widget class="QPushButton" name="adc_out_plot">

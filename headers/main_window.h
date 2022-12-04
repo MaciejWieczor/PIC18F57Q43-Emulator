@@ -35,10 +35,14 @@ private slots:
     void c_line_Highlight();
     void Add_Plot();
     void Add_Bit_Plot();
+    void Add_Analog_Plot();
+    void Add_ADC_Plot();
     void Set_Addr();
     void update_Plots();
+    void update_Analog_Plots();
     void update_Bit_Plots();
     void update_PlotsInv();
+    void update_Analog_PlotsInv();
     void update_Bit_PlotsInv();
     void change_Bank_Selected();
     void module_ports();
@@ -68,5 +72,13 @@ private:
     vector<QTextEdit *> bit_plot_bit;
     vector<vector<QPointF>> bit_points;
 
+    int analog_created = 0;
+    QwtPlot * analog_plot;
+    vector<QPointF> analog_points;
+    int adc_created = 0;
+    QwtPlot * adc_plot;
+    vector<QPointF> adc_points;
+
     long long int reset_plot_value = 0;
+    unsigned short current_analog_val = 0;
 };
